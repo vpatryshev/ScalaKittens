@@ -1,3 +1,5 @@
+Scala Kittens Project
+=====================
 In this project I plan to keep small solutions that are free to grab and too small for building a "library".
 Scala kittens (https://docs.google.com/present/view?id=dc7rg5cv_76d7dpx5c5&revision=_latest&start=0&theme=blank&cwj=true&pli=1)
 has example of this stuff, one-liners. Probably they deserve to be put to gist.
