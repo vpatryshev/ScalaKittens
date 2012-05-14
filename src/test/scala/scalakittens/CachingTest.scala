@@ -57,7 +57,8 @@ object CachingTest extends Specification {
         }
       }.start // yeah, launch it
 
-      val buffers = ((1 to 20000) map ((i:Int) => new StringWriter)).toList // have so many buffers
+      val numThreads: Int = 5000
+      val buffers = ((1 to numThreads) map ((i:Int) => new StringWriter)).toList // have so many buffers
       val TEN_HOURS = TimeUnit.HOURS toNanos 10 // an arbitrary timeout value
 
       buffers foreach startConsuming // right, we start so many threads, one per buffer
@@ -67,7 +68,7 @@ object CachingTest extends Specification {
       for (i <- 1 to numTries) { // now control our threads, they are waiting
         myTime = myTime + TEN_HOURS + 1 // time's up for a value
         signal // tell them all to consume - only one is supposed to bump the counter
-        Thread sleep 1000 // give them a chance to do their job
+        Thread sleep 2000 // give them a chance to do their job
       }
       buffers foreach (_.toString must_== "bcdefghijklmnop") // this is the ideal we are looking for
     }

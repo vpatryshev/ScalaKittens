@@ -3,6 +3,7 @@ package scalakittens
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.TimeUnit
 import scalakittens.Caching.CacheUnit
+import ref.SoftReference
 
 /**
  * This trait/object's purpose is to be used for caching:
@@ -43,18 +44,24 @@ trait Caching {
   class CacheUnit[T](fun:() => T, timeout_nano: Long) {
 
     private class Container(validUntil_nano: Long) {
-      lazy val value: T = fun()
+      private lazy val value: T = fun()
       def stillValid = now < validUntil_nano
+      def get: Option[T] = if (stillValid) Some(value) else None
     }
 
-    private def newContainer = new Container(now + timeout_nano)
+    private def newContainer = new SoftReference[Container](new Container(now + timeout_nano))
  
-    private val ref = new AtomicReference[Container](newContainer)
+    private val ref = new AtomicReference[SoftReference[Container]](newContainer)
 
+    private def getValue = ref.get/*weakref*/.get/*container*/.flatMap(_.get)
+    
     def apply(): T = {
-      val current = ref.get 
-      current.stillValid || ref.compareAndSet(current, newContainer) // avoiding multiple resettings
-      ref.get.value
+      (Stream.continually {
+        val latestRef = ref.get
+        val latestValue = latestRef.get.flatMap(_.get)
+        latestValue.isDefined || ref.compareAndSet(latestRef, newContainer) // avoiding multiple resettings
+        getValue
+      } dropWhile((optVal: Option[T]) => optVal.isEmpty)).head.get
     }
 
     def withTimeout(timeout: Long, unit: TimeUnit): CacheUnit[T] = new CacheUnit[T](fun, unit toNanos timeout)

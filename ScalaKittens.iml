@@ -4,7 +4,7 @@
     <facet type="scala" name="Scala">
       <configuration>
         <option name="compilerLibraryLevel" value="Project" />
-        <option name="compilerLibraryName" value="Maven: org.scala-lang:scala-compiler-bundle:2.7.0" />
+        <option name="compilerLibraryName" value="Maven: org.scala-lang:scala-compiler-bundle:2.8.1" />
         <option name="compilerOptions" value="-target:jvm-1.5" />
         <option name="vmOptions" value="" />
       </configuration>
@@ -20,14 +20,9 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Maven: org.scala-lang:scala-library:2.7.0" level="project" />
+    <orderEntry type="library" name="Maven: org.scala-lang:scala-library:2.8.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.4" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.specs:specs:1.2.5" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.scalatest:scalatest:0.9.1" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.scalacheck:scalacheck:1.2" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.jmock:jmock:2.4.0" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.hamcrest:hamcrest-core:1.1" level="project" />
-    <orderEntry type="library" scope="TEST" name="Maven: org.hamcrest:hamcrest-library:1.1" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.specs:specs:2.8.1-1.6.7" level="project" />
   </component>
 </module>
 
