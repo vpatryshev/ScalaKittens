@@ -12,12 +12,12 @@ Implements single value caching strategy.
 
 ###Purpose###
 
-Why would we need to need to cache just one value? There are a couple cases.
+Why would we need to cache just one value? There are a couple cases.
 
 1. You have some specific entity that has a limited validity time, and is a little bit expensive to reevaluate on each call. `lazy` won't work, since it evaluates once. So there.
    For example, a map of phone country codes; there's just one such list, but it changes from time to time.
-2. You don't care about memory, and you'd be willing to store your database table in a `Map`, but the problem is, individual
-   values still may expire.
+2. You don't care about memory, and you'd be willing to store your database table in a `Map`, but individual
+   values still may expire and require reevaluation.
 3. You want unused data to silently disappear from memory. This is implemented by using SoftReference, which cleans up
    if there's not enough memory. But unfortunately it has nothing to do with the data validity; just SoftReference.
    SoftReference also has a negative impact on performance in the tests, but this is a non-issue: if we are saving
