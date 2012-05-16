@@ -40,28 +40,29 @@ object CachingTest extends Specification {
       n5 must_== 19
     }
 
+    val mutex = new Object // used in controlling the 20k threads
+    def pause  { mutex.synchronized(mutex.wait) }
+    def signal { mutex.synchronized(mutex.notifyAll) }
+    val numTries = 15
+
+    var counter: Char = 'a'
+
+    def startConsuming(cached: sut.CacheUnit[Char])(out: Writer) = new Thread {
+      override def run { // this thread will
+        (1 to numTries) foreach ( // repeat this number of times
+          (i:Int) => { out.write(cached()) // log the current entry of cache
+                       pause } ) // and wait for a signal
+      }
+    }.start // yeah, launch it
+
     "only call function once per period" in {
-      val mutex = new Object // used in controlling the 20k threads
-      def pause  { mutex.synchronized(mutex.wait) }
-      def signal { mutex.synchronized(mutex.notifyAll) }
-      val numTries = 15
-
-      var counter: Char = 'a'
-      val cached = sut.cache(() => { counter = (counter+1).toChar; counter}) validFor 10 HOURS
-
-      def startConsuming(out: Writer) = new Thread {
-        override def run { // this thread will
-          (1 to numTries) foreach ( // repeat this number of times
-            (i:Int) => { out.write(cached()) // log the current entry of cache
-                         pause } ) // and wait for a signal
-        }
-      }.start // yeah, launch it
-
-      val numThreads: Int = 5000
+      val cached = sut.cache(() => { counter = (counter+1).toChar; counter}).validFor(10).HOURS
+      counter = 'a'
+      val numThreads: Int = 50
       val buffers = ((1 to numThreads) map ((i:Int) => new StringWriter)).toList // have so many buffers
       val TEN_HOURS = TimeUnit.HOURS toNanos 10 // an arbitrary timeout value
 
-      buffers foreach startConsuming // right, we start so many threads, one per buffer
+      buffers foreach startConsuming(cached) // right, we start so many threads, one per buffer
 
       Thread sleep 200 // give them all a chance to reach the gate
 
@@ -70,7 +71,27 @@ object CachingTest extends Specification {
         signal // tell them all to consume - only one is supposed to bump the counter
         Thread sleep 2000 // give them a chance to do their job
       }
+
       buffers foreach (_.toString must_== "bcdefghijklmnop") // this is the ideal we are looking for
+    }
+
+    "try the same with soft references" in {
+      val cached = sut.cache(() => { counter = (counter+1).toChar; counter}).withSoftReferences.validFor(5).MINUTES
+      counter = 'a'
+      val numThreads: Int = 500
+      val buffers = ((1 to numThreads) map ((i:Int) => new StringWriter)).toList
+      val FIVE_MINUTES = TimeUnit.MINUTES toNanos 7
+
+      buffers foreach startConsuming(cached)
+
+      Thread sleep 200
+
+      for (i <- 1 to numTries) {
+        myTime = myTime + FIVE_MINUTES + 1
+        signal
+        Thread sleep 1000
+      }
+      buffers foreach (_.toString must_== "bcdefghijklmnop")
     }
   }
 }

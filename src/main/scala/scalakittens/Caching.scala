@@ -2,8 +2,8 @@ package scalakittens
 
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.TimeUnit
-import scalakittens.Caching.CacheUnit
-import ref.SoftReference
+import scalakittens.Caching.{CacheUnit, SoftFactory}
+import ref.{WeakReference, Reference, PhantomReference, SoftReference}
 
 /**
  * This trait/object's purpose is to be used for caching:
@@ -41,30 +41,36 @@ trait Caching {
   // indirection that is good for applying cake pattern: see the object below and the test where time is mocked
   protected def now: Long // expecting nanos
 
-  class CacheUnit[T](fun:() => T, timeout_nano: Long) {
+  class Container[T](fun:() => T, validUntil_nano: Long) {
+    private lazy val value: T = fun()
+    def stillValid = now < validUntil_nano
+    def get: Option[T] = if (stillValid) Some(value) else None
+  }
 
-    private class Container(validUntil_nano: Long) {
-      private lazy val value: T = fun()
-      def stillValid = now < validUntil_nano
-      def get: Option[T] = if (stillValid) Some(value) else None
-    }
+  trait RefFactory { def apply[X <: AnyRef] (x: X) : Reference[X] }
+  
+  class CacheUnit[T](fun:() => T, timeout_nano: Long, factory: RefFactory) {
 
-    private def newContainer = new SoftReference[Container](new Container(now + timeout_nano))
- 
-    private val ref = new AtomicReference[SoftReference[Container]](newContainer)
+    private def newContainer = factory(new Container[T](fun, now + timeout_nano))
 
-    private def getValue = ref.get/*weakref*/.get/*container*/.flatMap(_.get)
-    
+    private val atom = new AtomicReference[Reference[Container[T]]](newContainer)
+
+    private def ptr: Reference[Container[T]] = atom.get
+
+    private def getContainerOpt: Option[Container[T]] = ptr.get /*containerOpt*/
+
+    private def getValue: Option[T] = getContainerOpt.flatMap((c: Container[T]) => c.get)
+
     def apply(): T = {
       (Stream.continually {
-        val latestRef = ref.get
-        val latestValue = latestRef.get.flatMap(_.get)
-        latestValue.isDefined || ref.compareAndSet(latestRef, newContainer) // avoiding multiple resettings
+        val latestRef = ptr
+        val latestValue = latestRef.get.flatMap((c: Container[T]) => c.get)
+        latestValue.isDefined || atom.compareAndSet(latestRef, newContainer) // avoiding multiple resettings
         getValue
       } dropWhile((optVal: Option[T]) => optVal.isEmpty)).head.get
     }
 
-    def withTimeout(timeout: Long, unit: TimeUnit): CacheUnit[T] = new CacheUnit[T](fun, unit toNanos timeout)
+    def withTimeout(timeout: Long, unit: TimeUnit): CacheUnit[T] = new CacheUnit[T](fun, unit toNanos timeout, factory)
 
     /**
      * Specify the time it is valid for, with units
@@ -81,13 +87,43 @@ trait Caching {
       def DAYS         = apply(TimeUnit.DAYS)
       private def apply(unit: TimeUnit) = withTimeout(timeout, unit)
     }
+
+    def withHardReferences = new CacheUnit[T](fun, timeout_nano, HardFactory)
+
+    def withSoftReferences = new CacheUnit[T](fun, timeout_nano, SoftFactory)
+
+    def withWeakReferences = new CacheUnit[T](fun, timeout_nano, WeakFactory)
+
+    def withPhantomReferences = new CacheUnit[T](fun, timeout_nano, PhantomFactory)
   }
 
-  def cache[T](fun: () => T) = new CacheUnit[T](fun, Long.MaxValue) // by default it's valid forever
+  object SoftFactory extends RefFactory {
+    def apply[X <: AnyRef](x: X) = new SoftReference[X](x)
+  }
+
+  object WeakFactory extends RefFactory {
+    def apply[X <: AnyRef](x: X) = new WeakReference[X](x)
+  }
+
+  object PhantomFactory extends RefFactory {
+    def apply[X <: AnyRef](x: X) = new PhantomReference[X](x, null)
+  }
+
+  object HardFactory extends RefFactory {
+    def apply[X <: AnyRef](x: X) = new Reference[X] {
+      def apply() = x
+      def get() = Some(x)
+      def isEnqueued() = false
+      def enqueue() = false
+      def clear() {}
+    }
+  }
+  
+  def cache[T](fun: () => T) = new CacheUnit[T](fun, Long.MaxValue, HardFactory) // by default it's valid forever
 }
 
 object Caching extends Caching {
   protected def now = System.nanoTime
-  
+
   implicit def currentValue[T](cu: CacheUnit[T]): T = cu.apply()
 }

@@ -18,16 +18,18 @@ Why would we need to cache just one value? There are a couple cases.
    For example, a map of phone country codes; there's just one such list, but it changes from time to time.
 2. You don't care about memory, and you'd be willing to store your database table in a `Map`, but individual
    values still may expire and require reevaluation.
-3. You want unused data to silently disappear from memory. This is implemented by using SoftReference, which cleans up
-   if there's not enough memory. But unfortunately it has nothing to do with the data validity; just SoftReference.
-   SoftReference also has a negative impact on performance in the tests, but this is a non-issue: if we are saving
+3. You want unused data to silently disappear from memory. You can do it by applying a reference selector, like
+   `withSoftReferences`, `withWeakReferences`, `withPhantomReferences`, so that the value can be discarded according
+   to the appropriate reference policies. E.g. if you use `withSoftReferences`, the value is discarded
+   if there's not enough memory. This discarding policy has nothing to do with the data validity, though.
+   Using this kind of discardable references has some negative impact on performance in the tests, but this is a non-issue: if we are saving
    on seconds, losing on milliseconds should not bother us.
 
 ###How to use###
 
 Here's an example
 
-    val hourNow = cache(() => new java.util.Date().getHours) validFor 60 MINUTES
+    val hourNow = cache(() => new java.util.Date().getHours).withSoftReferences.validFor(60).MINUTES
 
 We provide a function that produces a value; this function's return type is the type of the value cached
 We specify that this value gets invalidated after 60 minutes
@@ -43,6 +45,8 @@ followed by one of `NANOSECONDS`, `MILLISECONDS`... `DAY`.
 The resulting instance has just one public method, `apply`, which can be called by parentheses.
 
 ###How It Works#
+
+Let's say we do it `withSoftReferences`.
 
 When we specify evaluator function and validity period, these are stored in an instance of `Container` that is pointed to
 by `SoftReference` stored in `AtomicReference` within `CacheInstance`. `CacheInstance` is what is returned
