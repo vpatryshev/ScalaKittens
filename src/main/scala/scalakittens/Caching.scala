@@ -4,6 +4,7 @@ import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.TimeUnit
 import scalakittens.Caching.{CacheUnit, SoftFactory}
 import ref.{WeakReference, Reference, PhantomReference, SoftReference}
+import annotation.tailrec
 
 /**
  * This trait/object's purpose is to be used for caching:
@@ -49,28 +50,24 @@ trait Caching {
 
   trait RefFactory { def apply[X <: AnyRef] (x: X) : Reference[X] }
   
-  class CacheUnit[T](fun:() => T, timeout_nano: Long, factory: RefFactory) {
+  class CacheUnit[T](fun:() => T, timeout_nano: Long, newRef: RefFactory) {
 
-    private def newContainer = factory(new Container[T](fun, now + timeout_nano))
+    private def newHolder = newRef(new Container[T](fun, now + timeout_nano))
 
-    private val atom = new AtomicReference[Reference[Container[T]]](newContainer)
+    private val atom = new AtomicReference[Reference[Container[T]]](newHolder)
 
-    private def ptr: Reference[Container[T]] = atom.get
-
-    private def getContainerOpt: Option[Container[T]] = ptr.get /*containerOpt*/
-
-    private def getValue: Option[T] = getContainerOpt.flatMap((c: Container[T]) => c.get)
-
-    def apply(): T = {
-      (Stream.continually {
-        val latestRef = ptr
-        val latestValue = latestRef.get.flatMap((c: Container[T]) => c.get)
-        latestValue.isDefined || atom.compareAndSet(latestRef, newContainer) // avoiding multiple resettings
-        getValue
-      } dropWhile((optVal: Option[T]) => optVal.isEmpty)).head.get
+    @tailrec private def getValue: T = {
+      val latest = atom.get
+      latest.get.flatMap(_.get) match {
+        case Some(t) => t
+        case None    => atom.compareAndSet(latest, newHolder)
+                        getValue
+      }
     }
 
-    def withTimeout(timeout: Long, unit: TimeUnit): CacheUnit[T] = new CacheUnit[T](fun, unit toNanos timeout, factory)
+    def apply(): T = getValue
+
+    def withTimeout(timeout: Long, unit: TimeUnit): CacheUnit[T] = new CacheUnit[T](fun, unit toNanos timeout, newRef)
 
     /**
      * Specify the time it is valid for, with units
@@ -112,7 +109,7 @@ trait Caching {
   object HardFactory extends RefFactory {
     def apply[X <: AnyRef](x: X) = new Reference[X] {
       def apply() = x
-      def get() = Some(x)
+      def get = Some(x)
       def isEnqueued() = false
       def enqueue() = false
       def clear() {}

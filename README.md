@@ -68,4 +68,6 @@ So that's how it works. If you look at the test, you'll see a couple of examples
 for about 20 seconds, controlling their activity, making sure that all 5000 burst at once each cycle, competing for the access to
 one single cache value; the test check that they do not recalculate the value until the time is up.
 
+Credits: [lj user="sassa_nf"](sassa_nf.livejournal.com) [discussion](http://ivan-gandhi.livejournal.com/1974346.html)
+
 [slides]: (https://docs.google.com/present/view?id=dc7rg5cv_76d7dpx5c5&revision=_latest&start=0&theme=blank&cwj=true&pli=1)
