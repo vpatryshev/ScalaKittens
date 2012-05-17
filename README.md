@@ -19,7 +19,7 @@ Why would we need to cache just one value? There are a couple cases.
 2. You don't care about memory, and you'd be willing to store your database table in a `Map`, but individual
    values still may expire and require reevaluation.
 3. You want unused data to silently disappear from memory. You can do it by applying a reference selector, like
-   `withSoftReferences`, `withWeakReferences`, `withPhantomReferences`, so that the value can be discarded according
+   `withSoftReferences`, `withWeakReferences`, `withHardReferences`, so that the value can be discarded according
    to the appropriate reference policies. E.g. if you use `withSoftReferences`, the value is discarded
    if there's not enough memory. This discarding policy has nothing to do with the data validity, though.
    Using this kind of discardable references has some negative impact on performance in the tests, but this is a non-issue: if we are saving

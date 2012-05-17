@@ -43,7 +43,7 @@ object CachingTest extends Specification {
     val mutex = new Object // used in controlling the 20k threads
     def pause  { mutex.synchronized(mutex.wait) }
     def signal { mutex.synchronized(mutex.notifyAll) }
-    val numTries = 15
+    val numTries = 9
 
     var counter: Char = 'a'
 
@@ -58,7 +58,7 @@ object CachingTest extends Specification {
     "only call function once per period" in {
       val cached = sut.cache(() => { counter = (counter+1).toChar; counter}).validFor(10).HOURS
       counter = 'a'
-      val numThreads: Int = 50
+      val numThreads: Int = 20я 000
       val buffers = ((1 to numThreads) map ((i:Int) => new StringWriter)).toList // have so many buffers
       val TEN_HOURS = TimeUnit.HOURS toNanos 10 // an arbitrary timeout value
 
@@ -69,16 +69,16 @@ object CachingTest extends Specification {
       for (i <- 1 to numTries) { // now control our threads, they are waiting
         myTime = myTime + TEN_HOURS + 1 // time's up for a value
         signal // tell them all to consume - only one is supposed to bump the counter
-        Thread sleep 2000 // give them a chance to do their job
+        Thread sleep 10000 // give them a chance to do their job
       }
 
-      buffers foreach (_.toString must_== "bcdefghijklmnop") // this is the ideal we are looking for
+      buffers foreach (_.toString must_== "bcdefghij") // this is the ideal we are looking for
     }
 
     "try the same with soft references" in {
       val cached = sut.cache(() => { counter = (counter+1).toChar; counter}).withSoftReferences.validFor(5).MINUTES
       counter = 'a'
-      val numThreads: Int = 500
+      val numThreads: Int = 5000
       val buffers = ((1 to numThreads) map ((i:Int) => new StringWriter)).toList
       val FIVE_MINUTES = TimeUnit.MINUTES toNanos 7
 
@@ -91,7 +91,7 @@ object CachingTest extends Specification {
         signal
         Thread sleep 1000
       }
-      buffers foreach (_.toString must_== "bcdefghijklmnop")
+      buffers foreach (_.toString must_== "bcdefghij")
     }
   }
 }

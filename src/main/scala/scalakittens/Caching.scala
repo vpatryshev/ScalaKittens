@@ -86,36 +86,22 @@ trait Caching {
     }
 
     def withHardReferences = new CacheUnit[T](fun, timeout_nano, HardFactory)
-
     def withSoftReferences = new CacheUnit[T](fun, timeout_nano, SoftFactory)
-
     def withWeakReferences = new CacheUnit[T](fun, timeout_nano, WeakFactory)
-
-    def withPhantomReferences = new CacheUnit[T](fun, timeout_nano, PhantomFactory)
   }
 
-  object SoftFactory extends RefFactory {
-    def apply[X <: AnyRef](x: X) = new SoftReference[X](x)
+  private object HardFactory extends RefFactory { def apply[X <: AnyRef](x: X) = new HardReference[X](x) }
+  private object SoftFactory extends RefFactory { def apply[X <: AnyRef](x: X) = new SoftReference[X](x) }
+  private object WeakFactory extends RefFactory { def apply[X <: AnyRef](x: X) = new WeakReference[X](x) }
+
+  private class HardReference[+X <: AnyRef](x:X) extends Reference[X] {
+    def apply() = x
+    def get = Some(x)
+    def isEnqueued() = false
+    def enqueue() = false
+    def clear() {}
   }
 
-  object WeakFactory extends RefFactory {
-    def apply[X <: AnyRef](x: X) = new WeakReference[X](x)
-  }
-
-  object PhantomFactory extends RefFactory {
-    def apply[X <: AnyRef](x: X) = new PhantomReference[X](x, null)
-  }
-
-  object HardFactory extends RefFactory {
-    def apply[X <: AnyRef](x: X) = new Reference[X] {
-      def apply() = x
-      def get = Some(x)
-      def isEnqueued() = false
-      def enqueue() = false
-      def clear() {}
-    }
-  }
-  
   def cache[T](fun: () => T) = new CacheUnit[T](fun, Long.MaxValue, HardFactory) // by default it's valid forever
 }
 
