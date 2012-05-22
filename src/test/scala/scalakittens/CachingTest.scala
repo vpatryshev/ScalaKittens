@@ -58,7 +58,7 @@ object CachingTest extends Specification {
     "only call function once per period" in {
       val cached = sut.cache(() => { counter = (counter+1).toChar; counter}).validFor(10).HOURS
       counter = 'a'
-      val numThreads: Int = 20я 000
+      val numThreads: Int = 20000
       val buffers = ((1 to numThreads) map ((i:Int) => new StringWriter)).toList // have so many buffers
       val TEN_HOURS = TimeUnit.HOURS toNanos 10 // an arbitrary timeout value
 

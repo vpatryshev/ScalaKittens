@@ -2,8 +2,7 @@ package scalakittens
 
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.TimeUnit
-import scalakittens.Caching.{CacheUnit, SoftFactory}
-import ref.{WeakReference, Reference, PhantomReference, SoftReference}
+import ref.{WeakReference, Reference, SoftReference}
 import annotation.tailrec
 
 /**
