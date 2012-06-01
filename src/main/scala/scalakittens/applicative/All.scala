@@ -103,12 +103,10 @@ object All {
   //  (K(f))(p) /: ((x: E=>F, y: E => B) => ski(x) S y)
   //}
 
-
-
-  implicit object TraversableList extends Traversable[List] {
+  implicit object TraversableList extends scalakittens.applicative.Traversable[List] {
     def cons[A](a: A)(as: List[A]): List[A] = a :: as
 
-    override def traverse0[A, B, F[+_]](app: Applicative[F])(f: A => F[B])(al: List[A]): F[List[B]] = {
+    def traverse0[A, B, F[+_]](app: Applicative[F])(f: A => F[B])(al: List[A]): F[List[B]] = {
       al match {
         case Nil => app.pure(List[B]())
         case head :: tail => app.applicable(app.lift(cons[B] _) <@> f(head)) <*> traverse0[A, B, F](app)(f)(tail)
@@ -120,9 +118,9 @@ object All {
   case class Leaf[T](t: T) extends Tree[T]
   case class Node[T](left: Tree[T], right: Tree[T]) extends Tree[T]
 
-  implicit object TraversableTree extends Traversable[Tree] {
+  implicit object TraversableTree extends scalakittens.applicative.Traversable[Tree] {
 
-    override def traverse0[A, B, F[+_]](app: Applicative[F])(f: A => F[B])(at: Tree[A]): F[Tree[B]] = at match {
+    def traverse0[A, B, F[+_]](app: Applicative[F])(f: A => F[B])(at: Tree[A]): F[Tree[B]] = at match {
 
       case Leaf(a) => app.lift(Leaf[B] _) <@> f(a)
       case Node(left, right) => {
@@ -132,7 +130,7 @@ object All {
 
         val traverse: (Tree[A]) => F[Tree[B]] = traverse0(app)(f)
 
-        app.pure(nodeBuilder) <*> traverse(left) <*> traverse(left)
+        app.pure(nodeBuilder) <*> traverse(left) <*> traverse(right)
       }
     }
   }

@@ -4,7 +4,8 @@ package applicative
 import org.specs._
 import org.specs.runner.JUnit4
 import scalakittens.applicative.All._
-import scala.collection.Seq
+import scala.collection.immutable.List
+import scala.collection.{Set, Seq}
 
 class AppTest extends JUnit4(AppTest)
 
@@ -42,10 +43,6 @@ object AppTest extends Specification {
 
     "be able to transpose a matrix" in {
       import All.AppZip._
-
-      def prepend(prefix: String) = (s: String) => prefix + " " + s
-      println(List(prepend("a"), prepend("the")) <*> List("quick brown fox jumps over ", "lazy dog "))
-      //  List("a quick brown fox jumps over ", "the lazy dog. ")
 
       trait matrices[A] {
         type matrix = Seq[Seq[A]]
@@ -121,6 +118,14 @@ object AppTest extends Specification {
       }
       val evaluated = AppEnv.ev(Add(Var("one"), Add(Var("three"), Val(11))))(Map("one" -> 1, "two" -> 2, "three" -> 3))
       evaluated must_== 15
+    }
+  }
+
+  "Traversable" should {
+    "do something, no?" in {
+          import TraversableList._
+          import AppSet._
+      val thedist = dist(AppSet)
     }
   }
 }
