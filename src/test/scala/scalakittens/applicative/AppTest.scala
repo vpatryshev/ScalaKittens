@@ -122,10 +122,23 @@ object AppTest extends Specification {
   }
 
   "Traversable" should {
-    "do something, no?" in {
-          import TraversableList._
-          import AppSet._
-      val thedist = dist(AppSet)
+    "let applicative set traverse over list" in {
+      import TraversableList._
+
+      val distributor = dist[String, Set](AppSet)
+      val setOfLists = distributor(List(Set("a", "b"), Set("x", "y")))
+      setOfLists must_== Set(List("a", "x"), List("a", "y"), List("b", "x"), List("b", "y"))
+    }
+
+    "let applicative list traverse over tree" in {
+      import TraversableTree._
+
+      val distributor = dist[String, List](AppList)
+      val treeOfLists:Tree[List[String]] = Node(Leaf(List("a", "b")), Node(Leaf(List("x", "y", "z")), Leaf(List("1"))))
+      val listOfTrees = distributor(treeOfLists)
+      println(listOfTrees)
+      def tree(s: String) = Node(Leaf("" + s(0)), Node(Leaf("" + s(1)), Leaf("" + s(2))))
+      listOfTrees must_== List(tree("ax1"), tree("ay1"), tree("az1"), tree("bx1"), tree("by1"), tree("bz1"))
     }
   }
 }

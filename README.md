@@ -71,3 +71,7 @@ one single cache value; the test check that they do not recalculate the value un
 Credits: [lj user="sassa_nf"](sassa_nf.livejournal.com) [discussion](http://ivan-gandhi.livejournal.com/1974346.html)
 
 [slides]: (https://docs.google.com/present/view?id=dc7rg5cv_76d7dpx5c5&revision=_latest&start=0&theme=blank&cwj=true&pli=1)
+
+##FileSpec##
+
+(TODO: write it)
