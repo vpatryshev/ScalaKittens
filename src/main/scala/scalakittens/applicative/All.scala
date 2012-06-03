@@ -36,8 +36,8 @@ object All {
   object AppList extends ListFunctor with Applicative[List] {
     override def pure[A](a: A) = List(a)
 
-    override implicit def applicable[A, B](lf: List[A => B]): Applicable[A, B, List] = {
-      new Applicable[A, B, List] {
+    override implicit def applicable[A, B](lf: List[A => B]): Applicable[A, B] = {
+      new Applicable[A, B] {
         def <*>(as: List[A]) = (for (f <- lf; a <- as) yield f(a)).toList
       }
     }
@@ -48,10 +48,8 @@ object All {
 
     override implicit def applicable[A, B](ff: Set[A => B]) = {
       val sf: Set[A => B] = ff
-      new Applicable[A, B, Set] {
-        def <*>(fa: Set[A]) = {
-          (for (f <- sf; a <- fa) yield f(a)).toSet
-        }
+      new Applicable[A, B] {
+        def <*>(fa: Set[A]) = (for (f <- sf; a <- fa) yield f(a)).toSet
       }
     }
   }
@@ -62,7 +60,7 @@ object All {
     override def pure[A](a: A): Seq[A] = Stream.continually(a)
 
     implicit def applicable[A, B](ff: Seq[A => B]) = {
-      new Applicable[A, B, Seq] {
+      new Applicable[A, B] {
         def <*>(az: Seq[A]) = ff zip az map ({ case (f: (A => B), a: A) => f(a) })
       }
     }
@@ -91,7 +89,7 @@ object All {
 
   trait AppEnv extends Applicative[Env] {
 
-    implicit def applicable[A, B](fe: Env[A => B]) = new Applicable[A, B, Env] {
+    implicit def applicable[A, B](fe: Env[A => B]) = new Applicable[A, B] {
       def <*>(fa: Env[A]) = ski(fe) S fa
     }
 
@@ -106,10 +104,10 @@ object All {
   implicit object TraversableList extends scalakittens.applicative.Traversable[List] {
     def cons[A](a: A)(as: List[A]): List[A] = a :: as
 
-    def traverse0[A, B, F[_]](app: Applicative[F])(f: A => F[B])(al: List[A]): F[List[B]] = {
+    def traverse[A, B, F[_]](app: Applicative[F])(f: A => F[B])(al: List[A]): F[List[B]] = {
       al match {
         case Nil => app.pure(List[B]())
-        case head :: tail => app.applicable(app.lift(cons[B] _) <@> f(head)) <*> traverse0[A, B, F](app)(f)(tail)
+        case head :: tail => app.applicable(app.lift(cons[B] _) <@> f(head)) <*> traverse[A, B, F](app)(f)(tail)
       }
     }
   }
@@ -122,16 +120,42 @@ object All {
 
   implicit object TraversableTree extends scalakittens.applicative.Traversable[Tree] {
 
-    def traverse0[A, B, F[_]](app: Applicative[F])(f: A => F[B])(at: Tree[A]): F[Tree[B]] = at match {
+    def traverse[A, B, F[_]](app: Applicative[F])(f: A => F[B])(at: Tree[A]): F[Tree[B]] = at match {
 
       case Leaf(a) => app.lift(leaf[B]) <@> f(a)
       case Node(left, right) => {
         implicit def applicable[A, B](tf: F[A => B]) = app.applicable(tf)
 
-        val traverse: (Tree[A]) => F[Tree[B]] = traverse0(app)(f)
+        val traverse1: (Tree[A]) => F[Tree[B]] = traverse(app)(f)
 
-        app.pure(node[B] _) <*> traverse(left) <*> traverse(right)
+        app.pure(node[B] _) <*> traverse1(left) <*> traverse1(right)
       }
     }
   }
+
+  trait Monoid[O] {
+    val _0: O
+    def add(x: O, y: O): O
+
+    case class Acc[A](value: O) {
+      def <+>(another: O): O = add(value, another)
+    }
+
+    implicit def acc[A](x: O): Acc[A]
+
+    object App extends ConstantFunctor[Acc] with Applicative[Acc] {
+
+      override def pure[A](a: A) = acc[A](_0)
+
+      override implicit def applicable[A, B](ff: Acc[A => B]) = new Applicable[A, B] {
+        def <*>(fa: Acc[A]) = Acc(ff <+> ff.value)
+      }
+    }
+
+    def accumulate[A,T[_]](traversable: Traversable[T])(eval: A => O)(ta: T[A]): O = {
+      val evalToAcc: (A) => Acc[O] = eval andThen acc
+      traversable.traverse(App)(evalToAcc)(ta).value
+    }
+  }
+
 }

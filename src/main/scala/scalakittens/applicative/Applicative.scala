@@ -9,9 +9,9 @@ trait Applicative[T[_]] extends Functor[T] {
 
 // below are additional enrichments, not exactly pertaining to Applicative
 
-  trait Applicable[A, B, T[_]] { def <*>(ta: T[A]): T[B] }
+  trait Applicable[A, B] { def <*>(ta: T[A]): T[B] }
 
-  implicit def applicable[A, B](tf: T[A => B]): Applicable[A, B, T]
+  implicit def applicable[A, B](tf: T[A => B]): Applicable[A, B]
 
   def ap[A, B](fs: T[A => B]) = (ta: T[A]) => fs <*> ta
 
