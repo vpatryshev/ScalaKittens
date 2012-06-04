@@ -141,4 +141,19 @@ object AppTest extends Specification {
       listOfTrees must_== List(tree("ax1"), tree("ay1"), tree("az1"), tree("bx1"), tree("by1"), tree("bz1"))
     }
   }
+  
+  "Monoid" should {
+    "walk through the tree collecting the content" in {
+      object StringMonoid extends Monoid[String] {
+        val _0 = ""
+        def add(x: String, y: String) = x + y
+      }
+      import StringMonoid._
+      import TraversableTree._
+      def tree(s: String) = Node(Leaf("" + s(0)), Node(Leaf("" + s(1)), Leaf("" + s(2))))
+      val sut: Tree[String] = tree("abc")
+      val collected: String = traverse(StringMonoid.App)((s: String) => "<<" + s + ">>")(sut).value
+      collected == "<<a>><<b>><<c>>" aka collected mustBe true
+    }
+  }
 }
