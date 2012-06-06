@@ -27,9 +27,9 @@ trait Applicative[T[_]] extends Functor[T] { self =>
 // self.ap transforms T[A=>B] to T[A] => T[B]
 // u.f1(self.ap) will transform U[T[A=>B]] to U[T[A] => T[B]]
 // u.ap will transform the last one to U[T[A]] => U[T[B]]
-    type λ[α] = U[T[α]]
-    implicit def applicable[A, B](utf: U[T[A => B]]): Applicable[A,  B, λ] = {
+    implicit def applicable[A, B](utf: U[T[A => B]]) = {
       val uta2tb: U[(T[A]) => T[B]] = u.f1(self.ap[A, B])(utf)
+      type λ[α] = U[T[α]]
       new Applicable[A, B, λ] {
         def <*>(uta: λ[A]) = u.applicable(uta2tb) <*> uta
       }
