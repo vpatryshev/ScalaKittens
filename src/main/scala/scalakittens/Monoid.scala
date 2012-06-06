@@ -14,7 +14,7 @@ trait Monoid[O] {
 
     override def pure[A](a: A) = acc[A](_0)
 
-    override implicit def applicable[A, B](ff: Acc[A => B]) = new Applicable[A, B] {
+    override implicit def applicable[A, B](ff: Acc[A => B]) = new Applicable[A, B, Acc] {
       def <*>(fa: Acc[A]) = Acc(ff <+> fa.value)
     }
   }

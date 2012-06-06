@@ -36,8 +36,8 @@ object All {
   object AppList extends ListFunctor with Applicative[List] {
     override def pure[A](a: A) = List(a)
 
-    override implicit def applicable[A, B](lf: List[A => B]): Applicable[A, B] = {
-      new Applicable[A, B] {
+    override implicit def applicable[A, B](lf: List[A => B]): Applicable[A, B, List] = {
+      new Applicable[A, B, List] {
         def <*>(as: List[A]) = (for (f <- lf; a <- as) yield f(a)).toList
       }
     }
@@ -48,7 +48,7 @@ object All {
 
     override implicit def applicable[A, B](ff: Set[A => B]) = {
       val sf: Set[A => B] = ff
-      new Applicable[A, B] {
+      new Applicable[A, B, Set] {
         def <*>(fa: Set[A]) = (for (f <- sf; a <- fa) yield f(a)).toSet
       }
     }
@@ -60,7 +60,7 @@ object All {
     override def pure[A](a: A): Seq[A] = Stream.continually(a)
 
     implicit def applicable[A, B](ff: Seq[A => B]) = {
-      new Applicable[A, B] {
+      new Applicable[A, B, Seq] {
         def <*>(az: Seq[A]) = ff zip az map ({ case (f: (A => B), a: A) => f(a) })
       }
     }
@@ -89,7 +89,7 @@ object All {
 
   trait AppEnv extends Applicative[Env] {
 
-    implicit def applicable[A, B](fe: Env[A => B]) = new Applicable[A, B] {
+    implicit def applicable[A, B](fe: Env[A => B]) = new Applicable[A, B, Env] {
       def <*>(fa: Env[A]) = ski(fe) S fa
     }
 
@@ -147,7 +147,7 @@ object All {
 
       override def pure[A](a: A) = acc[A](_0)
 
-      override implicit def applicable[A, B](ff: Acc[A => B]) = new Applicable[A, B] {
+      override implicit def applicable[A, B](ff: Acc[A => B]) = new Applicable[A, B, Acc] {
         def <*>(fa: Acc[A]) = Acc(ff <+> ff.value)
       }
     }

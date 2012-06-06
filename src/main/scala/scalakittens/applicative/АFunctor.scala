@@ -1,7 +1,7 @@
 package scalakittens
 package applicative
 
-trait Functor[T[_]] {
+trait Functor[T[_]] { self => 
   // mapping on objects of a category
   type f0[_] = T[_]
 
@@ -10,4 +10,9 @@ trait Functor[T[_]] {
 
   // the following thing we need for some obscure scala reason
   implicit def as[A](t: f0[A]) = t.asInstanceOf[T[A]]
+
+  def andThen[U[_]](u: Functor[U]) = new Functor[({type λ[α] = U[T[α]]})#λ] {
+    def f1[A, B](f: A => B): (U[T[A]]) => U[T[B]] = u.f1(self.f1(f))
+  }
 }
+
