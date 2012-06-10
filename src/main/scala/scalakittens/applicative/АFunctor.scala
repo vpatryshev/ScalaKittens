@@ -16,3 +16,6 @@ trait Functor[T[_]] { self =>
   }
 }
 
+object Base { // todo: figure out how it might work
+  type Comp[F[_], G[_]] = ({type λ[α] = G[F[α]]})#λ[_]
+}

@@ -133,29 +133,46 @@ object All {
     }
   }
 
-  trait Monoid[O] {
-    val _0: O
-    def add(x: O, y: O): O
-
-    case class Acc[A](value: O) {
-      def <+>(another: O): O = add(value, another)
-    }
-
-    implicit def acc[A](x: O): Acc[A]
-
-    object App extends ConstantFunctor[Acc] with Applicative[Acc] {
-
-      override def pure[A](a: A) = acc[A](_0)
-
-      override implicit def applicable[A, B](ff: Acc[A => B]) = new Applicable[A, B, Acc] {
-        def <*>(fa: Acc[A]) = Acc(ff <+> ff.value)
-      }
-    }
-
-    def accumulate[A,T[_]](traversable: Traversable[T])(eval: A => O)(ta: T[A]): O = {
-      val evalToAcc: (A) => Acc[O] = eval andThen acc
-      traversable.traverse(App)(evalToAcc)(ta).value
-    }
+  object StringMonoid extends Monoid[String] {
+    val _0 = ""
+    def add(x: String, y: String) = x + y
   }
 
+  trait ListMonoid[T] extends Monoid[List[T]] {
+    val _0 = Nil
+    def add(x: List[T], y: List[T]) = x ++ y
+  }
+
+//  val exceptionLog = ListMonoid[Exception]
+
+  trait RightEitherFunctor[L] extends Functor[({type Maybe[A] = Either[L, A]})#Maybe] {
+    def f1[A, B](f: A => B): Either[L, A] => Either[L, B] = _.right.map(f)
+  }
+
+  trait AccumulatingErrors[Bad] {
+    val errorLog: Semigroup[Bad]
+    implicit def acc(err: Bad) = errorLog.acc(err)
+    type Maybe[T] = Either[Bad, T]
+    
+    object App extends Applicative[({type Maybe[A] = Either[Bad, A]})#Maybe] with RightEitherFunctor[Bad] {
+
+      def pure[A](a: A):Either[Bad, A] = Right[Bad, A](a)
+
+      implicit def applicable[A, B](maybeF: Either[Bad, A => B]) = {
+        new Applicable[A, B, Maybe] {
+          
+          def <*>(maybeA: Maybe[A]) = maybeF match {
+            case Left(badF) => maybeA match {
+                case Left(errorA) => Left(badF <+> errorA)
+                case Right(_)     => Left(badF)
+              }
+            case Right(f)   => maybeA match {
+                case Left(badA) => Left(badA)
+                case Right(a)   => Right(f(a))
+              }
+          }
+        }
+      }
+    }
+  }
 }

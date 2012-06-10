@@ -17,12 +17,12 @@ object FileSpec {
   def apply(pattern: String) = new FileSpec(convertP4PatternToRegex(pattern))
 
   def convertP4PatternToRegex(s: String): Regex = {
-    if (!s.matches("^[/*. \\w]+$")) throw new IllegalArgumentException("Error in path pattern '" + s + "'")
+    if (!s.matches("^[/*. \\w]+$")) throw new IllegalArgumentException("Oops in path pattern '" + s + "'")
     val s1 = s
       .replaceAll("\\*", "[^/]+")
       .replaceAll("\\.\\.\\.", "|")
 
-    if (s1.matches(".[^ \\w]")) throw new IllegalArgumentException("Error in path pattern '" + s + "'")
+    if (s1.matches(".[^ \\w]")) throw new IllegalArgumentException("Oops in path pattern '" + s + "'")
     ("^" + s1.replaceAll("\\.", "\\\\.")
       .replaceAll("\\|", ".+")
       + "$")

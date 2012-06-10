@@ -6,6 +6,7 @@ import org.specs.runner.JUnit4
 import scalakittens.applicative.All._
 import scala.collection.immutable.List
 import scala.collection.{Set, Seq}
+import applicative.Semigroup
 
 class AppTest extends JUnit4(AppTest)
 
@@ -154,6 +155,37 @@ object AppTest extends Specification {
       val sut: Tree[String] = tree("abc")
       val collected: String = traverse(StringMonoid.App)((s: String) => "<<" + s + ">>")(sut).value
       collected == "<<a>><<b>><<c>>" aka collected mustBe true
+    }
+  }
+
+  trait ListMonoid[T] extends Monoid[List[T]] {
+    val _0 = Nil
+    def add(x: List[T], y: List[T]) = x ++ y
+  }
+
+  object ExceptionLog extends ListMonoid[Exception]
+
+  "AccumulativeErrors" should {
+    "work properly" in {
+      import All.AccumulatingErrors
+      trait Oops
+      case class Omg(what: String) extends Oops
+      case class OiVei(first: Oops, second: Oops) extends Oops
+
+      object Accumulator extends AccumulatingErrors[Oops] {
+        val errorLog =  new Semigroup[Oops] { def add(x: Oops, y: Oops) = OiVei(x, y) }
+      }
+      
+      implicit def applicable[A, B](maybeF: Either[Oops, A => B]) = Accumulator.App.applicable(maybeF)
+
+      val goodFun    = Right((s: String) => "<<" + s + ">>")
+      val badFun     = Left(Omg("snafu"))
+      val goodString = Right("I am good")
+      val badString  = Left(Omg("I'm bad"))
+      goodFun <*> goodString must_== Right("<<I am good>>")
+      goodFun <*> badString  must_== Left(Omg("I'm bad"))
+      badFun  <*> goodString must_== Left(Omg("snafu"))
+      badFun  <*> badString  must_== Left(OiVei(Omg("snafu"), Omg("I'm bad")))
     }
   }
 }

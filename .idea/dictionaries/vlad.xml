@@ -5,6 +5,7 @@
       <w>discardable</w>
       <w>enrichments</w>
       <w>monoid</w>
+      <w>semigroup</w>
     </words>
   </dictionary>
 </component>
