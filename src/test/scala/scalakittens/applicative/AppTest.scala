@@ -6,7 +6,6 @@ import org.specs.runner.JUnit4
 import scalakittens.applicative.All._
 import scala.collection.immutable.List
 import scala.collection.{Set, Seq}
-import applicative.Semigroup
 
 class AppTest extends JUnit4(AppTest)
 
@@ -175,7 +174,7 @@ object AppTest extends Specification {
       object Accumulator extends AccumulatingErrors[Oops] {
         val errorLog =  new Semigroup[Oops] { def add(x: Oops, y: Oops) = OiVei(x, y) }
       }
-      
+
       implicit def applicable[A, B](maybeF: Either[Oops, A => B]) = Accumulator.App.applicable(maybeF)
 
       val goodFun    = Right((s: String) => "<<" + s + ">>")

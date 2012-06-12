@@ -161,15 +161,11 @@ object All {
       implicit def applicable[A, B](maybeF: Either[Bad, A => B]) = {
         new Applicable[A, B, Maybe] {
           
-          def <*>(maybeA: Maybe[A]) = maybeF match {
-            case Left(badF) => maybeA match {
-                case Left(errorA) => Left(badF <+> errorA)
-                case Right(_)     => Left(badF)
-              }
-            case Right(f)   => maybeA match {
-                case Left(badA) => Left(badA)
-                case Right(a)   => Right(f(a))
-              }
+          def <*>(maybeA: Maybe[A]) = (maybeF, maybeA) match {
+            case (Left(badF), Left(badA)) => Left(badF <+> badA)
+            case (Left(badF), _)          => maybeF
+            case (Right(f),  Left(badA))  => maybeA
+            case (Right(f), Right(a))     => Right(f(a))
           }
         }
       }

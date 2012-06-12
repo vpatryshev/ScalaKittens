@@ -1,7 +1,7 @@
 package scalakittens
 
 import io.{Source => ioS}
-import java.io.{PrintWriter, File}
+import java.io._
 
 /**
  * File system ops
@@ -15,7 +15,7 @@ trait FS {
   implicit def textFile(path: String):     TextFile     = new TextFile(file(path))
   implicit def folder(file: File):         Folder       = new Folder(file)
   implicit def folder(path: String):       Folder       = new Folder(file(path))
-  implicit def file(path: String)                        = new File(path)
+  implicit def file(path: String)                       = new File(path)
   def tempFile(prefix: String)                          = new TextFile(File.createTempFile(prefix, "tmp"))
 
   def probablyFile(path: String): Either[Any, ExistingFile] = try { Right(existingFile(file(path)))} catch { case x => Left(x) }
@@ -59,7 +59,8 @@ trait FS {
     }
 
     def text_+=(s: String) {
-      text_= (try { text + s } catch { case e => s })
+      val out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file, true), "UTF-8"))
+      try{ out.print(s) } finally{ out.close }
     }
 
     def textOr(default: String) = try { text } catch { case _ => default }
