@@ -23,26 +23,27 @@ object AppTest extends Specification {
       def pp(i: Int) = (j: Int) => i + j * j
 
       val combinations:List[Int] = ap(List(pp(1), pp(2)))(List(10, 20, 30))
-      combinations == List(101, 401, 901, 102, 402, 902) mustBe true
+      combinations must_== List(101, 401, 901, 102, 402, 902)
     }
+  }
 
+  "ZipList" should {
+    import All.AppZip._
     "be able to zip two lists" in {
-      import All.AppZip._
+      val appender = (s1: String) => (s2: String) => s1 + " " + s2
 
       val zp2: Seq[String => String => String] = pure(appender)
-      (zp2 <*> List("1", "2") <*> List("a", "b")).toList == List("1 a", "2 b") mustBe true
+      (zp2 <*> List("1", "2") <*> List("a", "b")).toList must_== List("1 a", "2 b")
     }
 
     "be able to zip functions with values" in {
-      import All.AppZip._
 
       def prepend(prefix: String) = (s: String) => prefix + " " + s
       val result = (List(prepend("a"), prepend("the")) <*> List("quick brown fox jumps over ", "lazy dog "))
-      result == List("a quick brown fox jumps over ", "the lazy dog ") aka result.toString mustBe true
+      result must_== List("a quick brown fox jumps over ", "the lazy dog ")
     }
 
     "be able to transpose a matrix" in {
-      import All.AppZip._
 
       trait matrices[A] {
         type matrix = Seq[Seq[A]]
@@ -61,19 +62,19 @@ object AppTest extends Specification {
       object m extends matrices[Int]
       import m._
       val m0x0: m.matrix = transpose(List[List[Int]]()).toList
-      m0x0 == List() aka m0x0.toString mustBe true
+      m0x0 must_== List()
 
       val m0x1: m.matrix = transpose(List(List[Int]()))
-      m0x1 == List() aka m0x1.toString mustBe true
+      m0x1 must_== List()
 
       val m2x1: m.matrix = transpose(List(List(1, 2)))
-      m2x1 == List(List(1), List(2)) aka m2x1.toString mustBe true
+      m2x1 must_== List(List(1), List(2))
 
       val m1x2: m.matrix = transpose(List(List(1), List(2))).toList
-      m1x2 == List(List(1,2)) aka m1x2.toString mustBe true
+      m1x2 must_== List(List(1,2))
 
       val m2x2 = transpose(List(List(11, 12), List(21, 22))).take(12).toList
-      m2x2 equals List(List(11, 21), List(12, 22)) aka m2x2.toString mustBe true
+      m2x2 must_== List(List(11, 21), List(12, 22))
     }
   }
 
@@ -85,39 +86,39 @@ object AppTest extends Specification {
     }
   }
   
-  "EnvApp" should {
+  "AppEnv" should {
     "evaluate an expression" in {
+      import EnvExample._
 
-      def fetch(x: String) = (env: E) => env(x)
+      object Expressions extends AppEnv {
 
-      val add = (i: Int) => (j: Int) => i + j
+        val fetch = (varName: String) => (env: Env) => env(varName)
+        val const = (value: Int) => (env: Env) => value
+        val add = (i: Int) => (j: Int) => i + j
 
-      trait Expr
-
-      case class Var(x: String) extends Expr
-
-      case class Val(i: Int) extends Expr
-
-      case class Add(p: Expr, q: Expr) extends Expr
-
-      def eval(exp: Expr): (E => Int) = exp match {
-        case Var(x) => fetch(x)
-        case Val(i) => KEnv(i)
-        case Add(p, q) => KEnv(add) S eval(p) S eval(q)
-      }
-
-      object AppEnv extends AppEnv {
-        override def f1[A, B](f: A => B): Env[A] => Env[B] = ea => f compose ea
-
-        def ev(exp: Expr): (E => Int) = exp match {
-          case Var(x) => fetch(x)
-          case Val(i) => pure(i)
-          case Add(p, q) => applicable[Int, Int => Int](pure(add)) <*> eval(p) <*> eval(q)
+        trait Expr {
+          def eval: Env => Int
         }
 
+        case class Var(name: String) extends Expr {
+          override def eval = fetch(name)
+        }
+
+        case class Val(i: Int) extends Expr {
+          override def eval = const(i)
+        }
+
+        case class Add(p: Expr, q: Expr) extends Expr {
+          override def eval =  pure(add) <*> p.eval <*> q.eval
+        }
+
+
       }
-      val evaluated = AppEnv.ev(Add(Var("one"), Add(Var("three"), Val(11))))(Map("one" -> 1, "two" -> 2, "three" -> 3))
-      evaluated must_== 15
+
+      import Expressions._
+
+      val expr = Add(Var("one"), Add(Var("three"), Val(11))).eval
+      expr (Map("one" -> 1, "two" -> 2, "three" -> 3)) must_== 15
     }
   }
 
@@ -153,7 +154,7 @@ object AppTest extends Specification {
       def tree(s: String) = Node(Leaf("" + s(0)), Node(Leaf("" + s(1)), Leaf("" + s(2))))
       val sut: Tree[String] = tree("abc")
       val collected: String = traverse(StringMonoid.App)((s: String) => "<<" + s + ">>")(sut).value
-      collected == "<<a>><<b>><<c>>" aka collected mustBe true
+      collected must_== "<<a>><<b>><<c>>"
     }
   }
 

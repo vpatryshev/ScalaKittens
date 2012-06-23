@@ -33,6 +33,13 @@ object All {
     override def f1[A, B](f: A => B) = (sa: Set[A]) => sa map f
   }
 
+  /**
+   * Functorial features of Either[X,Y], for the second parameter
+   */
+  trait RightEitherFunctor[L] extends Functor[({type Maybe[A] = Either[L, A]})#Maybe] {
+    def f1[A, B](f: A => B): Either[L, A] => Either[L, B] = _.right.map(f)
+  }
+
   object AppList extends ListFunctor with Applicative[List] {
     override def pure[A](a: A) = List(a)
 
@@ -54,7 +61,6 @@ object All {
     }
   }
 
-
   object AppZip extends SeqFunctor with Applicative[Seq] {
 
     override def pure[A](a: A): Seq[A] = Stream.continually(a)
@@ -66,35 +72,30 @@ object All {
     }
   }
 
+  object EnvExample {
 
-  // combinators
-  implicit def ski[E, A, B](fe: E => A => B) = new {
-    val S = (ae: E => A) => (env: E) => fe(env)(ae(env))
-  }
+    type Env = Map[String, Int] // String=>Int would be enough, but for educational purposes...
 
-  def K[Env, A](x: A) = (gamma: Env) => x
+    type Environmental[X] = Env => X
 
-  type E = Any => Int
-
-  type Env[X] = E => X
-
-  trait EnvFunctor extends Functor[Env] {
-
-    def asEnv[A](fx: Env[A]) = fx.asInstanceOf[Env[A]]
-
-    override def f1[A, B](f: A => B) = (aa: Env[A]) => asEnv(aa) andThen f
-  }
-
-  def KEnv[X](x: X) = K[E, X](x)
-
-  trait AppEnv extends Applicative[Env] {
-
-    implicit def applicable[A, B](fe: Env[A => B]) = new Applicable[A, B, Env] {
-      def <*>(fa: Env[A]) = ski(fe) S fa
+    trait EnvFunctor extends Functor[Environmental] {
+      override def f1[A, B](f: A => B) = (aa: Environmental[A]) => aa andThen f
     }
 
-    def pure[A](a: A): Env[A] =KEnv(a)
-    override def ap[A, B](fe: Env[A => B]) = applicable(fe) <*> _
+    implicit def K[A](a: A) = (env: Env) => a
+
+    // combinators
+    implicit def ski[Env, A, B](fe: Env => A => B) = new {
+      val S = (ae: Env => A) => (env: Env) => fe(env)(ae(env))
+    }
+
+    trait AppEnv extends EnvFunctor {
+      def pure[A](a: A): Environmental[A] = K(a)
+
+      implicit def applicable[A, B](fe: Environmental[A => B]) = new Applicable[A, B, Environmental] {
+        def <*>(fa: Environmental[A]) = fe S fa // aka S(f, a)
+      }
+    }
   }
 
   //def FOLD[E, A, B, F <: E =>A =>B, P](f: F, p: (E => P)*) = {
@@ -118,7 +119,7 @@ object All {
   case class Node[T](left: Tree[T], right: Tree[T]) extends Tree[T]
   def node[T](left: Tree[T])(right: Tree[T]): Tree[T] = Node(left, right)
 
-  implicit object TraversableTree extends scalakittens.applicative.Traversable[Tree] {
+  implicit object TraversableTree extends Traversable[Tree] {
 
     def traverse[A, B, F[_]](app: Applicative[F])(f: A => F[B])(at: Tree[A]): F[Tree[B]] = at match {
 
@@ -144,10 +145,6 @@ object All {
   }
 
 //  val exceptionLog = ListMonoid[Exception]
-
-  trait RightEitherFunctor[L] extends Functor[({type Maybe[A] = Either[L, A]})#Maybe] {
-    def f1[A, B](f: A => B): Either[L, A] => Either[L, B] = _.right.map(f)
-  }
 
   trait AccumulatingErrors[Bad] {
     val errorLog: Semigroup[Bad]
