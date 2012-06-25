@@ -1,12 +1,12 @@
 package scalakittens.applicative
 
-trait Semigroup[O] {
-  def add(x: O, y: O): O
+trait Semigroup[X] {
+  def add(x: X, y: X): X
 
-  case class Acc[A](value: O) {
-    def <+>(another: O): O = add(value, another)
+  case class Value[A](value: X) {
+    def +(another: X): X = add(value, another)
   }
 
-  implicit def acc[A](x: O): Acc[A] = Acc(x)
+  implicit def value[A](x: X): Value[A] = Value(x)
 
 }

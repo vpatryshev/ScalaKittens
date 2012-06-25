@@ -134,6 +134,11 @@ object All {
     }
   }
 
+  object IntMonoid extends Monoid[Int] {
+    val _0 = 0
+    def add(x: Int, y: Int) = x + y
+  }
+  
   object StringMonoid extends Monoid[String] {
     val _0 = ""
     def add(x: String, y: String) = x + y
@@ -148,18 +153,18 @@ object All {
 
   trait AccumulatingErrors[Bad] {
     val errorLog: Semigroup[Bad]
-    implicit def acc(err: Bad) = errorLog.acc(err)
+    implicit def acc(err: Bad) = errorLog.value(err)
     type Maybe[T] = Either[Bad, T]
-    
+
     object App extends Applicative[({type Maybe[A] = Either[Bad, A]})#Maybe] with RightEitherFunctor[Bad] {
 
       def pure[A](a: A):Either[Bad, A] = Right[Bad, A](a)
 
       implicit def applicable[A, B](maybeF: Either[Bad, A => B]) = {
         new Applicable[A, B, Maybe] {
-          
+
           def <*>(maybeA: Maybe[A]) = (maybeF, maybeA) match {
-            case (Left(badF), Left(badA)) => Left(badF <+> badA)
+            case (Left(badF), Left(badA)) => Left(badF + badA)
             case (Left(badF), _)          => maybeF
             case (Right(f),  Left(badA))  => maybeA
             case (Right(f), Right(a))     => Right(f(a))
