@@ -44,6 +44,7 @@ trait FS {
     def file(path: String): TextFile = new TextFile(file(path split "/"))
     def subfolder(name: String) = new Folder(file(name).file)
     def existingFile(name: String) = new ExistingFile(file(name).file)
+    def contains(name: String) = new File(path, name) exists
     def files: List[ExistingFile] = canonicalFile.listFiles filter (_.isFile) map (f => existingFile(f.getName)) toList
     def subfolders: List[Folder]  = canonicalFile.listFiles filter(_.isDirectory) map Folder toList
 

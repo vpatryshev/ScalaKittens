@@ -59,5 +59,17 @@ object FSTest extends Specification {
       dir file "Ego sum" text = "Ergo cogito"
       (dir existingFile "Ego sum" text) must_== "Ergo cogito"
     }
-  }
+
+    "check that a file exists in a folder" in {
+      val id = tag
+      val foldername = "tmp/fsIntegrationTest/" + id + "/folder1"
+      new File(foldername).mkdirs()
+      val dir = folder(foldername)
+      new File(foldername + "/sub").mkdir()
+      val file = dir file "something"
+      file.text = "Shri guru devi ommm"
+      dir contains "abanamat" mustBe false
+      dir contains "something" mustBe true
+      dir contains "sub" mustBe true
+    }  }
 }
