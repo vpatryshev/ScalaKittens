@@ -71,5 +71,30 @@ object FSTest extends Specification {
       dir contains "abanamat" mustBe false
       dir contains "something" mustBe true
       dir contains "sub" mustBe true
-    }  }
+    }
+
+    "create a subfolder for an absolute path" in {
+      val id = tag
+      val name = "tmp/fsIntegrationTest/" + id + "/folder1"
+      new File(name).mkdirs()
+      val sut = folder(name)
+      val parent = sut.parent
+      (parent subfolder (parent.absolutePath + File.separatorChar + "folder1") toString) must_== sut.toString
+    }
+
+    "fail if absolute subfolder is not within the folder" in {
+      val id = tag
+      val name = "tmp/fsIntegrationTest/" + id + "/folder1"
+      new File(name).mkdirs()
+      val sut = folder(name)
+      val parent = sut.parent
+      try {
+        parent subfolder (parent.absolutePath + "nonono" + File.separatorChar + "folder1")
+        fail("Expected to fail while creating a subfolder with wrong absolute path")
+      } catch {
+        case iae: IllegalArgumentException => iae.getMessage() contains "fsIntegrationTest" mustBe true
+        case x => fail("Expected an iae, got " + x)
+      }
+    }
+  }
 }

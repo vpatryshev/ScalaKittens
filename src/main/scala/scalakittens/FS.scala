@@ -42,7 +42,23 @@ trait FS {
     def /(name: String)    = new File(path, name)
     def file(path: Seq[String]): TextFile = new TextFile((canonicalFile /: path) (new File(_, _)))
     def file(path: String): TextFile = new TextFile(file(path split "/"))
-    def subfolder(name: String) = new Folder(file(name).file)
+
+    def subfolder(name: String): Folder = {
+      try {
+        val tentative = new Folder(name)
+        val abs = tentative.absolutePath
+        if (abs startsWith absolutePath) return tentative
+      } catch {
+        case _ => // ignore
+      }
+      try {
+        val tentative = new Folder(file(name).file)
+        val abs = tentative.absolutePath
+        if (abs startsWith absolutePath) return tentative
+      }
+      throw new IllegalArgumentException("Could not create subfolder '" + name + "' in '" + this + "'")
+    }
+
     def existingFile(name: String) = new ExistingFile(file(name).file)
     def contains(name: String) = new File(path, name) exists
     def files: List[ExistingFile] = canonicalFile.listFiles filter (_.isFile) map (f => existingFile(f.getName)) toList
