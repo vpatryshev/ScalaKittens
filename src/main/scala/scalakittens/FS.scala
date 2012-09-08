@@ -32,29 +32,35 @@ trait FS {
     override def toString = canonicalFile.toString
   }
 
-  class ExistingFile(theFile: File) extends TextFile(theFile) {
-    require(exists(theFile), "File " + file + " must exist")
+  class ExistingFile(f: File) extends TextFile(f) {
+    require(exists(f), "File " + f + " must exist")
   }
 
   case class Folder(path: File) extends Entry(path) {
     require(path != null)
-    require(path.isDirectory, "File " + path + " must be a directory")
+    require(path.toString != "", "Path cannot be empty")
+    require(!path.exists() || path.isDirectory, "Existing file " + path + " must be a directory")
     def /(name: String)    = new File(path, name)
     def file(path: Seq[String]): TextFile = new TextFile((canonicalFile /: path) (new File(_, _)))
     def file(path: String): TextFile = new TextFile(file(path split "/"))
 
+    def isSubfolderOf(parent: Folder) = {
+      absolutePath == parent.absolutePath ||
+        (absolutePath startsWith (parent.absolutePath + File.separatorChar))
+    }
+
     def subfolder(name: String): Folder = {
-      try {
-        val tentative = new Folder(name)
-        val abs = tentative.absolutePath
-        if (abs startsWith absolutePath) return tentative
-      } catch {
-        case _ => // ignore
+      if (!name.isEmpty) {
+        try {
+          val tentative = new Folder(name)
+          if (tentative isSubfolderOf this) return tentative
+        } catch {
+          case _ => // ignore
+        }
       }
       try {
         val tentative = new Folder(file(name).file)
-        val abs = tentative.absolutePath
-        if (abs startsWith absolutePath) return tentative
+        if (tentative isSubfolderOf this) return tentative
       }
       throw new IllegalArgumentException("Could not create subfolder '" + name + "' in '" + this + "'")
     }
@@ -70,19 +76,27 @@ trait FS {
   class TextFile(file: File) extends Entry(file) {
     def text = ioS.fromFile(file).mkString
 
-    def text_=(s: String) {
+    def text_=(content: AnyRef) {
       val out = new PrintWriter(file, "UTF-8")
-      try{ out.print(s) } finally{ out.close }
+      try{ out.print(content) } finally{ out.close }
     }
 
-    def text_+=(s: String) {
+    def text_+=(content: AnyRef) {
       val out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file, true), "UTF-8"))
-      try{ out.print(s) } finally{ out.close }
+      try{ out.print(content) } finally{ out.close }
     }
 
     def textOr(default: String) = try { text } catch { case _ => default }
     def probablyText: Either[Any, String] = try { Right(text) } catch { case x => Left(x) }
   }
+
+  // TODO(vlad): make it efficient - use channels
+  def cp(from: TextFile, to: TextFile) { to.text = from.text }
+
+  // For casual java usage
+  def subfolder(parent: File, path: String) = folder(parent).subfolder(path).canonicalFile
 }
 
 object FS extends FS
+
+class FSC extends FS {} // for Java

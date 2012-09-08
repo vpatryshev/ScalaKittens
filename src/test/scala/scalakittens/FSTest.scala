@@ -4,6 +4,7 @@ import org.specs.runner.JUnit4
 import org.specs.Specification
 import java.io.{PrintWriter, File}
 import FS._
+import org.specs.execute.FailureException
 
 class FSTest extends JUnit4(FSTest)
 
@@ -82,19 +83,32 @@ object FSTest extends Specification {
       (parent subfolder (parent.absolutePath + File.separatorChar + "folder1") toString) must_== sut.toString
     }
 
-    "fail if absolute subfolder is not within the folder" in {
+    "do not fail if absolute subfolder is not within the folder" in {
       val id = tag
       val name = "tmp/fsIntegrationTest/" + id + "/folder1"
       new File(name).mkdirs()
       val sut = folder(name)
       val parent = sut.parent
-      try {
-        parent subfolder (parent.absolutePath + "nonono" + File.separatorChar + "folder1")
-        fail("Expected to fail while creating a subfolder with wrong absolute path")
-      } catch {
-        case iae: IllegalArgumentException => iae.getMessage() contains "fsIntegrationTest" mustBe true
-        case x => fail("Expected an iae, got " + x)
-      }
+      val result = parent subfolder (parent.absolutePath + "nonono" + File.separatorChar + "folder1")
+      val secondComing = result.absolutePath.indexOf(parent.absolutePath, 4)
+      secondComing > 6 mustBe true
+    }
+
+    "return a local subfolder for an absolute path that is not within the folder" in {
+      val id = tag
+      val name = "tmp/fsIntegrationTest/" + id + "/folder1"
+      new File(name).mkdirs()
+      val sut = folder(name)
+      val parent = sut.parent
+      (parent subfolder ("/folder1") toString) must_== sut.toString
+    }
+
+    "return itself for '/'" in {
+      val id = tag
+      val name = "tmp/fsIntegrationTest/" + id + "/folder1"
+      new File(name).mkdirs()
+      val sut = folder(name)
+      (sut subfolder ("/") toString) must_== sut.toString
     }
   }
 }
