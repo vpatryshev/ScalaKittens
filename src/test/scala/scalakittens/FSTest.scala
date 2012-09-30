@@ -4,7 +4,6 @@ import org.specs.runner.JUnit4
 import org.specs.Specification
 import java.io.{PrintWriter, File}
 import FS._
-import org.specs.execute.FailureException
 
 class FSTest extends JUnit4(FSTest)
 
@@ -74,15 +73,6 @@ object FSTest extends Specification {
       dir contains "sub" mustBe true
     }
 
-    "create a subfolder for an absolute path" in {
-      val id = tag
-      val name = "tmp/fsIntegrationTest/" + id + "/folder1"
-      new File(name).mkdirs()
-      val sut = folder(name)
-      val parent = sut.parent
-      (parent subfolder (parent.absolutePath + File.separatorChar + "folder1") toString) must_== sut.toString
-    }
-
     "do not fail if absolute subfolder is not within the folder" in {
       val id = tag
       val name = "tmp/fsIntegrationTest/" + id + "/folder1"
@@ -110,5 +100,9 @@ object FSTest extends Specification {
       val sut = folder(name)
       (sut subfolder ("/") toString) must_== sut.toString
     }
-  }
+
+    "detect file's absoluteness" in {
+      List(".", "", "..", "../..", "a", "a/b/c", "c:") foreach (x => FS.isAbsolute(x) aka x mustBe false)
+      List("/", "/x/y", "c:/", "A:/System", "//", "c:/x") foreach (x => FS.isAbsolute(x) aka x mustBe true)
+    }  }
 }

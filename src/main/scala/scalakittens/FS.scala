@@ -36,6 +36,12 @@ trait FS {
     require(exists(f), "File " + f + " must exist")
   }
 
+  def isAbsolute(name: String) = {
+    var sepAt = name indexOf File.separatorChar
+    sepAt == 0 ||
+      sepAt > 0 && name(sepAt - 1) == ':'
+  }
+
   case class Folder(path: File) extends Entry(path) {
     require(path != null)
     require(path.toString != "", "Path cannot be empty")
@@ -50,14 +56,6 @@ trait FS {
     }
 
     def subfolder(name: String): Folder = {
-      if (!name.isEmpty) {
-        try {
-          val tentative = new Folder(name)
-          if (tentative isSubfolderOf this) return tentative
-        } catch {
-          case _ => // ignore
-        }
-      }
       try {
         val tentative = new Folder(file(name).file)
         if (tentative isSubfolderOf this) return tentative
