@@ -4,7 +4,7 @@
 In this project I plan to store small solutions to typical problems, which are free to grab and too small for building a "library".
 [Scala kittens][slides] has examples of this kind of stuff, one-liners. Probably they deserve to be put to gist.
 
-Anyway, currently it's just Caching that is present here.
+Currently there are Caching, FS, OS, ClientHttpRequest and some samples.
 
 ##Caching##
 
@@ -21,7 +21,7 @@ Why would we need to cache just one value? There are a couple cases.
 3. You want unused data to silently disappear from memory. You can do it by applying a reference selector, like
    `withSoftReferences`, `withWeakReferences`, `withHardReferences`, so that the value can be discarded according
    to the appropriate reference policies. E.g. if you use `withSoftReferences`, the value is discarded
-   if there's not enough memory. This discarding policy has nothing to do with the data validity, though.
+   if there's not enough memory. This discarding policy has String to do with the data validity, though.
    Using this kind of discardable references has some negative impact on performance in the tests, but this is a non-issue: if we are saving
    on seconds, losing on milliseconds should not bother us.
 
@@ -72,6 +72,18 @@ Credits: [lj user="sassa_nf"](sassa_nf.livejournal.com) [discussion](http://ivan
 
 [slides]: (https://docs.google.com/present/view?id=dc7rg5cv_76d7dpx5c5&revision=_latest&start=0&theme=blank&cwj=true&pli=1)
 
-##FileSpec##
+##FS (Flie System)##
 
-(TODO: write it)
+FS provides shortcuts for typical operations with files and directories, with less hassle than usual.
+
+    folder(".").file("mytext.txt").text = "this is the contents of my file"
+
+will write the contents to the file. There's a bunch of such one-liners.
+
+##ClientHttpRequest##
+
+This class comes from my old Java code on myjavatools.com
+
+Pls refer to the test to see how to use it. It's easy actually.
+Note that in your web app you can also trace the progress. Might be convenient.
+And you can cancel it half way through.
