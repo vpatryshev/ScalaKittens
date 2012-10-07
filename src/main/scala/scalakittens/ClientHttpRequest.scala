@@ -25,9 +25,19 @@ class ClientHttpRequest extends Observable {
   lazy val os: OutputStream = connection.getOutputStream
   private val cookies = new ListBuffer[(String, String)]
   private var rawCookies = ""
+  private var _bytesSent = 0
+  def bytesSent = _bytesSent
+  private var _filesSent = 0
+  def filesSent = _filesSent
+  var _isOpen = true
 
   protected def write(ss: String*) = {
-    ss foreach { s => os.write(s.getBytes) }
+    if (!_isOpen) throw new IOException("This request was already sent, too late to append.")
+    ss foreach { s =>
+      val bytes = s.getBytes
+      os.write(bytes)
+      _bytesSent += bytes.length
+    }
     this
   }
 
@@ -134,36 +144,31 @@ class ClientHttpRequest extends Observable {
   private def writeName(name: String) = write(CRLF, "Content-Disposition: form-data; name=\"", name, "\"")
 
   private var isCanceled: Boolean = false
-  private var _bytesSent: Int = 0
-
-  def bytesSent = _bytesSent
 
   def cancel {
     isCanceled = true
   }
 
+//  def pipe(in: FileInputStream, out: OutputStream) {
+//    val oc = Channels.newChannel(out)
+//    val ic: FileChannel = in.getChannel
+//    ic.transferTo(0, in.available, oc) // that's it? or should I
+//  }
+
   private def pipe(in: InputStream, out: OutputStream) {
-    var buf: Array[Byte] = new Array[Byte](1024)
+    val buf: Array[Byte] = new Array[Byte](ClientHttpRequest.BLOCK_SIZE)
     var nread: Int = 0
-    _bytesSent = 0
-    isCanceled = false
-    in synchronized {
-      while ((({
-        nread = in.read(buf, 0, buf.length); nread
-      })) >= 0) {
-        out.write(buf, 0, nread)
-        _bytesSent += nread
-        if (isCanceled) {
-          throw new IOException("Canceled")
-        }
-        out.flush
-        this.setChanged
-        this.notifyObservers(bytesSent)
-        this.clearChanged
+    while ({ nread = in.read(buf, 0, buf.length); nread >= 0 }) {
+      out.write(buf, 0, nread)
+      out.flush
+      _bytesSent += nread
+      if (isCanceled) {
+        throw new IOException("Canceled")
       }
+      this.setChanged
+      this.notifyObservers(bytesSent)
+      this.clearChanged
     }
-    out.flush
-    buf = null
   }
 
   /**
@@ -172,12 +177,13 @@ class ClientHttpRequest extends Observable {
    * @param value parameter value
    * @throws IOException
    */
-  def setParameter(name: String, value: String) {
+  def addParameter(name: String, value: String) = {
     writeBoundary
     writeName(name)
     newline
     newline
     writeln(value)
+    this
   }
 
   /**
@@ -187,22 +193,21 @@ class ClientHttpRequest extends Observable {
    * @param is input stream to read the contents of the file from
    * @throws IOException
    */
-  def setParameter(name: String, filename: String, is: InputStream) {
+  def addFile(name: String, filename: String, is: InputStream): ClientHttpRequest = {
     writeBoundary
     writeName(name)
     write("; filename=\"", filename, "\"", CRLF, "Content-Type: ", contentType(filename), CRLF, CRLF)
-    pipe(is, os)
+    is match {
+      case fis: FileInputStream => pipe(fis, os)
+      case _ => pipe(is, os)
+    }
     newline
+    _filesSent += 1
+    this
   }
-
 
   def contentType(filename: String): String = {
     Option(URLConnection.guessContentTypeFromName(filename)).getOrElse("application/octet-stream")
-  }
-
-  def getFilePostSize(name: String, file: File): Long = {
-    val filename: String = file.getPath
-    return boundaryNumBytes + writeNameNumBytes(name) + "; filename=\"".length + filename.getBytes.length + 1 + newlineNumBytes + "Content-Type: ".length + contentType(filename).length + newlineNumBytes + newlineNumBytes + file.length + newlineNumBytes
   }
 
   /**
@@ -211,16 +216,13 @@ class ClientHttpRequest extends Observable {
    * @param file the file to upload
    * @throws IOException
    */
-  def setParameter(name: String, file: File) {
-    var fis: FileInputStream = null
+  def addFile(name: String, file: File): ClientHttpRequest = {
+    val fis = new FileInputStream(file)
     try {
-      fis = new FileInputStream(file)
-      setParameter(name, file.getPath, fis)
+      addFile(name, file.getPath, fis)
     }
     finally {
-      if (fis != null) {
-        fis.close
-      }
+      fis.close
     }
   }
 
@@ -230,33 +232,11 @@ class ClientHttpRequest extends Observable {
    * @param value parameter value, a File or anything else that can be stringified
    * @throws IOException
    */
-  def setParameter(name: String, value: Any) {
+  def addParameter(name: String, value: Any) {
     value match {
-      case f: File => setParameter(name, f)
-      case _       => setParameter(name, value.toString)
+      case f: File => addFile(name, f)
+      case _       => addParameter(name, value.toString)
     }
-  }
-
-  /**
-   * Adds parameters to the request
-   * @param parameters "name-to-value" map of parameters; if a value is a file, the file is uploaded, otherwise it is stringified and sent in the request
-   * @throws IOException
-   */
-  def setParameters(parameters: Seq[(String, Any)]) {
-    parameters.foreach (p => setParameter(p._1, p._2))
-  }
-
-//  /**
-//   * Adds parameters to the request
-//   * @param parameters (vararg) parameter names and values (parameters[2*i] is a name, parameters[2*i + 1] is a value); if a value is a file, the file is uploaded, otherwise it is stringified and sent in the request
-//   * @throws IOException
-//   */
-//  def setParameters(parameters: (String, Any)*) {
-//    parameters foreach { p => setParameter(p._1, p._2) }
-//  }
-
-  def getPostFooterSize: Long = {
-    return boundaryNumBytes + 2 + newlineNumBytes + newlineNumBytes
   }
 
   /**
@@ -264,9 +244,10 @@ class ClientHttpRequest extends Observable {
    * @return input stream with the server response
    * @throws IOException
    */
-  private def doPost: InputStream = {
+  private def close: InputStream = {
     writeBoundary
     writeln("--")
+    _isOpen = false
     os.close
     connection.getInputStream
   }
@@ -276,7 +257,7 @@ class ClientHttpRequest extends Observable {
    * @return input stream with the server response
    * @throws IOException
    */
-  def post: InputStream = { postCookies; doPost }
+  def post: InputStream = { postCookies; close }
 
   /**
    * Posts the requests to the server, with all the cookies and parameters that were added before (if any), and with parameters that are passed in the argument
@@ -285,59 +266,21 @@ class ClientHttpRequest extends Observable {
    * @throws IOException
    * @see setParameters
    */
-  def post(parameters: Seq[(String, Any)]): InputStream = {
+  def post(parameters: (String, Any)*): InputStream = {
     postCookies
-    setParameters(parameters)
-    doPost
-  }
-
-//  /**
-//   * Posts the requests to the server, with all the cookies and parameters that were added before (if any), and with parameters that are passed in the argument
-//   * @param parameters request parameters
-//   * @return input stream with the server response
-//   * @throws IOException
-//   * @see setParameters
-//   */
-//  def post(parameters: (String, Any)*): InputStream = {
-//    postCookies
-//    setParameters(parameters:_*)
-//    doPost
-//  }
-
-  /**
-   * Posts the requests to the server, with all the cookies and parameters that were added before (if any), and with cookies and parameters that are passed in the arguments
-   * @param cookies request cookies
-   * @param parameters request parameters
-   * @return input stream with the server response
-   * @throws IOException
-   * @see setParameters
-   * @see setCookies
-   */
-  def post(cookies: Seq[(String, String)], parameters: Seq[(String, Any)]): InputStream = {
-    setCookies(cookies)
-    postCookies
-    setParameters(parameters)
-    doPost
-  }
-
-  /**
-   * Posts the requests to the server, with all the cookies and parameters that were added before (if any), and with cookies and parameters that are passed in the arguments
-   * @param raw_cookies request cookies
-   * @param parameters request parameters
-   * @return input stream with the server response
-   * @throws IOException
-   * @see setParameters
-   * @see setCookies
-   */
-  def post(raw_cookies: String, parameters: Seq[(String, Any)]): InputStream = {
-    setCookies(raw_cookies)
-    postCookies
-    setParameters(parameters)
-    doPost
+    parameters.foreach (p => addParameter(p._1, p._2))
+    close
   }
 }
 
 object ClientHttpRequest {
+
+  val BLOCK_SIZE = {
+    val inceptionTime = 42
+    val now = System.currentTimeMillis / 365.24 / 24 / 3600 / 1000
+    val dt = now - inceptionTime
+    (16000 * math.pow(2, dt / 3)).toInt // Moore's law
+  }
 
   /**
    * Posts a new request to specified URL, with parameters that are passed in the argument
@@ -347,31 +290,7 @@ object ClientHttpRequest {
    * @throws IOException
    * @see setParameters
    */
-  def post(url: URL, parameters: Seq[(String, Any)]): InputStream = {
-    new ClientHttpRequest(url).post(parameters)
-  }
-
-//  /**
-//   * Posts a new request to specified URL, with parameters that are passed in the argument
-//   * @param parameters request parameters
-//   * @return input stream with the server response
-//   * @throws IOException
-//   * @see setParameters
-//   */
-//  def post(url: URL, parameters: (String, Any)*): InputStream = {
-//    new ClientHttpRequest(url).post(parameters:_*)
-//  }
-
-  /**
-   * Posts a new request to specified URL, with cookies and parameters that are passed in the argument
-   * @param cookies request cookies
-   * @param parameters request parameters
-   * @return input stream with the server response
-   * @throws IOException
-   * @see setCookies
-   * @see setParameters
-   */
-  def post(url: URL, cookies: Seq[(String, String)], parameters: Seq[(String, Any)]): InputStream = {
-    new ClientHttpRequest(url).post(cookies, parameters)
+  def post(url: URL, parameters: (String, Any)*): InputStream = {
+    new ClientHttpRequest(url).post(parameters: _*)
   }
 }
