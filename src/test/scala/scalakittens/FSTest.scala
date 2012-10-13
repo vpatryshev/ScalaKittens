@@ -14,7 +14,7 @@ object FSTest extends Specification {
     "be able to deal with a folder" in {
       val id = tag
       val name = "tmp/fsIntegrationTest/" + id + "/folder1"
-      new File(name).mkdirs()
+      new File(name).mkdirs
       val sut = folder(name)
       val parent = sut.parent
       (parent subfolder "folder1" toString) must_== sut.toString
@@ -25,7 +25,7 @@ object FSTest extends Specification {
     "be able to deal with a text file" in {
       val id = tag
       val foldername = "tmp/fsIntegrationTest/" + id + "/folder1"
-      new File(foldername).mkdirs()
+      new File(foldername).mkdirs
       val dir = folder(foldername)
       val grandparent = dir.parent.parent
       val file = dir file "something"
@@ -63,7 +63,7 @@ object FSTest extends Specification {
     "check that a file exists in a folder" in {
       val id = tag
       val foldername = "tmp/fsIntegrationTest/" + id + "/folder1"
-      new File(foldername).mkdirs()
+      new File(foldername).mkdirs
       val dir = folder(foldername)
       new File(foldername + "/sub").mkdir()
       val file = dir file "something"
@@ -76,7 +76,7 @@ object FSTest extends Specification {
     "do not fail if absolute subfolder is not within the folder" in {
       val id = tag
       val name = "tmp/fsIntegrationTest/" + id + "/folder1"
-      new File(name).mkdirs()
+      new File(name).mkdirs
       val sut = folder(name)
       val parent = sut.parent
       val result = parent subfolder (parent.absolutePath + "nonono" + File.separatorChar + "folder1")
@@ -87,7 +87,7 @@ object FSTest extends Specification {
     "return a local subfolder for an absolute path that is not within the folder" in {
       val id = tag
       val name = "tmp/fsIntegrationTest/" + id + "/folder1"
-      new File(name).mkdirs()
+      new File(name).mkdirs
       val sut = folder(name)
       val parent = sut.parent
       (parent subfolder ("/folder1") toString) must_== sut.toString
@@ -96,7 +96,7 @@ object FSTest extends Specification {
     "return itself for '/'" in {
       val id = tag
       val name = "tmp/fsIntegrationTest/" + id + "/folder1"
-      new File(name).mkdirs()
+      new File(name).mkdirs
       val sut = folder(name)
       (sut subfolder ("/") toString) must_== sut.toString
     }
@@ -104,5 +104,10 @@ object FSTest extends Specification {
     "detect file's absoluteness" in {
       List(".", "", "..", "../..", "a", "a/b/c", "c:") foreach (x => FS.isAbsolute(x) aka x mustBe false)
       List("/", "/x/y", "c:/", "A:/System", "//", "c:/x") foreach (x => FS.isAbsolute(x) aka x mustBe true)
+    }
+
+    "not crash listing the contents of a non-existent folder" in {
+      FS.folder("I do not exist").listFiles.isEmpty mustBe true
+
     }  }
 }

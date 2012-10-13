@@ -65,8 +65,9 @@ trait FS {
 
     def existingFile(name: String) = new ExistingFile(file(name).file)
     def contains(name: String) = new File(path, name) exists
-    def files: List[ExistingFile] = canonicalFile.listFiles filter (_.isFile) map (f => existingFile(f.getName)) toList
-    def subfolders: List[Folder]  = canonicalFile.listFiles filter(_.isDirectory) map Folder toList
+    def listFiles: List[File] = Option(canonicalFile.listFiles).toList.map(_.toList).flatten
+    def files: List[ExistingFile] = listFiles filter (_.isFile) map (f => existingFile(f.getName)) toList
+    def subfolders: List[Folder]  = listFiles filter(_.isDirectory) map Folder toList
 
     override def equals(x: Any) = x.isInstanceOf[Folder] && canonicalFile == x.asInstanceOf[Folder].canonicalFile
   }
