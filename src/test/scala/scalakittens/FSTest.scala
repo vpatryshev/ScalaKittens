@@ -2,7 +2,7 @@ package scalakittens
 
 import org.specs.runner.JUnit4
 import org.specs.Specification
-import java.io.{PrintWriter, File}
+import java.io.{ByteArrayInputStream, PrintWriter, File}
 import FS._
 
 class FSTest extends JUnit4(FSTest)
@@ -109,5 +109,28 @@ object FSTest extends Specification {
     "not crash listing the contents of a non-existent folder" in {
       FS.folder("I do not exist").listFiles.isEmpty mustBe true
 
-    }  }
+    }
+    "цrite via streams" in {
+      val id = tag
+      val name = "tmp/fsIntegrationTest/" + id + "/folder1"
+      new File(name).mkdirs()
+      val sut = folder(name).file("justatest.txt")
+      val text: String = "Once upon a midnight dreary"
+      sut <<< new ByteArrayInputStream(text.getBytes)
+      sut.text must_== text
+    }
+
+    "append via streams" in {
+      val id = tag
+      val name = "tmp/fsIntegrationTest/" + id + "/folder1"
+      new File(name).mkdirs()
+      val sut = folder(name).file("justatest.txt")
+      val text1: String = "Once upon a midnight dreary,\n"
+      val text2: String = "While I pondered, weak and weary"
+      sut.text = text1
+      sut +<< new ByteArrayInputStream(text2.getBytes)
+      sut.text must_== text1 + text2
+    }
+
+  }
 }

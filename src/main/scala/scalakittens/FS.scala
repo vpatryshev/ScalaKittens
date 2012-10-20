@@ -2,11 +2,12 @@ package scalakittens
 
 import io.{Source => ioS}
 import java.io._
+import java.nio.channels.{Channels, ReadableByteChannel}
 
 /**
  * File system ops
  */
-trait FS {
+trait FS { fs =>
 
   implicit def asFile(file: TextFile)                   = file.file
   implicit def existingFile(file: File):   ExistingFile = new ExistingFile(file)
@@ -21,19 +22,25 @@ trait FS {
   def probablyFile(path: String): Either[Any, ExistingFile] = try { Right(existingFile(file(path)))} catch { case x => Left(x) }
 
   def exists(file: File): Boolean = file.exists
+  def exists(path: String): Boolean = exists(new File(path))
 
-  protected class Entry(val file: File) {
+  // need the following so mocking could work
+  def isDirectory(file: File): Boolean = file.isDirectory
+  def isDirectory(path: String): Boolean = isDirectory(new File(path))
+
+  protected case class Entry(val file: File) {
     require(file != null)
 
     lazy val canonicalFile = file.getCanonicalFile.getAbsoluteFile
     lazy val absolutePath = canonicalFile.getAbsolutePath
     def parent = new Folder(canonicalFile.getParentFile)
     def delete = file.delete
+    def exists = fs.exists(file)
     override def toString = canonicalFile.toString
   }
 
   class ExistingFile(f: File) extends TextFile(f) {
-    require(exists(f), "File " + f + " must exist")
+    require(exists, "File " + f + " must exist")
   }
 
   def isAbsolute(name: String) = {
@@ -45,10 +52,11 @@ trait FS {
   case class Folder(path: File) extends Entry(path) {
     require(path != null)
     require(path.toString != "", "Path cannot be empty")
-    require(!path.exists() || path.isDirectory, "Existing file " + path + " must be a directory")
+    require(!exists || isDirectory(path), "Existing file " + path + " must be a directory")
     def /(name: String)    = new File(path, name)
     def file(path: Seq[String]): TextFile = new TextFile((canonicalFile /: path) (new File(_, _)))
     def file(path: String): TextFile = new TextFile(file(path split "/"))
+    def mkdirs = path.mkdirs
 
     def isSubfolderOf(parent: Folder) = {
       absolutePath == parent.absolutePath ||
@@ -83,6 +91,35 @@ trait FS {
     def text_+=(content: AnyRef) {
       val out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file, true), "UTF-8"))
       try{ out.print(content) } finally{ out.close }
+    }
+
+    private def writeAt(os: FileOutputStream, pos: Long)(in: ReadableByteChannel, length: Long) {
+      val out = os.getChannel
+      try { out.transferFrom(in, pos, length) } finally { out.close }
+    }
+
+    def write(in: ReadableByteChannel, length: Long) {
+      writeAt(new FileOutputStream(file, false), 0)(in, length)
+    }
+
+    def append(in: ReadableByteChannel, length: Long) {
+      writeAt(new FileOutputStream(file, true), file.length)(in, length)
+    }
+
+    def write(in: InputStream, length: Long) {
+      write(Channels.newChannel(in), length)
+    }
+
+    def append(in: InputStream, length: Long) {
+      append(Channels.newChannel(in), length)
+    }
+
+    def <<<(in: InputStream) {
+      write(in, in.available)
+    }
+
+    def +<<(in: InputStream) {
+      append(in, in.available)
     }
 
     def textOr(default: String) = try { text } catch { case _ => default }
