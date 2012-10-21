@@ -19,7 +19,7 @@ trait FS { fs =>
   implicit def file(path: String)                       = new File(path)
   def tempFile(prefix: String)                          = new TextFile(File.createTempFile(prefix, "tmp"))
 
-  def probablyFile(path: String): Either[Any, ExistingFile] = try { Right(existingFile(file(path)))} catch { case x => Left(x) }
+  def probablyFile(path: String): Either[Any, ExistingFile] = try { Right(existingFile(file(path)))} catch { case x: Exception => Left(x) }
 
   def exists(file: File): Boolean = file.exists
   def exists(path: String): Boolean = exists(new File(path))
@@ -28,7 +28,7 @@ trait FS { fs =>
   def isDirectory(file: File): Boolean = file.isDirectory
   def isDirectory(path: String): Boolean = isDirectory(new File(path))
 
-  protected case class Entry(val file: File) {
+  sealed protected case class Entry(file: File) {
     require(file != null)
 
     lazy val canonicalFile = file.getCanonicalFile.getAbsoluteFile
@@ -37,6 +37,7 @@ trait FS { fs =>
     def delete = file.delete
     def exists = fs.exists(file)
     override def toString = canonicalFile.toString
+    def size: Long = 0
   }
 
   class ExistingFile(f: File) extends TextFile(f) {
@@ -72,30 +73,36 @@ trait FS { fs =>
     }
 
     def existingFile(name: String) = new ExistingFile(file(name).file)
-    def contains(name: String) = new File(path, name) exists
+    def contains(name: String) = fs.exists(new File(path, name))
     def listFiles: List[File] = Option(canonicalFile.listFiles).toList.map(_.toList).flatten
-    def files: List[ExistingFile] = listFiles filter (_.isFile) map (f => existingFile(f.getName)) toList
-    def subfolders: List[Folder]  = listFiles filter(_.isDirectory) map Folder toList
+    def files: List[ExistingFile] = listFiles.filter(_.isFile).map(f => existingFile(f.getName)).toList
+    def subfolders: List[Folder]  = listFiles.filter(_.isDirectory).map(Folder).toList
+    def entries: List[Entry] = files ++ subfolders
+
+    override def size: Long = entries.map(_.size).sum
 
     override def equals(x: Any) = x.isInstanceOf[Folder] && canonicalFile == x.asInstanceOf[Folder].canonicalFile
   }
 
+
   class TextFile(file: File) extends Entry(file) {
+    override def size: Long = file.length
+
     def text = ioS.fromFile(file).mkString
 
     def text_=(content: AnyRef) {
       val out = new PrintWriter(file, "UTF-8")
-      try{ out.print(content) } finally{ out.close }
+      try{ out.print(content) } finally{ out.close() }
     }
 
     def text_+=(content: AnyRef) {
       val out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file, true), "UTF-8"))
-      try{ out.print(content) } finally{ out.close }
+      try{ out.print(content) } finally{ out.close() }
     }
 
     private def writeAt(os: FileOutputStream, pos: Long)(in: ReadableByteChannel, length: Long) {
       val out = os.getChannel
-      try { out.transferFrom(in, pos, length) } finally { out.close }
+      try { out.transferFrom(in, pos, length) } finally { out.close() }
     }
 
     def write(in: ReadableByteChannel, length: Long) {
@@ -114,16 +121,18 @@ trait FS { fs =>
       append(Channels.newChannel(in), length)
     }
 
+    // careful with this method, input stream may not show the full size via available()
     def <<<(in: InputStream) {
       write(in, in.available)
     }
 
+    // careful with this method, input stream may not show the full size via available()
     def +<<(in: InputStream) {
       append(in, in.available)
     }
 
-    def textOr(default: String) = try { text } catch { case _ => default }
-    def probablyText: Either[Any, String] = try { Right(text) } catch { case x => Left(x) }
+    def textOr(default: String) = try { text } catch { case _:Exception => default }
+    def probablyText: Either[Any, String] = try { Right(text) } catch { case x: Exception => Left(x) }
   }
 
   // TODO(vlad): make it efficient - use channels
