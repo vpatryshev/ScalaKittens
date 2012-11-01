@@ -47,6 +47,22 @@
       <version>1.6.9</version>
       <scope>test</scope>
     </dependency>
+      <dependency>
+          <groupId>org.scalaz</groupId>
+          <artifactId>scalaz-core_2.9.2</artifactId>
+          <version>7.0.0-M3</version>
+      </dependency>
+
+      <dependency>
+          <groupId>org.scalaz</groupId>
+          <artifactId>scalaz-effect_2.9.2</artifactId>
+          <version>7.0.0-M3</version>
+      </dependency>
+      <dependency>
+          <groupId>org.scalaz</groupId>
+          <artifactId>scalaz-concurrent_2.9.2</artifactId>
+          <version>7.0.0-M3</version>
+      </dependency>
   </dependencies>
 
   <build>

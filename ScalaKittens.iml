@@ -23,6 +23,9 @@
     <orderEntry type="library" name="Maven: org.scala-lang:scala-library:2.9.2" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.4" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.scala-tools.testing:specs_2.9.2:1.6.9" level="project" />
+    <orderEntry type="library" name="Maven: org.scalaz:scalaz-core_2.9.2:7.0.0-M3" level="project" />
+    <orderEntry type="library" name="Maven: org.scalaz:scalaz-effect_2.9.2:7.0.0-M3" level="project" />
+    <orderEntry type="library" name="Maven: org.scalaz:scalaz-concurrent_2.9.2:7.0.0-M3" level="project" />
   </component>
 </module>
 
