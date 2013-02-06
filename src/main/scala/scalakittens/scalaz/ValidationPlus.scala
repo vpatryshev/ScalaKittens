@@ -18,8 +18,8 @@ class ValidationPlus[X,Y](base: Validation[X, Y]) {
 object ValidationPlus {
 
   implicit def pimpValidation[X,Y](x:Validation[X, Y]) = new ValidationPlus(x)
-  implicit def pimpValidation[X,Y](x:Success[X, Y]) = new ValidationPlus(x)
-  implicit def pimpValidation[X,Y](x:Failure[X, Y]) = new ValidationPlus(x)
+  implicit def pimpValidation[X,Y](x:Success[X, Y])    = new ValidationPlus(x)
+  implicit def pimpValidation[X,Y](x:Failure[X, Y])    = new ValidationPlus(x)
 
   implicit def fromEither[L,R](either: Either[L,R]) = either match {
     case Left(x)  => Failure(x)
