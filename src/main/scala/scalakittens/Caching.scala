@@ -30,18 +30,17 @@ import annotation.tailrec
  * CacheUnit's apply() method returns the fresh value; if the value stored in current Container is not fresh, it's reevaluated.
  *
  * You can find use cases in the test. Here's one:
- * <code>
- *    var counter: Char = 'a'
- *    val cached = sut.cache(() => { counter = (counter+1).toChar; counter}) validFor 10 HOURS
- *</code>
- * We declare a cache that invalidates after 10 hours and retrieves a counter value, with a side-effect of bumping the counter.
+ * <codee of bumping the counter.
  */
 trait Caching {
-
+  var debugme = false
+  def debug(s: => String) = if (debugme) println("" + now + "](" + Thread.currentThread.getId + ")" + s)
   // indirection that is good for applying cake pattern: see the object below and the test where time is mocked
   protected def now: Long // expecting nanos
 
   class Container[T](fun:() => T, validUntil_nano: Long) {
+    if (validUntil_nano < 0) throw new Exception("wtf, negative validUntil")
+    debug("Creating new " + this + " valid until " + (if (validUntil_nano >= Long.MaxValue/2) "forever" else validUntil_nano))
     private lazy val value: T = fun()
     def stillValid = now < validUntil_nano
     def get: Option[T] = if (stillValid) Some(value) else None
@@ -51,16 +50,31 @@ trait Caching {
   
   class CacheUnit[T](fun:() => T, timeout_nano: Long, newRef: RefFactory) {
 
-    private def newHolder = newRef(new Container[T](fun, now + timeout_nano))
+    private val maxTime = Long.MaxValue/2
+    private val forever = timeout_nano > maxTime
+
+    private def newHolder = {
+      val theEnd = if (forever) maxTime else (now + timeout_nano)
+      debug("new holder! now is " + now +
+        (if (forever) "- it's forever" else (", timeout=" + timeout_nano + ", so " + (now + timeout_nano))))
+      newRef(new Container[T](fun, theEnd))
+    }
 
     private val atom = new AtomicReference[Reference[Container[T]]](newHolder)
 
     @tailrec private def getValue: T = {
       val latest = atom.get
+      debug("getValue at " + now + ": latest = @" + latest.toString.split("@")(1) + ", valid? " + latest.get.get.stillValid)
       latest.get.flatMap(_.get) match {
-        case Some(t) => t
-        case None    => atom.compareAndSet(latest, newHolder)
-                        getValue
+        case Some(t) => {
+          debug("extracted value " + t)
+          t
+        }
+        case None    => {
+          debug("there's nothing there; let's set new value")
+          atom.compareAndSet(latest, newHolder)
+          getValue
+        }
       }
     }
 
