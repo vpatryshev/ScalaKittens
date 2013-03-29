@@ -56,6 +56,7 @@ final case class NoResult[T]() extends Result[T] {
   def isGood: Boolean = false
   val listErrors: Seq[ErrorDetails] = Nil
   def onError(op: (Seq[ErrorDetails]) => Unit) {}
+  def apply() = throw new BadResultException[T](Nil)
   def map[U](f: (T) => U): Result[U] = NoResult[U]
   def flatMap[U](f: (T) => Result[U]): Result[U] = NoResult[U]
   def toOption: Option[T] = None
