@@ -1,6 +1,5 @@
 package scalakittens
 
-
 sealed trait Result[+T] {
   def isGood: Boolean
   def isBad:  Boolean = !isGood
@@ -67,20 +66,20 @@ final case class Bad[T](listErrors: Traversable[String]) extends Result[T] {
   override def toString = summary
 }
 
-final case object NoResult extends Result[Nothing] {
+final case object Empty extends Result[Nothing] {
   def isGood: Boolean = false
   val listErrors: Traversable[String] = Nil
   def onError(op: (Traversable[String]) => Unit) {}
   def apply() = throw new BadResultException("No results available"::Nil)
-  def map[U](f: Nothing => U): Result[U] = NoResult
-  def flatMap[U](f: Nothing => Result[U]): Result[U] = NoResult
-  def collect[U](pf: PartialFunction[Nothing, U], onError: => String) = NoResult
+  def map[U](f: Nothing => U): Result[U] = Empty
+  def flatMap[U](f: Nothing => Result[U]): Result[U] = Empty
+  def collect[U](pf: PartialFunction[Nothing, U], onError: => String) = Empty
   def toOption: Option[Nothing] = None
 
   def getOrElse[T](alt: => T): T = alt
   def orElse[T1 >: Nothing] (next: => Result[T1]): Result[T1] = next
 
-  def <*>[U](other: Result[U]): Result[(Nothing, U)] = NoResult
+  def <*>[U](other: Result[U]): Result[(Nothing, U)] = Empty
   def foreach(f: (Nothing) => Unit) {}
   def filter(p: Nothing => Boolean, onError: Nothing => String) = this
   def errorDetails = Some("No results")
@@ -96,8 +95,8 @@ case class BadResultException(errors: Traversable[String]) extends Exception {
 object Result {
   type predicate[-P] = Function1[P, Boolean]
 
-  def apply[T](optT: Option[T]): Result[T] = optT map (t => Good(t)) getOrElse NoResult
-  def apply[T](optT: Option[T], onError: => String): Result[T] = optT map (t => Good(t)) getOrElse Bad(onError::Nil)
+  def apply[T](optT: Option[T])                    : Result[T] = optT map (t => Good(t)) getOrElse Empty
+  def apply[T](optT: Option[T], onError: => String): Result[T] = optT map (t => Good(t)) getOrElse error(onError)
 
   def forValue[T](value: T, onError: => String): Result[T] = apply(Option(value), onError)
 
@@ -111,12 +110,12 @@ object Result {
   def exception[T](x: Exception, value: => T): Bad[T] = error(s"Exception $x on $value")
 
   def traverse[T](results: Traversable[Result[T]]): Result[Traversable[T]] = {
-    if (results.isEmpty) NoResult else {
+    if (results.isEmpty) Empty else {
       val (goodOnes, notGoodOnes) = results.partition(_.isGood)
       val goodValues = goodOnes collect {case Good(x) => x}
       if (notGoodOnes.isEmpty) Good(goodValues)
       else {
-        val (emptyOnes, badOnes) = notGoodOnes partition(NoResult ==)
+        val (emptyOnes, badOnes) = notGoodOnes partition(Empty ==)
         if (badOnes.isEmpty) error("Some results are missing")
         else                 Bad(badOnes.toList.flatMap(_.listErrors))
       }
