@@ -13,7 +13,7 @@ This is my version of scalaz.Validating; somewhat less highbrow applicative mona
 
 `Result[T]` represents a storage for results of unreliable calculations, with possible list of errors produced during the process.
 `Good[T]` is how good results are stored; `Bad[T]` is how bad results are stored (this is just a list of error messages, with proper functionality);
-`NoResult` is a weird case when we do not have any results at all, like `None` in `Option[T]`.
+`Empty` is a weird case when we do not have any results at all, like `None` in `Option[T]`.
 One can chain, blend, check the results; all that you can do with `Option` you can do with `Result`; one can `fold` it like they do with `Either`.
 Using `Result` in sugared loops (aka "list comprehensions") makes the loops even sweeter.
 
