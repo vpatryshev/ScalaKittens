@@ -2,7 +2,7 @@ package scalakittens
 
 import org.specs2.mutable.Specification
 
-object Result_Test extends Specification {
+object ResultTest extends Specification {
   import Result._
 
    "Good" should {
@@ -310,6 +310,31 @@ object Result_Test extends Specification {
     }
     "return Empty if some results are missing, but no errors" in {
       Result.traverse(Good("abc")::Good("xyz")::Empty:: Nil) must_== Result.error("Some results are missing")
+    }
+  }
+
+  "Accompanying object" should {
+    "produce good from some" in {
+      Result(Some("beer")) must_== Good("beer")
+      Result(Some("beer"), "but not bud!") must_== Good("beer")
+    }
+    "produce Empty from None" in {
+      Result(None) must_== Empty
+    }
+    "produce Bad from None" in {
+      Result(None, "Bud") must_== Bad("Bud"::Nil)
+    }
+    "produce good from a value" in {
+      Result.forValue("beer") must_== Good("beer")
+      Result.forValue("beer", "but not bud!") must_== Good("beer")
+    }
+    "produce Empty from null" in {
+      Result.forValue(null) must_== Empty
+      Result.forValue(null, "bud") must_== Bad("bud"::Nil)
+    }
+    "produce Bad from exceptional values" in {
+      Result.forValue(throw new UnsupportedOperationException("brain surgery")) must_== Bad("java.lang.UnsupportedOperationException: brain surgery"::Nil)
+      Result.forValue(throw new UnsupportedOperationException("brain surgery"), "oi vei") must_== Bad("oi vei: java.lang.UnsupportedOperationException: brain surgery"::Nil)
     }
   }
 }
