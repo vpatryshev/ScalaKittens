@@ -95,19 +95,20 @@ case class BadResultException(errors: Traversable[String]) extends Exception {
 object Result {
   type predicate[-P] = Function1[P, Boolean]
 
-  def apply[T](optT: Option[T])                    : Result[T] = optT map (t => Good(t)) getOrElse Empty
+  def attempt[T](eval: =>Result[T]): Result[T] = try { eval } catch { case e: Exception => exception(e) }
+  def attempt[T](eval: =>Result[T], errMsg:String): Result[T] = try { eval } catch { case e: Exception => exceptionWithMessage(e, errMsg) }
+
+  def apply[T](optT: Option[T]):                     Result[T] = optT map (t => Good(t)) getOrElse Empty
   def apply[T](optT: Option[T], onError: => String): Result[T] = optT map (t => Good(t)) getOrElse error(onError)
 
-  def forValue[T](value: T, onError: => String): Result[T] = apply(Option(value), onError)
-
-  def forValue[T](value: T): Result[T] = Result(Option(value)) // have to give it a different name, so that it's not mixed with Option
-
-  def apply[T](value: T, p: predicate[T], message: String): Result[T] =
-    if (p(value)) Good(value) else error(message)
+  def forValue[T](value: =>T):                     Result[T] = attempt(apply(Option(value)))
+  def forValue[T](value: =>T, onError: => String): Result[T] = attempt(apply(Option(value), onError), onError)
 
   def error[T](message: => Any): Bad[T] = Bad(("" + message)::Nil)
 
-  def exception[T](x: Exception, value: => T): Bad[T] = error(s"Exception $x on $value")
+  def exception[T](x: Exception): Bad[T] = error("" +x)
+  def exception[T, U](x: Exception, suspect: => U): Bad[T] = error(s"$x on $suspect")
+  def exceptionWithMessage[T](x: Exception, message: String): Bad[T] = error(s"$message: $x")
 
   def traverse[T](results: Traversable[Result[T]]): Result[Traversable[T]] = {
     if (results.isEmpty) Empty else {
