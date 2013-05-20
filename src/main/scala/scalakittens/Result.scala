@@ -40,20 +40,24 @@ final case class Good[T](value: T) extends Result[T] {
   def errorDetails = None
 }
 
-final case class Bad[T](listErrors: Traversable[String]) extends Result[T] {
+trait NoGood[T] extends Result[T] {
+  self =>
   def isGood = false
+  def filter(p: T => Boolean, onError: T => String):Result[T] = self
+  def foreach(f: T => Unit) {}
+  def getOrElse[T1 >: T](alt: => T1): T1 = alt
+  def orElse[T1 >: T] (next: => Result[T1]): Result[T1] = next
+  def toOption = None
+}
+
+final case class Bad[T](listErrors: Traversable[String]) extends Result[T] with NoGood[T] {
   def onError(op: Traversable[String] => Unit): Unit = {op(listErrors)}
   def apply() = throw new BadResultException(listErrors)
-  def toOption = None
   def map[U](f: T=>U) = Bad(listErrors)
   def flatMap[U](f: T => Result[U]) = Bad(listErrors)
   def collect[U](pf: PartialFunction[T, U], onError: => String) = Bad(listErrors)
-  def orElse[T1 >: T] (next: => Result[T1]): Result[T1] = next
-  def getOrElse[T1 >: T](alt: => T1): T1 = alt
   def <*>[U](other: Result[U]): Result[(T, U)] = Bad(listErrors ++ other.listErrors)
 
-  def foreach(f: T => Unit) {}
-  def filter(p: T => Boolean, onError: T => String) = this
   def errorDetails = Some(summary)
 
   private def abbr(x: Any) = {
@@ -66,30 +70,21 @@ final case class Bad[T](listErrors: Traversable[String]) extends Result[T] {
   override def toString = summary
 }
 
-final case object Empty extends Result[Nothing] {
-  def isGood: Boolean = false
+final case object Empty extends Result[Nothing] with NoGood[Nothing] {
   val listErrors: Traversable[String] = Nil
   def onError(op: (Traversable[String]) => Unit) {}
   def apply() = throw new BadResultException("No results available"::Nil)
   def map[U](f: Nothing => U): Result[U] = Empty
   def flatMap[U](f: Nothing => Result[U]): Result[U] = Empty
   def collect[U](pf: PartialFunction[Nothing, U], onError: => String) = Empty
-  def toOption: Option[Nothing] = None
-
-  def getOrElse[T](alt: => T): T = alt
-  def orElse[T1 >: Nothing] (next: => Result[T1]): Result[T1] = next
 
   def <*>[U](other: Result[U]): Result[(Nothing, U)] = Empty
-  def foreach(f: (Nothing) => Unit) {}
-  def filter(p: Nothing => Boolean, onError: Nothing => String) = this
   def errorDetails = Some("No results")
 }
 
 // TODO(vlad): stringify better
 case class BadResultException(errors: Traversable[String]) extends Exception {
-  override def getMessage: String = {
-    "errors: " + (errors mkString "; ")
-  }
+  override def getMessage: String = "errors: " + (errors mkString "; ")
 }
 
 object Result {
