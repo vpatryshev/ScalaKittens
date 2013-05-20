@@ -88,8 +88,6 @@ case class BadResultException(errors: Traversable[String]) extends Exception {
 }
 
 object Result {
-  type predicate[-P] = Function1[P, Boolean]
-
   def attempt[T](eval: =>Result[T]): Result[T] = try { eval } catch { case e: Exception => exception(e) }
   def attempt[T](eval: =>Result[T], errMsg:String): Result[T] = try { eval } catch { case e: Exception => exceptionWithMessage(e, errMsg) }
 
