@@ -40,8 +40,8 @@ final case class Good[T](value: T) extends Result[T] {
   def errorDetails = None
 }
 
-trait NoGood[T] extends Result[T] {
-  self =>
+trait NoGood[T] {
+  self:NoGood[T] =>
   def isGood = false
   def filter(p: T => Boolean, onError: T => String):Result[T] = self
   def foreach(f: T => Unit) {}
