@@ -4,7 +4,18 @@
 In this project I plan to store small solutions to typical problems, which are free to grab and too small for building a "library".
 [Scala kittens][slides] has examples of this kind of stuff, one-liners. Probably they deserve to be put to gist.
 
-Currently there are Caching, FS, OS, ClientHttpRequest and some samples.
+Currently there are Caching, FS, OS, ClientHttpRequest, Result and some samples.
+
+##Result##
+
+This is my version of scalaz.Validating; somewhat less highbrow applicative monadic monoidal bs
+(but yes, it is a monad, and it is an applicative functor).
+
+`Result[T]` represents a storage for results of unreliable calculations, with possible list of errors produced during the process.
+`Good[T]` is how good results are stored; `Bad[T]` is how bad results are stored (this is just a list of error messages, with proper functionality);
+`Empty` is a weird case when we do not have any results at all, like `None` in `Option[T]`.
+One can chain, blend, check the results; all that you can do with `Option` you can do with `Result`; one can `fold` it like they do with `Either`.
+Using `Result` in sugared loops (aka "list comprehensions") makes the loops even sweeter.
 
 ##Caching##
 

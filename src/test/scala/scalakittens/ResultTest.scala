@@ -1,18 +1,19 @@
 package scalakittens
 
-import org.specs.Specification
+import org.specs2.mutable.Specification
 
 object ResultTest extends Specification {
+  import Result._
 
-  "Good" should {
+   "Good" should {
     "be good" in {
-      Good(42).isGood mustBe true
+      Good(42).isGood must beTrue
     }
-    "be not bad" in {
-      Good(43).isBad mustBe false
-    }
+     "be not bad" in {
+       Good(43).isBad must beFalse
+     }
     "list no errors" in {
-      Good(math.Pi).listErrors.isEmpty mustBe true
+      Good(math.Pi).listErrors.isEmpty must beTrue
     }
     "do nothing on error" in {
       var wasThere = false
@@ -27,63 +28,69 @@ object ResultTest extends Specification {
     }
     "flatMap as designed" in {
       Good("hello") flatMap (s => Good(s.toUpperCase)) must_== Good("HELLO")
-      Good("hello") flatMap (s => Result.error(s, "alas...")) must_== Bad(ErrorDetails("alas...", "hello")::Nil)
-      Good("hello") flatMap (s => NoResult) must_== NoResult
+      Good("hello") flatMap (s => Result.error("alas...")) must_== Bad(("alas...")::Nil)
+      Good("hello") flatMap (s => Empty) must_== Empty
     }
     "collect as designed" in {
-      val err = ErrorDetails(":(", ":)")
-      Good("hello") collect ({ case "hello" => 1}, err) must_== Good(1)
-      Good("hello") collect ({ case "Hello" => 1}, err) must_== Bad(err::Nil)
+      val err = (":(")
+      Good("hello") collect ({ case "hello" => 1}, ":(") must_== Good(1)
+      Good("hello") collect ({ case "Hello" => 1}, ":(") must_== Bad(err::Nil)
     }
     "convert to Some" in {
       Good(":)").toOption must_== Some(":)")
     }
-    "stay put in orElse" in {
-      Good(":)").orElse(NoResult) must_== Good(":)")
-    }
-    "stay put in getOrElse" in {
-      Good(":)").getOrElse(":(") must_== ":)"
-    }
-    "blend properly via <*>" in {
-      Good(1) <*> Good(2) must_== Good((1,2))
-      Good(1) <*> Result.error(2, ":(") must_== Result.error(2, ":(")
-      Good(1) <*> NoResult must_== NoResult
-    }
-    "call function in foreach" in {
-      var v: String = ":("
-      Good(":)") foreach (v = _)
-      v must_== ":)"
-    }
-    "filter as designed" in {
-      val err = ErrorDetails(":(", ":)")
-      Good("hello") filter (_.startsWith("he"), "oi vei") must_== Good("hello")
-      Good("hello") filter (_.startsWith("lo"), "oi vei") must_== Result.error("hello", "oi vei")
-    }
-    "Show nothing in errorDetails" in {
-      Good("sh").errorDetails must_== None
-    }
-  }
+     "stay put in orElse" in {
+       Good(":)").orElse(Empty) must_== Good(":)")
+     }
+     "stay put in getOrElse" in {
+       Good(":)").getOrElse(":(") must_== ":)"
+     }
+     "blend properly via <*>" in {
+       Good(1) <*> Good(2) must_== Good((1,2))
+       Good(1) <*> Result.error(":(") must_== Result.error(":(")
+       Good(1) <*> Empty must_== Empty
+     }
+     "call function in foreach" in {
+       var v: String = ":("
+       Good(":)") foreach (v = _)
+       v must_== ":)"
+     }
+     "filter as designed" in {
+       val err = (":(")
+       Good("hello") filter ((s:String) => s.startsWith("he"), "oi vei") must_== Good("hello")
+       Good("hello") filter ((s:String) => s.startsWith("lo"), "oi vei") must_== Result.error("oi vei")
+     }
+     "Show nothing in errorDetails" in {
+       Good("sh").errorDetails must_== None
+     }
+
+     "combine with other goods in sugared loop" in {
+       val actual = for (x <- Good("x");
+                         y <- Good("y")) yield(x+y)
+       actual must_== Good("xy")
+     }
+   }
 
   "Bad" should {
     "be bad" in {
-      Bad(ErrorDetails("what was the question?", 42)::Nil).isGood mustBe false
+      Bad(("what was the question?")::Nil).isGood must beFalse
     }
     "list errors" in {
-      val errors = ErrorDetails("Whose life is it?", math.Pi)::
-        ErrorDetails("Hey Euler!", math.E):: Nil
+      val errors = ("Whose life is it?")::
+                   ("Hey Euler!"):: Nil
       Bad(errors).listErrors must_== errors
     }
     "behave on error" in {
-      val errors = ErrorDetails("Say hi", "hello")::
-        ErrorDetails("Say bye", "chiao"):: Nil
+      val errors = ("Say hi")::
+                   ("Say bye"):: Nil
       var beenThere = false
-      var ed: Traversable[ErrorDetails] = Nil
+      var ed: Traversable[String] = Nil
       Bad(errors).onError(es => { beenThere = true; ed=es})
-      beenThere aka "visited what you were not supposed to visit" mustBe true
+      beenThere aka "visited what you were not supposed to visit" must beTrue
       ed must_== errors
     }
     "throw on apply" in {
-      val errors = ErrorDetails("oi-vei", 740)::Nil
+      val errors = ("oi-vei")::Nil
       val sut = Bad(errors)
       var beenThere = false
       try {
@@ -91,92 +98,118 @@ object ResultTest extends Specification {
         beenThere = true
       } catch {
         case ex: BadResultException => ex.errors must_== errors
-        case _ => fail("Expected a Bad#ResultException")
+        case _: Throwable => failure("Expected a Bad#ResultException")
       }
-      beenThere mustBe false
+      beenThere must beFalse
     }
     "Map as designed" in {
       var wasThere = false
-      Result.error(17, "oops") map (x => {
+      Result.error[Int]("oops") map ((x:Int) => {
         wasThere = true; 1+x
-      }) must_== Result.error(17, "oops")
-      wasThere aka "visited what you were not supposed to visit" mustBe false
+      }) must_== Result.error("oops")
+      wasThere aka "visited what you were not supposed to visit" must beFalse
     }
     "flatMap as designed" in {
       var wasThere = false
-      val r1 = Result.error("hello", "oops") flatMap (s => {wasThere = true; Good(s.toUpperCase)})
-      r1 must_== Result.error("hello", "oops")
-      wasThere aka "visited what you were not supposed to visit" mustBe false
-      val r2 = Result.error("1 hello again", "oops") flatMap (s => {wasThere = true; Result.error(s, "alas...")})
-      r2.isBad mustBe true
-      r2.listErrors.toList must_== ErrorDetails("oops", "1 hello again")::Nil
-      r2 must_== Bad(ErrorDetails("oops", "1 hello again")::Nil)
-      wasThere aka "visited what you were not supposed to visit" mustBe false
-      Result.error("2 and hello again", "oops") flatMap (s => {wasThere = true; NoResult}) must_== Bad(ErrorDetails("oops", "2 and hello again")::Nil)
-      wasThere aka "visited what you were not supposed to visit" mustBe false
+      val r1 = Result.error[String]("oops") flatMap ((s:String) => {wasThere = true; Good(s.toUpperCase)})
+      r1 must_== Result.error("oops")
+      wasThere aka "visited what you were not supposed to visit" must beFalse
+      val r20:Result[String] = Result.error("oops")
+      val r2 = r20 flatMap (s => {wasThere = true; Result.error("alas...")})
+      r2.isBad must beTrue
+      r2.listErrors.toList must_== ("oops")::Nil
+      r2 must_== Bad(("oops")::Nil)
+      wasThere aka "visited what you were not supposed to visit" must beFalse
+      val r3:Result[String] = Result.error("oops")
+      r3 flatMap (s => {wasThere = true; Empty}) must_== Bad(("oops")::Nil)
+      wasThere aka "visited what you were not supposed to visit" must beFalse
     }
     "collect nothing" in {
       var wasThere = false
-      val err = ErrorDetails(":(", ":)")
-      Result.error("hello", "oops") collect ({ case "hello" => {wasThere = true; 1}}, err) must_== Result.error("hello", "oops")
-      wasThere aka "visited what you were not supposed to visit" mustBe false
-      Result.error("hello", "oops")  collect ({ case "Hello" => {wasThere = true; 1}}, err) must_== Result.error("hello", "oops")
-      wasThere aka "visited what you were not supposed to visit" mustBe false
+      val bad:Result[String] = Result.error("oops")
+      bad collect ({ case "hello" => {wasThere = true; 1}}, ":(") must_== Result.error("oops")
+      wasThere aka "visited what you were not supposed to visit" must beFalse
+      val bad1:Result[String] = Result.error("oops")
+      bad1 collect ({ case "Hello" => {wasThere = true; 1}}, ":(") must_== Result.error("oops")
+      wasThere aka "visited what you were not supposed to visit" must beFalse
     }
     "convert to None" in {
-      Result.error("hello", "oops") .toOption must_== None
+      Result.error("oops") .toOption must_== None
     }
     "get ignored in orElse" in {
-      Result.error("hello", "oops") .orElse(Result.error("hello", ":(")) must_== Result.error("hello", ":(")
-      Result.error("hello", "oops") .orElse(Good(":)")) must_== Good(":)")
-      Result.error("hello", "oops") .orElse(NoResult) must_== NoResult
+      Result.error("oops") .orElse(Result.error(":(")) must_== Result.error(":(")
+      Result.error("oops") .orElse(Good(":)")) must_== Good(":)")
+      Result.error("oops") .orElse(Empty) must_== Empty
     }
     "get ignored in getOrElse" in {
-      Result.error("hello", "oops").getOrElse(":)") must_== ":)"
+      Result.error("oops").getOrElse(":)") must_== ":)"
     }
     "blend properly via <*>" in {
-      Result.error(1, "oops") <*> Good(2) must_== Result.error(1, "oops")
-      Result.error(1, "oops") <*> Result.error(2, ":(") must_== Bad(ErrorDetails("oops", 1)::ErrorDetails(":(", 2)::Nil)
-      Result.error(1, "oops") <*> NoResult must_== Result.error(1, "oops")
+      Result.error("oops") <*> Good(2) must_== Result.error("oops")
+      Result.error("oops") <*> Result.error(":(") must_== Bad(("oops")::(":(")::Nil)
+      Result.error("oops") <*> Empty must_== Result.error("oops")
     }
     "ignore call function in foreach" in {
       var wasThere = false
-      Result.error("hello", "oops") foreach {s => wasThere = true}
-      wasThere aka "visited what you were not supposed to visit" mustBe false
+      val bad: Result[String] = Result.error("oops")
+      bad foreach {s => wasThere = true}
+      wasThere aka "visited what you were not supposed to visit" must beFalse
     }
     "filter as designed" in {
-      val err = ErrorDetails(":(", ":)")
-      Result.error("hello", "oops") filter (_.startsWith("he"), "oi vei") must_== Result.error("hello", "oops")
-      Result.error("hello", "oops") filter (_.startsWith("lo"), "oi vei") must_== Result.error("hello", "oops")
+      val err = (":(")
+      Result.error[String]("oops") filter ((s:String) => s.startsWith("he"), "oi vei") must_== Result.error("oops")
+      Result.error[String]("oops") filter ((s:String) => s.startsWith("lo"), "oi vei") must_== Result.error("oops")
     }
     "Merge errorDetails" in {
-      val detailsOpt: Some[ErrorDetails] = Bad(ErrorDetails("beer too expensive") :: ErrorDetails("are we there?") :: Nil).errorDetails
-      detailsOpt.isEmpty mustBe false
-      val details = detailsOpt.get
-      val desc = details.description
-      val expectedDesc = "beer too expensive\nare we there?"
+      val detailsOpt: Some[String] = Bad(("beer too expensive") :: ("are we there?") :: Nil).errorDetails
+      detailsOpt.isEmpty must beFalse
+      val desc = detailsOpt.get
+      val expectedDesc = "beer too expensive; are we there?"
       desc must_== expectedDesc
-      details must_== ErrorDetails(expectedDesc)
-      detailsOpt must_== Some(ErrorDetails(expectedDesc))
+      detailsOpt must_== Some((expectedDesc))
     }
+
+    "combine with goods in sugared loop" in {
+      val actual1 = for (x <- Bad[String](("x yourself")::Nil);
+                         y <- Good("y")) yield(x+y)
+      actual1 must_== Bad[String](("x yourself")::Nil)
+
+      val actual2 = for (x <- Good("x");
+                         y <- Bad[String](("y yourself")::Nil)) yield(x+y)
+      actual2 must_== Bad[String](("y yourself")::Nil)
+    }
+
+    "combine with bads in sugared loop" in {
+      val actual = for (x <- error[String]("x yourself");
+                        y <- error[String]("y yourself")) yield(x+y)
+      actual must_== Bad[String](("x yourself")::Nil)
+    }
+
+    "work applicativel" in {
+      val blended:Result[(Int,Int)] = error[Int]("x yourself") <*> error[Int]("y yourself")
+      def sum(x:Int,y:Int):Int = x+y
+      val actual:Result[Int] = blended map ((sum _).tupled)
+      actual must_== Bad[Int]("x yourself"::"y yourself"::Nil)
+    }
+
   }
 
-  "NoResult" should {
+  "Empty" should {
     "be bad" in {
-      NoResult.isGood mustBe false
+      Empty.isGood must beFalse
     }
     "list errors" in {
-      NoResult.listErrors.isEmpty mustBe true
+      Empty.listErrors.isEmpty must beTrue
     }
     "ignore on error" in {
       var beenThere = false
-      NoResult.onError(es => { beenThere = true})
-      beenThere mustBe false
+      Empty.onError(es => { beenThere = true})
+      beenThere must beFalse
     }
     "throw on apply" in {
       var beenThere = false
-      val sut = NoResult
-      var errorsCaught: Traversable[ErrorDetails] = Nil
+      val sut = Empty
+      var errorsCaught: Traversable[String] = Nil
       try {
         sut()
         beenThere = true
@@ -184,71 +217,124 @@ object ResultTest extends Specification {
         case ex: BadResultException => {
           errorsCaught = ex.errors
         }
-        case _ => fail("Expected a Bad#ResultException")
+        case _:Throwable => failure("Expected a Bad#ResultException")
       }
-      beenThere mustBe false
-      errorsCaught must_== ErrorDetails("No results available")::Nil
+      beenThere must beFalse
+      errorsCaught must_== ("No results available")::Nil
     }
     "Map as designed" in {
       var wasThere = false
-      NoResult map (x => {wasThere = true; null== x}) must_== NoResult
-      wasThere aka "visited what you were not supposed to visit" mustBe false
+      Empty map (x => {wasThere = true; null== x}) must_== Empty
+      wasThere aka "visited what you were not supposed to visit" must beFalse
     }
     "flatMap as designed" in {
       var wasThere = false
-      NoResult flatMap (s => {wasThere = true; NoResult}) must_== NoResult
-      wasThere aka "visited what you were not supposed to visit" mustBe false
+      Empty flatMap (s => {wasThere = true; Empty}) must_== Empty
+      wasThere aka "visited what you were not supposed to visit" must beFalse
     }
     "collect nothing" in {
       var wasThere = false
-      val sut: Result[String] = NoResult
-      sut collect ({ case "hello" => {wasThere = true; 1}}, null) must_== NoResult
-      wasThere aka "visited what you were not supposed to visit" mustBe false
+      val sut: Result[String] = Empty
+      sut collect ({ case "hello" => {wasThere = true; 1}}, null) must_== Empty
+      wasThere aka "visited what you were not supposed to visit" must beFalse
     }
     "convert to None" in {
-      NoResult .toOption must_== None
+      Empty .toOption must_== None
     }
     "get ignored in orElse" in {
-      NoResult .orElse(Result.error("hello", ":(")) must_== Result.error("hello", ":(")
-      NoResult .orElse(Good(":)")) must_== Good(":)")
-      NoResult .orElse(NoResult) must_== NoResult
+      Empty .orElse(Result.error(":(")) must_== Result.error(":(")
+      Empty .orElse(Good(":)")) must_== Good(":)")
+      Empty .orElse(Empty) must_== Empty
     }
     "get ignored in getOrElse" in {
-      NoResult.getOrElse(":)") must_== ":)"
+      Empty.getOrElse(":)") must_== ":)"
     }
 
     "blend properly via <*>" in {
-      NoResult <*> Good(2) must_== NoResult
-      NoResult <*> Result.error(2, ":(") must_== NoResult
-      NoResult <*> NoResult must_== NoResult
+      Empty <*> Good(2) must_== Empty
+      Empty <*> Result.error(":(") must_== Empty
+      Empty <*> Empty must_== Empty
     }
     "ignore call function in foreach" in {
       var wasThere = false
-      NoResult foreach ({x => wasThere = true})
-      wasThere aka "visited what you were not supposed to visit" mustBe false
+      Empty foreach ({x => wasThere = true})
+      wasThere aka "visited what you were not supposed to visit" must beFalse
     }
-    "filter as designed" in {
-      val err = ErrorDetails(":(", ":)")
-      NoResult filter (null !=, "oi vei") must_== NoResult
-      NoResult filter (null ==, "oi vei") must_== NoResult
+    "Filter as designed" in {
+      val err = (":(")
+      Empty filter ((x:Any) => x != null, "oi vei") must_== Empty
+      Empty filter ((x:Any) => x == null, "oi vei") must_== Empty
     }
     "Show 'missing' in errorDetails" in {
-      NoResult.errorDetails must_== Some(ErrorDetails("No results"))
+      Empty.errorDetails must_== Some(("No results"))
+    }
+
+    "combine with goods in sugared loop" in {
+      val nr: Result[String] = Empty
+      val actual1 = for (x <- nr;
+                         y <- Good("y")) yield(x+y)
+      actual1 must_== Empty
+
+      val actual2 = for (x <- Good("x");
+                         y <- nr) yield(x+y)
+      actual2 must_== Empty
+    }
+
+    "combine with bads in sugared loop" in {
+      val nr: Result[String] = Empty
+      val actual1 = for (x <- nr;
+                        y <- Bad[String](("y yourself")::Nil)) yield(x+y)
+      actual1 must_== nr
+      val actual2 = for (x <- Bad[String](("x yourself")::Nil);
+                        y <- nr) yield(x+y)
+      actual2 must_== Bad[String](("x yourself")::Nil)
+    }
+
+    "combine with Empty in sugared loop" in {
+      val nr: Result[String] = Empty
+      val actual1 = for (x <- nr;
+                         y <- nr) yield(x+y)
+      actual1 must_== nr
     }
   }
 
   "traverse" should {
-    "return NoResult if the collection is empty" in {
-      Result.traverse(Nil) must_== NoResult
+    "return Empty if the collection is empty" in {
+      Result.traverse(Nil) must_== Empty
     }
     "return all stuff in good case" in {
       Result.traverse(Good("abc")::Good("xyz")::Nil) must_== Good("abc"::"xyz"::Nil)
     }
     "return bads in bad case" in {
-      Result.traverse(Result.error("abc", "bad1")::Good("xyz")::Result.error("123", "bad2")::NoResult::Nil) must_== Bad(ErrorDetails("bad1", "abc")::ErrorDetails("bad2", "123")::Nil)
+      Result.traverse(Result.error("abc")::Good("xyz")::Result.error("123")::Empty::Nil) must_== Bad(("abc")::("123")::Nil)
     }
-    "return NoResult if some results are missing, but no errors" in {
-      Result.traverse(Good("abc")::Good("xyz")::NoResult:: Nil) must_== Result.error(List("abc", "xyz"), "Some results are missing")
+    "return Empty if some results are missing, but no errors" in {
+      Result.traverse(Good("abc")::Good("xyz")::Empty:: Nil) must_== Result.error("Some results are missing")
+    }
+  }
+
+  "Accompanying object" should {
+    "produce good from some" in {
+      Result(Some("beer")) must_== Good("beer")
+      Result(Some("beer"), "but not bud!") must_== Good("beer")
+    }
+    "produce Empty from None" in {
+      Result(None) must_== Empty
+    }
+    "produce Bad from None" in {
+      Result(None, "Bud") must_== Bad("Bud"::Nil)
+    }
+    "produce good from a value" in {
+      Result.forValue("beer") must_== Good("beer")
+      Result.forValue("beer", "but not bud!") must_== Good("beer")
+    }
+    "produce Empty from null" in {
+      Result.forValue(null) must_== Empty
+      Result.forValue(null, "bud") must_== Bad("bud"::Nil)
+    }
+    "produce Bad from exceptional values" in {
+      Result.forValue(throw new UnsupportedOperationException("brain surgery")) must_== Bad("java.lang.UnsupportedOperationException: brain surgery"::Nil)
+      Result.forValue(throw new UnsupportedOperationException("brain surgery"), "oi vei") must_== Bad("oi vei: java.lang.UnsupportedOperationException: brain surgery"::Nil)
     }
   }
 }
