@@ -9,14 +9,11 @@ import org.specs.Specification
 class ContainsTest extends JUnit4(ContainsTest)
 
 object ContainsTest extends Specification {
-  trait Container[-T] {
-    def contains(t:T): Boolean
-  }
 
   trait MyList[+T] {
     def head:T
     def tail:MyList[T]
-    def ::[U>:T](x:U) = new HeadWithTail(x, this)
+    def ::[U>:T](x:U) = HeadAndTail(x, this)
     def size: Int
   }
 
@@ -26,8 +23,12 @@ object ContainsTest extends Specification {
     def size = 0
   }
 
-  case class HeadWithTail[T](head:T, tail: MyList[T]) extends MyList[T] {
+  case class HeadAndTail[T](head:T, tail: MyList[T]) extends MyList[T] {
     def size = 1 + tail.size
+  }
+
+  trait Container[-T] {
+    def contains(t:T): Boolean
   }
 
   implicit def asContainer[T](list:MyList[T]): Container[T] = new Container[T] {
@@ -46,7 +47,8 @@ object ContainsTest extends Specification {
       listA.size must_== 3
       listA contains A("3") must beTrue
       listA contains B("1") must beTrue
-//      listA contains "nothingness" is a compilation error
+//      listA contains "nothingness" must not compile
+//      listB contains A("3") must not compile
       val listC: MyList[Any] = listA
       listC contains "abracadabra" must beFalse
       listC contains B("2") must beTrue
