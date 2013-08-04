@@ -57,13 +57,16 @@ class ContainsTest extends Specification {
       val cba: Container[B] = cA
       cA contains b3 must beTrue
       cba contains b3 must beFalse
+      val cA: Container[A] = listA
+      val cB: Container[B] = listB
+      val cba: Container[B] = cA
+      cA contains b3 must beTrue
+      cba contains b3 must beFalse
+//      cB contains a3 must not compile
+//      cba contains a3 must not compile
       val listC: MyList[Any] = listA
       listC contains "abracadabra" must beFalse
       listC contains b2 must beTrue
-//      type F[-A] = Function1[A, String]
-//      val m1:F[Object] = Map("abc" -> "ABC")
-//      val m2:F[String] = Map("xyz" -> "XYZ")
-//      val m3:F[String] = m1
     }
   }
 }
