@@ -4,6 +4,7 @@ import org.specs2.mutable.Specification
 
 /**
  * example of natural transformation from covariant to contravariant functor
+ * @see https://docs.google.com/document/d/1sC42GKY7WvztXzgWPGDqFukZ0smZFmNnQksD_lJzm20/edit?usp=sharing
  */
 class ContainsTest extends Specification {
   trait MyList[+T] {
