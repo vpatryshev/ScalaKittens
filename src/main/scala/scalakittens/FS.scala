@@ -28,7 +28,7 @@ trait FS { fs =>
   def isDirectory(file: File): Boolean = file.isDirectory
   def isDirectory(path: String): Boolean = isDirectory(new File(path))
 
-  sealed protected case class Entry(file: File) {
+  sealed protected class Entry(val file: File) {
     require(file != null)
 
     lazy val canonicalFile = file.getCanonicalFile.getAbsoluteFile
