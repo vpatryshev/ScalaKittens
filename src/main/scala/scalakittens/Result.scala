@@ -8,6 +8,7 @@ sealed trait Result[+T] /* TODO(vlad): extends GenTraversableOnce[T]*/ {
   def isGood: Boolean
   def isBad:  Boolean = !isGood
   def isEmpty: Boolean
+  def nonEmpty = !isEmpty
   def listErrors: Errors
   def onError[X >: Errors, Y](op: X => Y):Result[T]
   def map[U](f: T => U): Result[U]
@@ -47,7 +48,7 @@ case class Good[T](value: T) extends Result[T] {
   }
   def fold[U](good: T => U, bad: Errors => U) = good(value)
 
-  override def toString = "Good(" + value.toString + ")"
+  override def toString = s"Good($value)"
   def orElse[T1 >: T] (next: => Result[T1]): Result[T1] = this
   def getOrElse[T1 >: T](alt: => T1): T1 = value
   def <*>[U](other: Result[U]): Result[(T, U)] = other.flatMap(u => Good((value, u)))
@@ -95,16 +96,16 @@ class Bad[T](val listErrors: Errors) extends Result[T] with NoGood[T] {
     tail.take(35) mkString "\n"
   }
 
-  private def stackTrace1(t:Throwable): String = {
+  private def details(t:Throwable): String = {
     val st1 = stackTrace2(t)
     Option(t.getCause).fold(st1)((cause:Throwable) => st1 + "\n\n" + stackTrace2(cause))
 
     val stack = t.getStackTrace
     val tail = stack.dropWhile(el => el.getClassName.contains("Bad") || el.getMethodName == "stackTrace")
-    tail.take(35) mkString "\n"
+    t.getMessage + "\n" + (tail.take(35) mkString "\n")
   }
 
-  def stackTrace:String = listErrors map stackTrace1 mkString "\n\n"
+  def stackTrace:String = listErrors map details mkString "\n\n"
 
   override def toString = errors
 
@@ -155,11 +156,17 @@ case class BadResultException(errors: Errors) extends Exception {
 
 object Result {
 
+  type Errors = Traversable[Throwable]
+  type NoResult = Result[Nothing]
+  type Outcome = Result[Any]
+
   def recordEvent(message:Any):Throwable = new ResultException(""+message)
 
   implicit def asBoolean(r: Result[_]) = r.isGood
   def attempt[T](eval: => Result[T], onException: (Exception => Result[T]) = (e:Exception) => exception(e)) =
-    try { eval } catch { case e: Exception =>
+    try { val x = eval
+          x
+    } catch { case e: Exception =>
       onException(e)
     }
 
@@ -218,23 +225,24 @@ object Result {
   def exception[T](x: Throwable): Bad[T] = Bad(x)
   def exception[T](x: Throwable, comment: Any): Bad[T] = exception(x) orCommentTheError comment
 
-  def traverse[T](results: TraversableOnce[Result[T]]): Result[Traversable[T]] = {
+  def partition[T](results: TraversableOnce[Result[T]]): (List[T], List[Errors]) = {
     val (goodOnes, badOnes) = ((List.empty[T], List.empty[Errors]) /: results)((collected, current) =>
       current match {
         case Good(good)    => (good::collected._1, collected._2)
         case noGood:NoGood[T] => (collected._1, noGood.listErrors.toList::collected._2)
       }
     )
-
-    val errors = badOnes.flatten
-    if (!errors.isEmpty)                  new Bad(errors.toSet) else
-    if (goodOnes.isEmpty || !badOnes.isEmpty) Empty             else
-                                              Good(goodOnes.reverse)
+    (goodOnes, badOnes)
   }
 
-  type Errors = Traversable[Throwable]
-  type NoResult = Result[Nothing]
-  type Outcome = Result[Any]
+  def traverse[T](results: TraversableOnce[Result[T]]): Result[Traversable[T]] = {
+    val (goodOnes, badOnes) = partition(results)
+
+    val errors = badOnes.flatten
+    if (errors.nonEmpty)                  new Bad(errors.toSet) else
+    if (goodOnes.isEmpty || badOnes.nonEmpty) Empty             else
+                                              Good(goodOnes.reverse)
+  }
 
   def fold(results:Traversable[Outcome]):Outcome = ((OK:Outcome) /: results)(_<*>_) map (_ => 'OK)
 
