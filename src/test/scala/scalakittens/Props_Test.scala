@@ -308,7 +308,7 @@ class Props_Test extends Specification with MoreExpectations
           props @@ "A" must_== Good("a1")
           props @@ "B" must_== Good("b1")
           props @@ "C" must_== Good("c1")
-        case bad => failure(s"Goalss, $bad")
+        case bad => failure(s"Oops, $bad")
       }
     }
     "extract data when headers are messed up" in {
@@ -318,7 +318,7 @@ class Props_Test extends Specification with MoreExpectations
           props @@ "A" must_== Good("a1")
           props @@ "B" must_== Good("b1")
           props @@ "C" must_== Good("c1")
-        case bad => failure(s"Goalss, $bad")
+        case bad => failure(s"Oops, $bad")
       }
     }
 
@@ -355,7 +355,7 @@ class Props_Test extends Specification with MoreExpectations
       sutOpt match {
         case Good(sut) =>
           sut @@ "a" must_== Good("b")
-        case orelse => failure(s"Goalss, not good: $orelse")
+        case orelse => failure(s"Oops, not good: $orelse")
       }
     }
 
@@ -365,7 +365,7 @@ class Props_Test extends Specification with MoreExpectations
       sutOpt match {
         case Good(sut) =>
           sut @@ "a" must_== Good("b")
-        case orelse => failure(s"Goalss, not good: $orelse in $txt")
+        case orelse => failure(s"Oops, not good: $orelse in $txt")
       }
     }
 
@@ -374,7 +374,7 @@ class Props_Test extends Specification with MoreExpectations
       sutOpt match {
         case Good(sut) =>
           sut @@ "z" must_== Good("b")
-        case orelse => failure(s"Goalss, not good: $orelse")
+        case orelse => failure(s"Oops, not good: $orelse")
       }
     }
 
@@ -383,7 +383,7 @@ class Props_Test extends Specification with MoreExpectations
       sutOpt match {
         case Good(sut) =>
           sut @@ "d.c.a.b" must_== Good("cdba")
-        case orelse => failure(s"Goalss, not good: $orelse")
+        case orelse => failure(s"Oops, not good: $orelse")
       }
     }
 
@@ -392,7 +392,7 @@ class Props_Test extends Specification with MoreExpectations
       sutOpt match {
         case Good(sut) =>
           sut @@ "d.c.z.b" must_== Good("cdba")
-        case orelse => failure(s"Goalss, not good: $orelse")
+        case orelse => failure(s"Oops, not good: $orelse")
       }
     }
 
@@ -403,7 +403,7 @@ class Props_Test extends Specification with MoreExpectations
       sutOpt match {
         case Good(sut) =>
           sut @@ "Private.Somewhere.Bribe.max" must_== Good("$4,0.00")
-        case orelse => failure(s"Goalss, not good: $orelse")
+        case orelse => failure(s"Oops, not good: $orelse")
       }
     }
 
@@ -413,7 +413,7 @@ class Props_Test extends Specification with MoreExpectations
       sutOpt match {
         case Good(sut) =>
           sut @@ "Private.Somewhere.Bribe.max" must_== Good("$4,0.00")
-        case orElse => failure(s"Goalss, not good: $orElse")
+        case orElse => failure(s"Oops, not good: $orElse")
       }
     }
   }
@@ -547,7 +547,7 @@ class Props_Test extends Specification with MoreExpectations
           sut.size must_== 3
           val serviceTypes = sut map (_.getOrElse("[[1]].K", "oops..."))
           serviceTypes.toList must_== List("I0", "I1", "I2")
-        case basura => failure(s"Goalss, not good: $basura")
+        case basura => failure(s"Oops, not good: $basura")
       }
     }
 
@@ -557,7 +557,7 @@ class Props_Test extends Specification with MoreExpectations
       propsOpt match {
         case Good(props) =>
           props @@ "HERMIONE GRANGER, MUGGLE.Passport Number" must_== Good("9")
-        case basura => failure(s"Goalss, not good: $basura")
+        case basura => failure(s"Oops, not good: $basura")
       }
     }
 
@@ -570,7 +570,7 @@ class Props_Test extends Specification with MoreExpectations
           sut.size must_== 5
           val empty = sut.find(_._1.isEmpty)
           empty.isEmpty aka s"#{empty._2}" must beTrue
-        case basura => failure(s"Goalss, not good: $basura")
+        case basura => failure(s"Oops, not good: $basura")
       }
     }
 
@@ -586,7 +586,7 @@ class Props_Test extends Specification with MoreExpectations
             sut(i)(s"[[1]].key$i$j") must_== s"val$i$j"
           }
           val serviceTypes = sut map (_.getOrElse("[[1]].key", "oops..."))
-        case basura => failure(s"Goalss, not good: $basura")
+        case basura => failure(s"Oops, not good: $basura")
       }
     }
 
@@ -599,7 +599,7 @@ class Props_Test extends Specification with MoreExpectations
           sut.size must_== 3
           val serviceTypes = sut map (_.getOrElse("[[1]].Purpose of the Trip", "oops..."))
           serviceTypes.toList must_== List("Private Beach Party", "Thai Massage", "Private Show")
-        case basura => failure(s"Goalss, not good: $basura")
+        case basura => failure(s"Oops, not good: $basura")
       }
     }
 
@@ -609,7 +609,7 @@ class Props_Test extends Specification with MoreExpectations
       propsOpt match {
         case Good(props) =>
           props @@ ".Passport Number" must_== Good("9")
-        case basura => failure(s"Goalss, not good: $basura")
+        case basura => failure(s"Oops, not good: $basura")
       }
     }
     "Extract data from list" in {
