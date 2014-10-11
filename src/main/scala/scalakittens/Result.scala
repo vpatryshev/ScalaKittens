@@ -20,6 +20,7 @@ sealed trait Result[+T] /* TODO(vlad): extends GenTraversableOnce[T]*/ {
   def orElse[T1 >: T] (next: => Result[T1]): Result[T1]
   def getOrElse[T1 >: T](alt: => T1): T1
   def <*>[U](other: Result[U]): Result[(T,U)]
+  def andAlso[U](other: Result[U]): Result[(T,U)] = <*>(other)
   protected def foreach_(f: (T) ⇒ Unit)
   def foreach(f: (T) ⇒ Unit): Result[T] = {foreach_(f); this}
   def filter(p: T => Boolean): Result[T]
