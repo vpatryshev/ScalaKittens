@@ -1,6 +1,7 @@
 package scalakittens
 
-import com.healthexpense.common.Library._
+import Result._
+import Props._
 import scala.util.parsing.combinator.RegexParsers
 import scala.util.parsing.json.JSON
 
@@ -9,6 +10,8 @@ import scala.util.parsing.json.JSON
  */
 case class Props(private val innerMap: PropMap) extends PartialFunction[String, String] { self =>
   def filterValues(predicate: String => Boolean) = props(innerMap.filter {case (k,v) => predicate(v)})
+
+  implicit def ternary(b: =>Boolean) = new {def ?[T](x: =>T) = new { def |(y: =>T) = if(b) x else y}}
 
   import Props._
 

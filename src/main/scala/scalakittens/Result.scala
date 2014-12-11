@@ -246,6 +246,50 @@ object Result {
   }
 
   def fold(results:Traversable[Outcome]):Outcome = ((OK:Outcome) /: results)(_<*>_) map (_ => 'OK)
+  def zip[X1,X2](r1: Result[X1], r2: Result[X2]) = r1 andAlso r2
+
+  def zip[X1,X2,X3](r1: Result[X1], r2: Result[X2], r3: Result[X3]): Result[(X1,X2,X3)] = {
+    (r1,r2,r3) match {
+      case (Good(x1),Good(x2),Good(x3)) => Good((x1,x2,x3))
+      case (b1,b2,b3)                   => bad(b1, b2, b3)
+    }
+  }
+
+  def zip[X1,X2,X3,X4](r1: Result[X1], r2: Result[X2], r3: Result[X3], r4: Result[X4]): Result[(X1,X2,X3, X4)] = {
+    (r1,r2,r3,r4) match {
+      case (Good(x1),Good(x2),Good(x3),Good(x4)) => Good((x1,x2,x3,x4))
+      case (b1,b2,b3,b4)                         => bad(b1, b2, b3, b4)
+    }
+  }
+
+  def zip[X1,X2,X3,X4,X5](r1: Result[X1], r2: Result[X2], r3: Result[X3], r4: Result[X4], r5: Result[X5]): Result[(X1,X2,X3, X4,X5)] = {
+    (r1,r2,r3,r4,r5) match {
+      case (Good(x1),Good(x2),Good(x3),Good(x4),Good(x5)) => Good((x1,x2,x3,x4,x5))
+      case (b1,b2,b3,b4,b5)                               => bad(b1, b2, b3, b4, b5)
+    }
+  }
+
+  def zip[X1,X2,X3,X4,X5,X6](r1: Result[X1], r2: Result[X2], r3: Result[X3], r4: Result[X4], r5: Result[X5], r6: Result[X6]): Result[(X1,X2,X3, X4,X5,X6)] = {
+    (r1,r2,r3,r4,r5,r6) match {
+      case (Good(x1),Good(x2),Good(x3),Good(x4),Good(x5),Good(x6)) => Good((x1,x2,x3,x4,x5,x6))
+      case (b1,b2,b3,b4,b5,b6)                                     => bad(b1, b2, b3, b4, b5, b6)
+    }
+  }
+
+  def zip[X1,X2,X3,X4,X5,X6,X7](r1: Result[X1], r2: Result[X2], r3: Result[X3], r4: Result[X4], r5: Result[X5], r6: Result[X6], r7: Result[X7]): Result[(X1,X2,X3, X4,X5,X6,X7)] = {
+    (r1,r2,r3,r4,r5,r6,r7) match {
+      case (Good(x1),Good(x2),Good(x3),Good(x4),Good(x5),Good(x6),Good(x7)) => Good((x1,x2,x3,x4,x5,x6,x7))
+      case (b1,b2,b3,b4,b5,b6,b7)                                     => bad(b1, b2, b3, b4, b5, b6, b7)
+    }
+  }
+
+  def zip[X1,X2,X3,X4,X5,X6,X7,X8](r1: Result[X1], r2: Result[X2], r3: Result[X3], r4: Result[X4], r5: Result[X5], r6: Result[X6], r7: Result[X7], r8: Result[X8]): Result[(X1,X2,X3, X4,X5,X6,X7,X8)] = {
+    (r1,r2,r3,r4,r5,r6,r7,r8) match {
+      case (Good(x1),Good(x2),Good(x3),Good(x4),Good(x5),Good(x6),Good(x7),Good(x8)) => Good((x1,x2,x3,x4,x5,x6,x7,x8))
+      case (b1,b2,b3,b4,b5,b6,b7,b8)                                     => bad(b1, b2, b3, b4, b5, b6, b7, b8)
+    }
+  }
+
 
   object OK extends Good('OK) with Outcome
   def Oops[T](complaint: Any) = error(complaint)
