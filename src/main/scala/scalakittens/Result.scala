@@ -236,6 +236,9 @@ object Result {
     (goodOnes, badOnes)
   }
 
+  private def bad[T](errors: Errors): Result[T] = if (errors.isEmpty) Empty else Bad(errors.toSet)
+  private def bad[T](results: Result[_]*): Result[T] = bad(results map (_.listErrors) flatten)
+
   def traverse[T](results: TraversableOnce[Result[T]]): Result[Traversable[T]] = {
     val (goodOnes, badOnes) = partition(results)
 
