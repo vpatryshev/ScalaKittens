@@ -1,7 +1,10 @@
 package scalakittens
 
+import org.specs2.mutable.Specification
+
 class Props_Test extends Specification with MoreExpectations
 {
+  import Props._
 
   "PropsOps.replaceAll" should {
     "keep intact strings that don't match" in {

@@ -2,10 +2,9 @@ package scalakittens
 
 import java.io.{StringWriter, Writer}
 import Caching._
-import org.specs.Specification
-import org.specs.runner.{ConsoleRunner, JUnit4}
+import org.specs2.Specification
 import java.util.concurrent.TimeUnit
-
+/*
 class CachingTest extends JUnit4(CachingTest)
 
 object CachingTestRunner extends ConsoleRunner(CachingTest)
@@ -127,4 +126,4 @@ var patience = 10
       buffers foreach (_.toString must_== "bcdefghij")
     }
   }
-}
+}*/

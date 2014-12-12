@@ -1,5 +1,5 @@
 package scalakittens.scalaz
-
+/*
 import scalaz._
 import Scalaz._
 // must be 'having' ... 'or' ...
@@ -32,7 +32,7 @@ object ValidationPlus {
     case None  => Failure(())
     case Some(x) => Success(x)
   }
-}
+}*/
 // please ignore this, it'll go to another project
 //class ValidationPlus[Bad,Good](val root: Validation[Bad,Good]) {
 //  def orElse(another: Validation[Bad, Good]) = root match {

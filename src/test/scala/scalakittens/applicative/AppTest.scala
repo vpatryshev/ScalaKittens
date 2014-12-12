@@ -1,6 +1,6 @@
 package scalakittens
 package applicative
-
+/*
 import org.specs._
 import org.specs.runner.JUnit4
 import scalakittens.applicative.All._
@@ -189,3 +189,4 @@ object AppTest extends Specification {
     }
   }
 }
+*/

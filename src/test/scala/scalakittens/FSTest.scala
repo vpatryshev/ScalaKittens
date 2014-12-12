@@ -1,5 +1,5 @@
 package scalakittens
-
+/*
 import org.specs.runner.JUnit4
 import org.specs.Specification
 import java.io.{ByteArrayInputStream, PrintWriter, File}
@@ -134,3 +134,4 @@ object FSTest extends Specification {
 
   }
 }
+*/

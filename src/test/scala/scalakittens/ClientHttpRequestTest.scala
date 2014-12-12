@@ -1,5 +1,5 @@
 package scalakittens
-
+/*
 import org.specs.runner.JUnit4
 import org.specs.Specification
 import java.io._
@@ -71,3 +71,4 @@ object ClientHttpRequestTest extends Specification {
 //    }
   }
 }
+*/

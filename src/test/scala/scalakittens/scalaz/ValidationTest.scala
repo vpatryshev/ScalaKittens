@@ -1,5 +1,5 @@
 package scalakittens.scalaz
-
+/*
 import org.specs.runner.JUnit4
 import org.specs.Specification
 import java.io.{ByteArrayInputStream, PrintWriter, File}
@@ -48,3 +48,4 @@ object ValidationTest extends Specification {
 
   }
 }
+*/

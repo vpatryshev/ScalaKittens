@@ -391,7 +391,7 @@ trait PropsOps {
     case _          => false
   }
 
-  private[common] def parsePair(k:Any, v:Any):Result[Props] = v match {
+  def parsePair(k:Any, v:Any):Result[Props] = v match {
     case s:String            => Good(props(k.toString -> s))
     case x if isPrimitive(x) => Good(props(k.toString -> v.toString))
     case other               => fromTree(other) map(_ addPrefix k.toString)
@@ -408,6 +408,12 @@ trait PropsOps {
 }
 
 object Props extends PropsOps {
+
+  def tryOr  [T](eval: =>T, onError: Exception => T) =
+    try { eval } catch { case e: Exception => onError(e) }
+
+  def tryOr  [T](eval: =>T, orElse: =>T) =
+    try { eval } catch { case e: Exception => orElse }
 
   val sNumberKey = "\\[\\[(\\d+)\\]\\]"
   val NumberKeyPattern = sNumberKey.r
