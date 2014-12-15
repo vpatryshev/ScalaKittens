@@ -128,4 +128,7 @@ db.readUsers.filter(_.gender == 'F').flatMap(_.kids).flatMap(_.school).flatMap(_
 
 2.10. Defensive programming is the last resort; with properly designed types bad values just don't compile.
 
-2.11.
+## Sources
+http://docs.scala-lang.org/style/ - these old laws are a little bit _too_ old, but are a good hint regarding how to write readable stuff
+http://twitter.github.io/effectivescala/ - this is a little bit weird, but is a good source of inspiration
+
