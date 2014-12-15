@@ -88,9 +88,13 @@ This is for the people that never practiced functional programming in any langua
 
 1.16. DRY. Abstraction is your friend.
 
-1.17. Read books on functional programming and advanced books on Scala.
+1.17. The code lives as long as it's refactorable. If it's frozen, it's dead, or it will die soon.
 
-## Level 2. You are an experienced Scala programmer, pretty versatile with stuff, can write typed and untyped SKI combinators (maybe not).
+1.18. Read books on functional programming and advanced books on Scala.
+
+## Level 2. 
+
+You are an experienced Scala programmer, pretty versatile with stuff, can write typed and untyped SKI combinators (maybe not).
 
 2.1. Keep in mind that level 1 programmers are reading your code: don't make their life harder than is necessary.
 
@@ -104,5 +108,24 @@ This is for the people that never practiced functional programming in any langua
       } yield call(phone)
 ```
 is much more readable than
-``` db.readUsers.filter(_.gender == 'F').flatMap(_.kids).flatMap(_.school).flatMap(_.teacherOf("math")).flatMap(_.phoneNUmber).foreach(_.call)
+``` 
+db.readUsers.filter(_.gender == 'F').flatMap(_.kids).flatMap(_.school).flatMap(_.teacherOf("math")).flatMap(_.phoneNUmber).foreach(_.call)
 ```
+
+2.3. Dependency Injection is best done by cake pattern; and there's an even better solution from Chris Sachs: https://www.hakkalabs.co/articles/scala-bay-tech-talk-abstract-types https://drive.google.com/file/d/0BwRrcixvqFQgeTJZdVRaZ0hMU3ZMOFVKNlo2RENwN3c5ekZR/edit
+
+2.4. String-typing is not a bright idea; introduce individual types for individual data, so that you do not add, e.g., company name to street name. Same with "long ids"; nobody adds or subtracts two ids.
+
+2.5. scalaz is not evil, it is a vast collection of best algorithms and solutions in Scala
+
+2.6. Forget about synchronized, wait, notifyAll, it's ancient. Use CPS.
+
+2.7. Monads don't commute (except for a very special monad, `Reader`)
+
+2.8. `TraversableOnce` is enough on most occasions
+
+2.9. Booleans are an abomination. You return a boolean, next you'll have to dump an explanation into a log... why? return your explanation to the client.
+
+2.10. Defensive programming is the last resort; with properly designed types bad values just don't compile.
+
+2.11.
