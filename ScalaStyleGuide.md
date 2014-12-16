@@ -138,21 +138,23 @@ is much more readable than
 db.readUsers.filter(_.gender == 'F').flatMap(_.kids).flatMap(_.school).flatMap(_.teacherOf("math")).flatMap(_.phoneNUmber).foreach(_.call)
 ```
 
-2.3. Dependency Injection is best done by cake pattern; and there's an even better solution from Chris Sachs: https://www.hakkalabs.co/articles/scala-bay-tech-talk-abstract-types https://drive.google.com/file/d/0BwRrcixvqFQgeTJZdVRaZ0hMU3ZMOFVKNlo2RENwN3c5ekZR/edit
+2.3. Composition (mixin). There's no reason to stuff everything in a class; traits are an elegant way to split responsibilities, and then you can combine traits to build a class.
 
-2.4. String-typing is not a bright idea; introduce individual types for individual data, so that you do not add, e.g., company name to street name. Same with "long ids"; nobody adds or subtracts two ids.
+2.4. Dependency Injection is best done by cake pattern; and there's an even better solution from Chris Sachs: https://www.hakkalabs.co/articles/scala-bay-tech-talk-abstract-types https://drive.google.com/file/d/0BwRrcixvqFQgeTJZdVRaZ0hMU3ZMOFVKNlo2RENwN3c5ekZR/edit
 
-2.5. scalaz is not evil, it is a vast collection of best algorithms and solutions in Scala
+2.5. String-typing is not a bright idea; introduce individual types for individual data, so that you do not add, e.g., company name to street name. Same with "long ids"; nobody adds or subtracts two ids.
 
-2.6. Forget about synchronized, wait, notifyAll, it's ancient. Use CPS.
+2.6. scalaz is not evil, it is a vast collection of best algorithms and solutions in Scala
 
-2.7. Monads don't commute (except for a very special monad, `Reader`)
+2.7. Forget about synchronized, wait, notifyAll, it's ancient. Use CPS.
 
-2.8. `TraversableOnce` is enough on most occasions
+2.8. Monads don't commute (except for a very special monad, `Reader`)
 
-2.9. Booleans are an abomination. You return a boolean, next you'll have to dump an explanation into a log... why? return your explanation to the client.
+2.9. `TraversableOnce` is enough on most occasions
 
-2.10. Defensive programming is the last resort; with properly designed types bad values just don't compile.
+2.10. Booleans are an abomination. You return a boolean, next you'll have to dump an explanation into a log... why? return your explanation to the client.
+
+2.11. Defensive programming is the last resort; with properly designed types bad values just don't compile.
 
 ## Sources
 This classical source: http://docs.scala-lang.org/style/ contains a lot of good hints, and a lot of senseless hints. These old laws are just bit _too_ old. Also, these rules are too totalitarian, in my view. There's nothing wrong, for instance, in writing
@@ -165,5 +167,7 @@ for {
 }
 ```
 Tastes vary.
-http://twitter.github.io/effectivescala/ - this is a little bit weird, but is a good source of inspiration
+
+This twitter guide has a lot of good advices, and is a good source of inspiration even if you prefer not to follow:
+http://twitter.github.io/effectivescala/ 
 
