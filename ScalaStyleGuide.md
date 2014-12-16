@@ -1,6 +1,6 @@
 #Scala Style Guide
 
-####Authors: Vlad Patryshev
+####Authors: Vlad Patryshev (join!)
 
 This document is supposed to be the result of common efforts to reflect what we feel good about by the end of year 2014. Things and views may change.
 The document consists of two levels, one is for those who has just escaped from Javaland, and the next one is for those who can write code but at times makes mistakes.
