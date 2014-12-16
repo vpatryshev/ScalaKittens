@@ -64,33 +64,59 @@ This is for the people that never practiced functional programming in any langua
 - To make compiler's life easy, specify the types of your values and functions; it's a known fact that scalac runs faster when types are specified.
 - The same applies to your colleagues: if the type of a value is explicitly written (and not obvious otherwise), they'll feel more comfortable.
 
-1.6. Introduce intermediate variables with good names: your compiler may need them, your colleague too.
+1.6. Scala has strict naming rules. Use camel; try not to use underscores (unless you are a big fan of them). Class name starts with a capital. Constant name starts with a capital; this is especially important when matching regular expressions:
+The following code will work properly
+```
+  val Kvp = "(\\w+)=(\\w+)".r
+  val Announcement = "Hello!"
+  line match {
+    case Kvp(key, value) => Some(key -> value)
+    case Announcement    => Some("greeting" -> "hello")
+    case trash           => None
+   }
+```
+The following code will not work
+```
+  val kvp = "(\\w+)=(\\w+)".r
+  val announcement = "Hello!"
+  line match {
+    case kvp(key, value) => Some(key -> value)
+    case announcement    => Some("greeting" -> "hello") // locally, announcement=line
+    case trash           => None                        // unreachable
+   }
+```
+On the other hand, it's okay, on proper occasions, to give objects name starting with small characters.
+Hungarian notation is a matter of taste. A good argument against is that in a well-typed language the type of the variable is known not from its name, but from its declaration.
 
-1.7. Make methods do just one thing.
+1.7. Introduce intermediate variables with good names: your compiler may need them, your colleague too.
 
-1.8. There are two kinds of zero-parameter "functions": those that just return something with no side effect, like `myInvestment.currentValue` and those that have a side effect, like `myInvestment.rebalance()`.
+1.8. Make methods do just one thing.
 
-1.9. A function that returns anther function (e.g. `def add(x:Int)(y:Int):Int` is as good as `def add(x:Int,y:Int):Int`. Transformation of the second to the first called currying, and using this trick may also save your processor cycles (as if anybody cares these days).
+1.9. There are two kinds of zero-parameter "functions": those that just return something with no side effect, like `myInvestment.currentValue` and those that have a side effect, like `myInvestment.rebalance()`.
 
-1.10. Implicits. While you are at level 1, don't introduce new ones (it's tricky), but feel free to use whatever is available.
+1.10. A function that returns another function (e.g. `def add(x:Int)(y:Int):Int` is as good as `def add(x:Int,y:Int):Int`. Transformation of the second to the first called currying, and using this trick may also save your processor cycles (as if anybody cares these days).
 
-1.10. Your code is a piece of graphic art, although it's just an ASCII art; the more space characters, the more readable it is.
+1.11. Using `return` - if your compiler or IDE complains about them, don't use them (`return` in the end of function is unnecessary); but if it does not complain, it's the matter of taste.
 
-1.11. Max code line length... it's up to you, but remember, others are trying to read your masterpiece.
+1.12. Implicits. While you are at level 1, don't introduce new ones (it's tricky), but feel free to use whatever is available.
 
-1.12. Nobody reads documentation or comments these days. So a self-explanatory code makes a lot of sense.
+1.13. Your code is a piece of graphic art, although it's just an ASCII art; the more space characters, the more readable it is.
 
-1.13. Within a project, it may make sense to use the established naming conveniences, coding style and libraries... on the other hand, if we did that, we would be still coding in machine codes and sitting around fire in the caves.
+1.14. Max code line length... it's up to you, but remember, others are trying to read your masterpiece.
 
-1.14. Learn local libraries.
+1.15. Nobody reads documentation or comments these days. So a self-explanatory code makes a lot of sense.
 
-1.15. If you don't know how to write unittests in Scala, drop everything and learn it first. Hardly any of your code makes any sense (even if you believe it does) if there are no tests that prove it (to others; we know you trust yourself). Test frameworks used may vary from project to project; it's a stupid idea to have two frameworks in one project.
+1.16. Within a project, it may make sense to use the established naming conveniences, coding style and libraries... on the other hand, if we did that, we would be still coding in machine codes and sitting around fire in the caves.
 
-1.16. DRY. Abstraction is your friend.
+1.17. Learn local libraries. So you won't have to reinvent them, and your code looks more like other people's code.
 
-1.17. The code lives as long as it's refactorable. If it's frozen, it's dead, or it will die soon.
+1.18. If you don't know how to write unittests in Scala, drop everything and learn it first. Hardly any of your code makes any sense (even if you believe it does) if there are no tests that prove it (to others; we know you trust yourself). Test frameworks used may vary from project to project; it's a stupid idea to have two frameworks in one project.
 
-1.18. Read books on functional programming and advanced books on Scala.
+1.19. DRY. Abstraction is your friend.
+
+1.20. The code lives as long as it's refactorable. If it's frozen, it's dead, or it will die soon. Of course it is only important for you if you care.
+
+1.21. Read books on functional programming and advanced books on Scala.
 
 ## Level 2. 
 
@@ -129,6 +155,15 @@ db.readUsers.filter(_.gender == 'F').flatMap(_.kids).flatMap(_.school).flatMap(_
 2.10. Defensive programming is the last resort; with properly designed types bad values just don't compile.
 
 ## Sources
-http://docs.scala-lang.org/style/ - these old laws are a little bit _too_ old, but are a good hint regarding how to write readable stuff
+This classical source: http://docs.scala-lang.org/style/ contains a lot of good hints, and a lot of senseless hints. These old laws are just bit _too_ old. Also, these rules are too totalitarian, in my view. There's nothing wrong, for instance, in writing
+```
+for {
+  x <- board.rows
+  y <- board.files
+} {
+  print(s"($x, $y)")
+}
+```
+Tastes vary.
 http://twitter.github.io/effectivescala/ - this is a little bit weird, but is a good source of inspiration
 
