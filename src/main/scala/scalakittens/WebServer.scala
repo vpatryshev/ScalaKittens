@@ -1,4 +1,4 @@
-package com.scalakittens
+package scalakittens
 
 import java.net.{SocketException, Socket, ServerSocket}
 import Result
