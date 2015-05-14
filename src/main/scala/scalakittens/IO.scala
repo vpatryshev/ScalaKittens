@@ -1,4 +1,4 @@
-package com.scalakittens
+package scalakittens
 
 import language.{implicitConversions, postfixOps}
 import java.io._
