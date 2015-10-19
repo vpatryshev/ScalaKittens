@@ -163,13 +163,13 @@ trait Ops { self:AnyRef =>
       worker.start()
       worker.join(millis)
       if (worker.isAlive) {
-        Logging.info("Timeout on operation, interrupting...")
+//        Logging.info("Timeout on operation, interrupting...")
         worker.interrupt()
         Thread.`yield`()
         parkUntil(finalDeadline)
       }
       if (worker.isAlive) {
-        Logging.anError(s"Operation hung, called by $caller")
+//        Logging.anError(s"Operation hung, called by $caller")
         worker.stop()
       }
       if (done.get) res else {

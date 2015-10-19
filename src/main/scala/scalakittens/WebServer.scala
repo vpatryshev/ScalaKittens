@@ -1,11 +1,10 @@
 package scalakittens
 
-import java.net.{SocketException, Socket, ServerSocket}
-import Result
+import java.io.IOException
+import java.net.{ServerSocket, Socket, SocketException}
 
 import scala.io.Source
-import java.io.IOException
-import IO._
+import scalakittens.IO._
 
 
 trait Response {
