@@ -1,12 +1,10 @@
 package scalakittens
 
 import scala.concurrent.Future
-import scala.util.{Try, Success, Failure}
+import scala.util.{Failure, Success, Try}
 import scalakittens.Result.{Errors, NoResult}
 
-sealed trait Result[+T] /* TODO(vlad): extends GenTraversableOnce[T]*/ {
-  def isGood: Boolean
-  def isBad:  Boolean = !isGood
+sealed trait Result[+T] extends Goodness /*with GenTraversableOnce[T]*/ {
   def isEmpty: Boolean
   def nonEmpty = !isEmpty
   def listErrors: Errors
@@ -33,9 +31,8 @@ sealed trait Result[+T] /* TODO(vlad): extends GenTraversableOnce[T]*/ {
   def asOption: Option[T]
 }
 
-case class Good[T](value: T) extends Result[T] {
+case class Good[T](value: T) extends Result[T] with PositiveAttitude {
   require(value != null, "Cannot accept null in constructor")
-  def isGood = true
 
   def isEmpty = false
   val listErrors: Errors = Nil
@@ -61,8 +58,7 @@ case class Good[T](value: T) extends Result[T] {
   def asOption = Some(value)
 }
 
-trait NoGood[T] { self:Result[T] =>
-  def isGood = false
+trait NoGood[T] extends NegativeAttitude { self:Result[T] =>
   def filter(p: T => Boolean):Result[T] = self
   def filter(p: T => Boolean, onError: T => String):Result[T] = self
   protected def foreach_(f: T => Unit) {}

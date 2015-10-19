@@ -5,14 +5,18 @@
       <SbtProjectSettings>
         <option name="createEmptyContentRootDirectories" value="true" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="jdk" value="1.7" />
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/project" />
           </set>
         </option>
+        <option name="resolveClassifiers" value="true" />
+        <option name="sbtVersion" value="0.13.5" />
+        <option name="useAutoImport" value="true" />
+        <option name="useOurOwnAutoImport" value="true" />
       </SbtProjectSettings>
     </option>
   </component>
 </project>
-
