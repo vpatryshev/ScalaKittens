@@ -6,13 +6,17 @@ import Ops._
 import scala.io.{Codec, Source}
 import java.net.URL
 import java.nio.channels.Channels
-import scala.reflect.io.Streamable
 import scala.util.Try
+import scala.reflect.io.Streamable
 
 trait IO { self =>
-  implicit def asFile(path: String) = new File(path)
+  implicit def asFile(path: String): File = new File(path)
 
-  implicit def bytesWritable(buf: Array[Byte]) = new {
+  trait CanWrite {
+    def #>(f: File): Result[File]
+  }
+
+  implicit def bytesWritable(buf: Array[Byte]): CanWrite = new CanWrite {
     /**
      * Writes an array of bytes to a file.
      * Has a side-effect
@@ -27,7 +31,7 @@ trait IO { self =>
     }
   }
 
-  implicit def stringWritable(s: String) = bytesWritable(s.getBytes)
+  implicit def stringWritable(s: String): CanWrite = bytesWritable(s.getBytes)
 
 
   def withFile_old[T](file:File)(f: FileInputStream => T): Result[T] = {
@@ -56,7 +60,7 @@ trait IO { self =>
 
   def startsWith_old(prefix: Array[Byte])(file: File) =
     file.canRead &&
-    withFile_old(file)(in => prefix forall (in.read ==)).toOption .filter (identity) .isDefined
+    withFile_old(file)(in => prefix forall (in.read ==)).toOption .exists (identity)
 
   val MinFileLength = 10
 

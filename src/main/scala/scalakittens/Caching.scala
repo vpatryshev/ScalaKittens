@@ -1,5 +1,6 @@
 package scalakittens
 
+import scala.language.implicitConversions
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.TimeUnit
 import ref.{WeakReference, Reference, SoftReference}
