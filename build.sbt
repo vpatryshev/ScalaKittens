@@ -6,7 +6,7 @@ name := "Scala Kittens Library"
 
 version := "0.1.3"
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.10.6"
 
 scalacOptions ++= Seq("-deprecation", "-encoding", "UTF-8", "-feature", "-target:jvm-1.7", "-unchecked",
     "-Ywarn-adapted-args", "-Ywarn-value-discard", "-Xlint")
@@ -26,7 +26,10 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   "org.scalatest"           %% "scalatest"     % "2.2.3" % "test" withSources(),
-  "org.scala-lang" % "scala-parser-combinators" % "2.11.0-M4"
+  "org.scala-lang" % "scala-compiler" % "2.10.6",
+  "org.scala-lang" % "scala-library" % "2.10.6",
+  "org.specs2" %% "specs2-core" % "3.6" % "test",
+  "org.scalacheck" %% "scalacheck" % "1.12.4" % "test"
 )
 
 logLevel := Level.Warn

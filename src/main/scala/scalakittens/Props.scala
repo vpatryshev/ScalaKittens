@@ -7,6 +7,7 @@ import scalakittens.Result.Outcome
 
 import scala.io.Source
 import scala.language.{implicitConversions, postfixOps, reflectiveCalls}
+import scala.util.parsing.combinator.RegexParsers
 import Props._
 
 /**
@@ -20,22 +21,23 @@ case class Props(private val innerMap: PropMap) extends PartialFunction[String, 
   private def keyAsArray(k: String):Array[String] = k split "\\."
   implicit def keyAsSet(k: String):Set[String] = keyAsArray(k) toSet
 
+  private[scalakittens] def matchingKeys(key: String) = {
+    try {
+      val ks = innerMap.keys.filter(keyMatches(key))
+      ks
+    } catch {
+      case soe: StackOverflowError =>
+        Nil
+    }
+  }
+
   def findKey(key: String): Option[String] = {
 
     def equalKeys = innerMap.keys.filter(key==)
-    def matchingKeys = {
-      try {
-        val ks = innerMap.keys.filter(keyMatches(key))
-        ks
-      } catch {
-        case soe: StackOverflowError =>
-          Nil
-      }
-    }
-
     def containingKeys = innerMap.keys.filter(keyContains(key))
 
-    equalKeys.headOption orElse matchingKeys.headOption orElse containingKeys.headOption
+    val found = equalKeys.headOption orElse matchingKeys(key).headOption orElse containingKeys.headOption
+    found
   }
   def findAndReplace(key: String, value: String): Props = {
     val keysFound = findAllHaving(key)
@@ -53,7 +55,11 @@ case class Props(private val innerMap: PropMap) extends PartialFunction[String, 
 
 
 
-  lazy val pfOpt = (key:String) => findKey(key) flatMap innerMap.get
+  lazy val pfOpt = (key:String) => {
+    val kOpt = findKey(key)
+    val vOpt = kOpt flatMap innerMap.get
+    vOpt
+  }
 
   def apply(key: String) = innerMap(key)
   def find(collectionOfKeys: String*) = collectionOfKeys find isDefinedAt map apply
@@ -92,7 +98,7 @@ case class Props(private val innerMap: PropMap) extends PartialFunction[String, 
     "Map(" + keysAndValues.mkString(", ") + ")"
   }
 
-  override def toString() = if (isEmpty) "Empty()" else s"fp($toStringPf)"
+  override def toString = if (isEmpty) "Empty()" else s"fp($toStringPf)"
 
   override def equals(other:Any) = other match {
     case props: Props => props.innerMap == self.innerMap
@@ -267,7 +273,7 @@ case class Props(private val innerMap: PropMap) extends PartialFunction[String, 
     result
   }
 
-  private[common] lazy val indexRange = {
+  private[scalakittens] lazy val indexRange = {
     val indexes = keySet collect { case NumberKeyPattern(n) => n.toInt }
     1 to (if (indexes.isEmpty) 0 else indexes.max)
   }
@@ -350,7 +356,7 @@ case class Props(private val innerMap: PropMap) extends PartialFunction[String, 
 
   def transformKeys(keyTransformer: String=>String) = props(innerMap)(keyTransformer)
 
-  private[common] def stringAt(key:String, op: Props => String) = {
+  private[scalakittens] def stringAt(key:String, op: Props => String) = {
     val sub = subtree(key)
     val v = valueOf(key)
     if (!sub.isEmpty) op(sub) else v match {
@@ -487,7 +493,7 @@ trait PropsOps {
     case _          => false
   }
 
-  private[common] def parsePair(k:Any, v:Any):Result[Props] = v match {
+  private[scalakittens] def parsePair(k:Any, v:Any):Result[Props] = v match {
     case s:String            => Good(props(k.toString -> s))
     case x if isPrimitive(x) => Good(props(k.toString -> v.toString))
     case other               => fromTree(other) map(_ addPrefix k.toString)
@@ -642,28 +648,30 @@ object Props extends PropsOps {
       val noNL = s0.replaceAll("\\n", " ").trim
       parseAll(propExp, noNL) match {
         case Success(result, _) => Good(result)
-        case NoSuccess(x, y) => Result.error("Failed to parse", x, y)
+        case NoSuccess(x, y) => Result.error(s"Failed to parse: $x, $y")
       }
     }
+  }
+
+  private[scalakittens] def looseMatch(suggested: String, existing: String) = {
+    val keySequence = existing.split("\\.").toList
+
+    val suggestedSequence = suggested.split("\\.").toList map (_.replaceAll("\\?", "."))
+
+    def match1(sample: String, segment:String): Outcome = Result.forValue(segment matches sample) filter identity
+
+    def findNext(seq: List[String], sample: String) = seq dropWhile (!match1(sample, _))
+
+    val found = (keySequence /: suggestedSequence)((ks, sample) => findNext(ks, sample))
+
+    found.nonEmpty
   }
 
   def keyMatches(suggestedAnyCase: String)(theKeyWeHave: String) = {
     val suggested = suggestedAnyCase.toLowerCase
     val ourKey = theKeyWeHave.toLowerCase
 
-    ourKey == suggested || {
-      val keySequence = ourKey.split("\\.").toList
-
-      val suggestedSequence = suggested.split("\\.").toList map (_.replaceAll("\\?", "."))
-
-      def match1(sample: String, segment:String): Outcome = Result.forValue(segment matches sample)
-
-      def findNext(seq: List[String], sample: String) = seq dropWhile (!match1(sample, _))
-
-      val found = (keySequence /: suggestedSequence)((ks, sample) => findNext(ks, sample))
-
-      found.nonEmpty
-    }
+    ourKey == suggested || looseMatch(suggested, ourKey)
   }
 
   def keyContains(suggestedAnyCase: String)(theKeyWeHave: String) = {

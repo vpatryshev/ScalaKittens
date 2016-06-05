@@ -1,10 +1,19 @@
 package scalakittens
 
 import org.specs2.mutable.Specification
+import Props._
 
-class Props_Test extends Specification with MoreExpectations
-{
-  import Props._
+class Props_Test extends Specification {
+
+  "this test" should {
+    "fail on failure" in {
+      val x = List(1,2,3)
+//      x.isEmpty must beTrue
+      val f = false
+//      false must beTrue
+      ok
+    }
+  }
 
   "PropsOps.replaceAll" should {
     "keep intact strings that don't match" in {
@@ -18,23 +27,30 @@ class Props_Test extends Specification with MoreExpectations
   "Props.@@" should {
     "not crash on four parameters" in {
       val pf = props("a.b.c.d" -> "<<A B C D>>")
-      val res = pf valueOf ("x", "b", "c", "d")
+      val res = pf.valueOf("x", "b", "c", "d")
+      ok
     }
 
     "pass a negative real-life case" in {
       val key = "Private.InTheHouse.Bribe.sofar"
       val map = props("Private.In-The-House.Alcohol.Yearly" -> "$30.00",
-                    "Private.Abroad.Bribe.Used" -> "$0.00",
-                    "Private.In-The-House.Bribe.Used" -> "$15.00",
-                    "Private.In-The-House.Bribe.Yearly" -> "$15.00",
-                    "Private.In-The-House.Alcohol.Used" -> "$1734.48",
-                    "Private.Abroad.Bribe.Yearly" -> "$15.00",
-                    "Private.Abroad.Alcohol.Yearly" -> "$30.00",
-                    "Private.Abroad.Alcohol.Used" -> "$0.00")
+        "Private.Abroad.Bribe.Used" -> "$0.00",
+        "Private.In-The-House.Bribe.Used" -> "$15.00",
+        "Private.In-The-House.Bribe.Yearly" -> "$15.00",
+        "Private.In-The-House.Alcohol.Used" -> "$1734.48",
+        "Private.Abroad.Bribe.Yearly" -> "$15.00",
+        "Private.Abroad.Alcohol.Yearly" -> "$30.00",
+        "Private.Abroad.Alcohol.Used" -> "$0.00")
       val dictionary = Map("Somewhere" -> "WTF_is_it", "sofar" -> "Used", "max" -> "Yearly")
       val sut = map.translate(dictionary)
+      val mr = Props.keyMatches(key)("Private.Abroad.Bribe.Yearly")
+      mr must beFalse
+      val mks: Iterable[String] = sut.matchingKeys(key)
+      mks.toList.length must_== 0
+      val key1: Option[String] = sut.findKey(key)
+      key1 must_== None
       val bad = sut valueOf key
-      bad.isBad must beTrue
+      bad.isBad aka bad.toString must beTrue
       bad.toString contains "Missing 'Private.InTheHouse.Bribe.sofar'" must beTrue
     }
 
@@ -77,8 +93,11 @@ class Props_Test extends Specification with MoreExpectations
         "Somewhere" -> "abroad",
         "sofar" -> "used", "max" -> "yearly")
       val sut = map.translate(dictionary)
-      sut valueOf ("Private", "InTheHouse", "Bribe", "sofar") aka sut.toString must_== Result.forValue("$15.00")
-      sut valueOf ("Private", "Somewhere", "Alcohol", "max") aka sut.toString must_== Result.forValue("$30.00")
+      val actual1 = sut valueOf("Private", "InTheHouse", "Bribe", "sofar")
+      actual1 aka sut.toString must_== Result.forValue("$15.00")
+
+      val actual2 = sut valueOf("Private", "Somewhere", "Alcohol", "max")
+      actual2 aka sut.toString must_== Result.forValue("$30.00")
     }
 
     "pass a positive real-life case with regex" in {
@@ -91,8 +110,8 @@ class Props_Test extends Specification with MoreExpectations
         "Private.Abroad.Bribe.Yearly" -> "$15.00",
         "Private.Abroad.Alcohol.Yearly" -> "$30.00",
         "Private.Abroad.Alcohol.Used" -> "$0.00")(transformer)
-      sut valueOf ("Private", "InTheHouse", "Bribe", "sofar") aka sut.toString must_== Result.forValue("$15.00")
-      sut valueOf ("Private", "Abroad", "Alcohol", "max") aka sut.toString must_== Result.forValue("$30.00")
+      sut valueOf("Private", "InTheHouse", "Bribe", "sofar") aka sut.toString must_== Result.forValue("$15.00")
+      sut valueOf("Private", "Abroad", "Alcohol", "max") aka sut.toString must_== Result.forValue("$30.00")
     }
   }
 
@@ -116,7 +135,7 @@ class Props_Test extends Specification with MoreExpectations
       sut.isDefinedAt("c") must beTrue
       sut.isDefinedAt("d") must beFalse
       sut("a") must_== "1"
-      sut("b") == "2" || sut("b") == "42" must  beTrue
+      sut("b") == "2" || sut("b") == "42" must beTrue
       sut("c") must_== "4"
     }
 
@@ -126,52 +145,52 @@ class Props_Test extends Specification with MoreExpectations
       val fp1: Props = props("a" -> "1", "b" -> "2")
       val fp2: Props = props("b" -> "42", "c" -> "4")
       val fp3: Props = props("c" -> "88", "d" -> "6")
-      val sut = accumulate(fp1::fp2::fp3::Nil)
+      val sut = accumulate(fp1 :: fp2 :: fp3 :: Nil)
       sut.isDefinedAt("a") must beTrue
       sut.isDefinedAt("b") must beTrue
       sut.isDefinedAt("c") must beTrue
       sut.isDefinedAt("d") must beTrue
       sut.isDefinedAt("e") must beFalse
       sut("a") must_== "1"
-      sut("b") == "2" || sut("b") == "42" must  beTrue
-      sut("c") == "4" || sut("c") == "88" must  beTrue
+      sut("b") == "2" || sut("b") == "42" must beTrue
+      sut("c") == "4" || sut("c") == "88" must beTrue
       sut("d") must_== "6"
     }
 
     "@@ behave on four parameters" in {
       val pf = props("a.b.c.d" -> "<<A B C D>>")
-      pf valueOf ("a", "b", "c", "d") must_== Good("<<A B C D>>")
-      (pf valueOf ("x", "b", "c", "d")).isBad must beTrue
+      pf valueOf("a", "b", "c", "d") must_== Good("<<A B C D>>")
+      (pf valueOf("x", "b", "c", "d")).isBad must beTrue
     }
 
     "work with regexes" in {
       val pf = props("a1.b2.c3.d4" -> "<<A B C D>>")
       val actual: Result[String] = pf @@("a?", "b?", "c3", "d?")
       actual must_== Good("<<A B C D>>")
-      (pf @@ ("x", "b", "c", "d")).isBad must beTrue
+      (pf @@("x", "b", "c", "d")).isBad must beTrue
     }
 
     "reorder params" in {
       val pf = props("a.b.c.d" -> "<<A B C D>>") ++ props("a1.b1.c1.d1" -> "<<A1 B1 C1 D1>>")
-      val reordered = pf reorder(4,2,1,3)
-      reordered valueOf ("c", "b", "d", "a") must_== Good("<<A B C D>>")
-      reordered valueOf ("c1", "b1", "d1", "a1") must_== Good("<<A1 B1 C1 D1>>")
-      (reordered valueOf ("a", "b", "c", "d")).isBad must beTrue
+      val reordered = pf reorder(4, 2, 1, 3)
+      reordered valueOf("c", "b", "d", "a") must_== Good("<<A B C D>>")
+      reordered valueOf("c1", "b1", "d1", "a1") must_== Good("<<A1 B1 C1 D1>>")
+      (reordered valueOf("a", "b", "c", "d")).isBad must beTrue
     }
 
     "reorder params, heterogeneous" in {
       val pf = props("a.b.c.d" -> "<<A B C D>>")
-      val sut = (pf reorder(4,2,1,3)) ++ props("clue" -> "treasure")
-      val res = sut valueOf ("c", "b", "d", "a")
+      val sut = (pf reorder(4, 2, 1, 3)) ++ props("clue" -> "treasure")
+      val res = sut valueOf("c", "b", "d", "a")
       res must_== Good("<<A B C D>>")
-      (sut valueOf ("a", "b", "c", "d")).isBad must beTrue
+      (sut valueOf("a", "b", "c", "d")).isBad must beTrue
       sut valueOf "clue" must_== Good("treasure")
     }
 
     "dropPrefix work on four parameters" in {
       val pf = props("a.b.c.d" -> "<<ABCD>>", "x" -> "<<X>>")
       val dp = pf.dropPrefix
-      dp @@ ("b", "c", "d") must_== Good("<<ABCD>>")
+      dp @@("b", "c", "d") must_== Good("<<ABCD>>")
       (dp @@ "x").isBad must beTrue
     }
 
@@ -188,18 +207,19 @@ class Props_Test extends Specification with MoreExpectations
       val sut2 = props("a.b.c.d" -> "<<ABCDZZ>>", "x" -> "<<X>>", "a.d.x.y" -> "<<ADXY>>")
       val replaced = sut1.findAndReplace("c", "<<ABCDZZ>>")
       replaced == sut2 must beTrue
-      false must beTrue
+
       sut1.findAndReplace("ab", "oh really?!") must_== sut1
       val sut3 = Props parse "fp(Map(\"Back to Transaction History.Account #2014151 Details.Health Net ID#\" -> \"R0000000-00\", \"Back to Transaction History.Account #20140101 Details.Name\" -> \"SCOTT GRISCHY\"))"
       sut3 match {
         case Good(props) =>
           val newOne = props.findAndReplace("Name", "Lia Van Damm")
-          val newName = newOne.findHaving("Name").value
+          val newName: Result[String] = newOne.findHaving("Name")
           newName must_== Good("Lia Van Damm")
         case bad => failure(s"wrong text: $bad")
       }
+      ok
     }
-//
+    //
     "discard empty subtrees" in {
       val sut = props("a.b.c.d" -> "<<ABCD>>", "x" -> "<<X>>", "a.d.x.y" -> "<<ADXY>>")
       sut.findAllHaving("d").toString must_== """fp(Map("a.b.c.d" -> "<<ABCD>>", "a.d.x.y" -> "<<ADXY>>"))"""
@@ -213,46 +233,9 @@ class Props_Test extends Specification with MoreExpectations
       val p = props("a.b.c" -> "ABC")
       val t = p.trimPrefixes
       val s = t.toString()
-      s must_==props("c"->"ABC").toString
-      props(  "a.b" -> "ABC").trimPrefixes.toString must_==props("b"->"ABC").toString
-      props(    "a" -> "ABC").trimPrefixes.toString must_==props("a"->"ABC").toString
-    }
-
-    "pass a negative real-life case" in {
-      val key = "Private.InTheHouse.Bribe.sofar"
-      val map = props("Private.In-The-House.Alcohol.Yearly" -> "$30.00",
-        "Private.Abroad.Bribe.Used" -> "$0.00",
-        "Private.In-The-House.Bribe.Used" -> "$15.00",
-        "Private.In-The-House.Bribe.Yearly" -> "$15.00",
-        "Private.In-The-House.Alcohol.Used" -> "$1734.48",
-        "Private.Abroad.Bribe.Yearly" -> "$15.00",
-        "Private.Abroad.Alcohol.Yearly" -> "$30.00",
-        "Private.Abroad.Alcohol.Used" -> "$0.00")
-      val dictionary = Map("Somewhere" -> "WTF_is_it", "Alcohol" -> "Out_of_Pocket", "sofar" -> "Used", "max" -> "Yearly")
-      val sut = map.translate(dictionary)
-      val bad = sut valueOf key
-      bad.isBad must beTrue
-      bad.toString contains "Missing 'Private.InTheHouse.Bribe.sofar'" must beTrue
-    }
-
-    "pass a positive real-life case" in {
-      val key = "Private.InTheHouse.Bribe.sofar"
-      val map = props("Private.In-The-House.Alcohol.Yearly" -> "$30.00",
-        "Private.Abroad.Bribe.Used" -> "$0.00",
-        "Private.In-The-House.Bribe.Used" -> "$15.00",
-        "Private.In-The-House.Bribe.Yearly" -> "$15.00",
-        "Private.In-The-House.Alcohol.Used" -> "$1734.48",
-        "Private.Abroad.Bribe.Yearly" -> "$15.00",
-        "Private.Abroad.Alcohol.Yearly" -> "$30.00",
-        "Private.Abroad.Alcohol.Used" -> "$0.00")
-      val dictionary = Map(
-        "Somewhere" -> "WTF_is_it",
-        "Alcohol" -> "Out_of_Pocket",
-        "InTheHouse" -> "In-The-House",
-        "Somewhere" -> "Abroad",
-        "sofar" -> "Used", "max" -> "Yearly")
-      val sut = map.translate(dictionary)
-      sut valueOf key must_== Result.forValue("$15.00")
+      s must_== props("c" -> "ABC").toString
+      props("a.b" -> "ABC").trimPrefixes.toString must_== props("b" -> "ABC").toString
+      props("a" -> "ABC").trimPrefixes.toString must_== props("a" -> "ABC").toString
     }
 
     "return a subtree" in {
@@ -313,6 +296,7 @@ class Props_Test extends Specification with MoreExpectations
           props @@ "C" must_== Good("c1")
         case bad => failure(s"Oops, $bad")
       }
+      ok
     }
     "extract data when headers are messed up" in {
       val got = Props.fromParallelLists(List("D", "B", "A", "C"), List("d1", "b1", "a1", "c1"), List("A", "B", "C"))
@@ -323,6 +307,7 @@ class Props_Test extends Specification with MoreExpectations
           props @@ "C" must_== Good("c1")
         case bad => failure(s"Oops, $bad")
       }
+      ok
     }
 
     "fail if headers are missing" in {
@@ -331,6 +316,7 @@ class Props_Test extends Specification with MoreExpectations
         case bad: Bad[_] => bad.toString() contains "(b)" must beTrue
         case shozanah => failure(s"Expected an error in $shozanah")
       }
+      ok
     }
   }
 
@@ -340,14 +326,14 @@ class Props_Test extends Specification with MoreExpectations
       val sut = sut0.dropIndexes
       sut @@ "a.b.c.d" must_== Good("<<ABCD>>")
       sut @@ "a.b.c.y" must_== Good("<<ABCY>>")
-      sut @@ "x"       must_== Good("<<X>>")
+      sut @@ "x" must_== Good("<<X>>")
     }
   }
 
   "transformKeys" should {
     "work" in {
       val sut0 = props("a" -> "1", "b" -> "2")
-      val sut = sut0.transformKeys("<<"+_+">>")
+      val sut = sut0.transformKeys("<<" + _ + ">>")
       sut must_== props("<<a>>" -> "1", "<<b>>" -> "2")
     }
   }
@@ -360,6 +346,7 @@ class Props_Test extends Specification with MoreExpectations
           sut @@ "a" must_== Good("b")
         case orelse => failure(s"Oops, not good: $orelse")
       }
+      ok
     }
 
     "have left inverse" in {
@@ -370,6 +357,7 @@ class Props_Test extends Specification with MoreExpectations
           sut @@ "a" must_== Good("b")
         case orelse => failure(s"Oops, not good: $orelse in $txt")
       }
+      ok
     }
 
     "parse simple sample with dictionary as text" in {
@@ -379,6 +367,7 @@ class Props_Test extends Specification with MoreExpectations
           sut @@ "z" must_== Good("b")
         case orelse => failure(s"Oops, not good: $orelse")
       }
+      ok
     }
 
     "parse simple sample with reordering as text" in {
@@ -388,6 +377,7 @@ class Props_Test extends Specification with MoreExpectations
           sut @@ "d.c.a.b" must_== Good("cdba")
         case orelse => failure(s"Oops, not good: $orelse")
       }
+      ok
     }
 
     "parse simple sample with dictionary and reordering as text" in {
@@ -397,6 +387,7 @@ class Props_Test extends Specification with MoreExpectations
           sut @@ "d.c.z.b" must_== Good("cdba")
         case orelse => failure(s"Oops, not good: $orelse")
       }
+      ok
     }
 
     "parse OOP sample as text" in {
@@ -408,6 +399,7 @@ class Props_Test extends Specification with MoreExpectations
           sut @@ "Private.Somewhere.Bribe.max" must_== Good("$4,0.00")
         case orelse => failure(s"Oops, not good: $orelse")
       }
+      ok
     }
 
     "parse suspicious Wednesday Addams data" in {
@@ -418,86 +410,7 @@ class Props_Test extends Specification with MoreExpectations
           sut @@ "Private.Somewhere.Bribe.max" must_== Good("$4,0.00")
         case orElse => failure(s"Oops, not good: $orElse")
       }
-    }
-  }
-
-  "JSON parser" should {
-    "behave" in {
-      val parse = Function[String, Props]("json parser",
-        (s:String) => {
-        val propOpt = Props.parseJson(s)
-        propOpt match {
-          case Good(p) =>  p
-          case bad => failure(s"Failed to parse <<$s>> got $bad"); ???
-        }
-      },
-      (t:Throwable) => {t.printStackTrace(); throw t})
-
-      parse maps (
-        "{}"  -> Props.empty,
-        "{ \"v\":\"1\"}" -> props("v" -> "1"),
-//bad json lib        "{\"v\":\"1\"\\n}"  -> props("v" -> "1"),
-//bad json lib        "{\"v\":\"1\"\\r\\n}"  -> props("v" -> "1"),
-//bad json lib        "{\t\"v\":\"1\"\\n}"  -> props("v" -> "1"),
-//bad json lib        "{\t\"v\":\"1\"\\r\\n}"  -> props("v" -> "1"),
-        "{ \"v\":1}" -> props("v" -> "1.0"), // why?!
-        "{ \"v\":\"ab'c\"}" -> props("v" -> "ab'c"),
-//bad json lib        "{\"v\":123456789123456789123456789}" -> props("v" -> "123456789123456789123456789"),
-        "[ 1,2,3,4]" -> props("[[1]]" -> "1.0", "[[2]]" -> "2.0", "[[3]]" -> "3.0", "[[4]]" -> "4.0"),
-        "[ \"1\",\"2\",\"3\",\"4\"]" -> props("[[1]]" -> "1", "[[2]]" -> "2", "[[3]]" -> "3", "[[4]]" -> "4"),
-        "[ { }, { },[]]" -> Props.empty,
-        "{\"a\":\"hp://foo\"}" -> props("a" -> "hp://foo"),
-        "{\"a\":null}" -> Props.empty,
-        "{\"a\":true}" -> props("a" -> "true"),
-        "{\"x\":[1,2,3]}" -> props("x.[[1]]" -> "1.0", "x.[[2]]" -> "2.0", "x.[[3]]" -> "3.0"),
-        "[{\"a\":1},{\"b\":2},[3,4]]" -> props("[[1]].a" -> "1.0", "[[2]].b" -> "2.0", "[[3]].[[1]]" -> "3.0", "[[3]].[[2]]" -> "4.0"),
-        "{\"a\":{\"b\":\"c\"}}" -> props("a.b" -> "c"),
-        "{\"a\":[],\"b\":{},\"c\":{\"p\":\"q\"}}" -> props("c.p" -> "q"),
-        """{
-          "type" : "Attachment",
-          "date" : 1405445271804,
-          "frameType" : 2,
-          "message" : "OK",
-          "httpCode" : 200,
-          "affectedIDs" : [
-                  "11620"
-          ],
-          "item" : {
-                  "ID" : 11620,
-                  "EOBID" : 0,
-                  "subsID" : "",
-                  "uid" : "",
-                  "userID" : 10204,
-                  "name" : "statement.pdf",
-                  "attachedOn" : 1405445271000,
-                  "mimeType" : "application\\/pdf",
-                  "updatedAt" : 1405445271000,
-                  "updatedMS" : 1405445271000,
-                  "size" : 790523
-          }
-          }""" -> props(
-          "type" -> "Attachment",
-          "date" -> "1.405445271804E12",
-          "frameType" -> "2.0",
-          "message" -> "OK",
-          "httpCode" -> "200.0",
-          "affectedIDs.[[1]]" -> "11620",
-          "item.ID" -> "11620.0",
-          "item.EOBID" -> "0.0",
-          "item.subsID" -> "",
-          "item.uid" -> "",
-          "item.userID" -> "10204.0",
-          "item.name" -> "statement.pdf",
-          "item.attachedOn" -> "1.405445271E12", // pretty dumb eh
-          "item.updatedAt" -> "1.405445271E12",
-          "item.mimeType" -> "application\\/pdf",
-          "item.updatedMS" -> "1.405445271E12",
-          "item.size" -> "790523.0"
-        )
-        )
-
-      Props.parseJson("{'X':'s").isBad must beTrue
-      Props.parseJson("{'X").isBad must beTrue
+      ok
     }
   }
 
@@ -521,6 +434,7 @@ class Props_Test extends Specification with MoreExpectations
            j <- 1 to 2) {
         sut(i)(s"key$i$j") must_== s"val$i$j"
       }
+      ok
     }
 
     "Group by index in double index case" in {
@@ -535,11 +449,12 @@ class Props_Test extends Specification with MoreExpectations
            j <- 1 to 2) {
         sut(i)(s"[[1]].key$i$j") must_== s"val$i$j"
       }
+      ok
     }
 
     "Behave in a modified regression case of embedded array" in {
 
-      val text05062014="fp(Map(\"[[1]].[[1]].K\" -> \"I0\", \"[[3]].[[1]].K\" -> \"I2\", \"[[2]].[[1]].K\" -> \"I1\"))"
+      val text05062014 = "fp(Map(\"[[1]].[[1]].K\" -> \"I0\", \"[[3]].[[1]].K\" -> \"I2\", \"[[2]].[[1]].K\" -> \"I1\"))"
       val props05062014 = Props parse text05062014
 
       props05062014 match {
@@ -552,6 +467,7 @@ class Props_Test extends Specification with MoreExpectations
           serviceTypes.toList must_== List("I0", "I1", "I2")
         case basura => failure(s"Oops, not good: $basura")
       }
+      ok
     }
 
     "parse when keys contain commas" in {
@@ -562,6 +478,7 @@ class Props_Test extends Specification with MoreExpectations
           props @@ "HERMIONE GRANGER, MUGGLE.Passport Number" must_== Good("9")
         case basura => failure(s"Oops, not good: $basura")
       }
+      ok
     }
 
     "Group by index using real data" in {
@@ -575,10 +492,11 @@ class Props_Test extends Specification with MoreExpectations
           empty.isEmpty aka s"#{empty._2}" must beTrue
         case basura => failure(s"Oops, not good: $basura")
       }
+      ok
     }
 
     "Group by index in transitional" in {
-      val text="fp(Map(\"[[2]].[[1]].Tip\" -> \"$0.00\", \"[[3]].[[1]].Distance Limit\" -> \"$27.13\", \"[[1]].[[1]].Distance Flown by your Best Friend\" -> \"$0.00\", \"[[3]].[[1]].Departure Date\" -> \"10/16/2013 - 10/16/2013\", \"[[3]].[[1]].Distance Flown by your Best Friend\" -> \"$0.00\", \"[[1]].[[1]].key01\" -> \"val01\", \"[[2]].[[1]].Distance Limit\" -> \"$16.00\", \"[[3]].[[1]].Wasted\" -> \"$0.00\", \"[[2]].[[1]].Departure Date\" -> \"10/16/2013 - 10/16/2013\", \"[[3]].[[1]].Fuel Burned\" -> \"$38.00\", \"[[1]].[[1]].Wasted\" -> \"$91.49\", \"[[2]].[[1]].Wasted\" -> \"$0.00\", \"[[3]].[[1]].key21\" -> \"val21\", \"[[2]].[[1]].Distance Flown by your Best Friend\" -> \"$0.00\", \"[[1]].[[1]].Tax\" -> \"$0.00\", \"[[2]].[[1]].key11\" -> \"val11\", \"[[2]].[[1]].Tax\" -> \"$0.00\", \"[[1]].[[1]].Distance Flown by your Traditional Partner\" -> \"$0.00\", \"[[3]].[[1]].Distance Flown by your Traditional Partner\" -> \"$27.13\", \"[[1]].[[1]].Departure Date\" -> \"10/16/2013 - 10/16/2013\", \"[[2]].[[1]].Fuel Burned\" -> \"$30.00\", \"[[3]].[[1]].Tip\" -> \"$0.00\", \"[[1]].[[1]].Distance Limit\" -> \"$91.49\", \"[[2]].[[1]].Distance Flown by your Traditional Partner\" -> \"$16.00\", \"[[1]].[[1]].Flyweight\" -> \"$91.49\", \"[[2]].[[1]].Flyweight\" -> \"$0.00\", \"[[1]].[[1]].Fuel Burned\" -> \"$144.00\", \"[[3]].[[1]].Flyweight\" -> \"$0.00\", \"[[3]].[[1]].Tax\" -> \"$0.00\", \"[[1]].[[1]].Tip\" -> \"$0.00\"))"
+      val text = "fp(Map(\"[[2]].[[1]].Tip\" -> \"$0.00\", \"[[3]].[[1]].Distance Limit\" -> \"$27.13\", \"[[1]].[[1]].Distance Flown by your Best Friend\" -> \"$0.00\", \"[[3]].[[1]].Departure Date\" -> \"10/16/2013 - 10/16/2013\", \"[[3]].[[1]].Distance Flown by your Best Friend\" -> \"$0.00\", \"[[1]].[[1]].key01\" -> \"val01\", \"[[2]].[[1]].Distance Limit\" -> \"$16.00\", \"[[3]].[[1]].Wasted\" -> \"$0.00\", \"[[2]].[[1]].Departure Date\" -> \"10/16/2013 - 10/16/2013\", \"[[3]].[[1]].Fuel Burned\" -> \"$38.00\", \"[[1]].[[1]].Wasted\" -> \"$91.49\", \"[[2]].[[1]].Wasted\" -> \"$0.00\", \"[[3]].[[1]].key21\" -> \"val21\", \"[[2]].[[1]].Distance Flown by your Best Friend\" -> \"$0.00\", \"[[1]].[[1]].Tax\" -> \"$0.00\", \"[[2]].[[1]].key11\" -> \"val11\", \"[[2]].[[1]].Tax\" -> \"$0.00\", \"[[1]].[[1]].Distance Flown by your Traditional Partner\" -> \"$0.00\", \"[[3]].[[1]].Distance Flown by your Traditional Partner\" -> \"$27.13\", \"[[1]].[[1]].Departure Date\" -> \"10/16/2013 - 10/16/2013\", \"[[2]].[[1]].Fuel Burned\" -> \"$30.00\", \"[[3]].[[1]].Tip\" -> \"$0.00\", \"[[1]].[[1]].Distance Limit\" -> \"$91.49\", \"[[2]].[[1]].Distance Flown by your Traditional Partner\" -> \"$16.00\", \"[[1]].[[1]].Flyweight\" -> \"$91.49\", \"[[2]].[[1]].Flyweight\" -> \"$0.00\", \"[[1]].[[1]].Fuel Burned\" -> \"$144.00\", \"[[3]].[[1]].Flyweight\" -> \"$0.00\", \"[[3]].[[1]].Tax\" -> \"$0.00\", \"[[1]].[[1]].Tip\" -> \"$0.00\"))"
       val propsOpt = Props parse text
       propsOpt match {
         case Good(props) =>
@@ -591,10 +509,11 @@ class Props_Test extends Specification with MoreExpectations
           val serviceTypes = sut map (_.getOrElse("[[1]].key", "oops..."))
         case basura => failure(s"Oops, not good: $basura")
       }
+      ok
     }
 
     "Behave in a regression of 10/16/2013" in {
-      val text="fp(Map(\"[[2]].[[1]].Tip\" -> \"$0.00\", \"[[3]].[[1]].Distance Limit\" -> \"$27.13\", \"[[1]].[[1]].Distance Flown by your Best Friend\" -> \"$0.00\", \"[[3]].[[1]].Departure Date\" -> \"10/16/2013 - 10/16/2013\", \"[[3]].[[1]].Distance Flown by your Best Friend\" -> \"$0.00\", \"[[1]].[[1]].Purpose of the Trip\" -> \"Private Beach Party\", \"[[2]].[[1]].Distance Limit\" -> \"$16.00\", \"[[3]].[[1]].Wasted\" -> \"$0.00\", \"[[2]].[[1]].Departure Date\" -> \"10/16/2013 - 10/16/2013\", \"[[3]].[[1]].Official Distance\" -> \"$38.00\", \"[[1]].[[1]].Wasted\" -> \"$91.49\", \"[[2]].[[1]].Wasted\" -> \"$0.00\", \"[[3]].[[1]].Purpose of the Trip\" -> \"Private Show\", \"[[2]].[[1]].Distance Flown by your Best Friend\" -> \"$0.00\", \"[[1]].[[1]].Tax\" -> \"$0.00\", \"[[2]].[[1]].Purpose of the Trip\" -> \"Thai Massage\", \"[[2]].[[1]].Tax\" -> \"$0.00\", \"[[1]].[[1]].Distance Flown by your Traditional Partner\" -> \"$0.00\", \"[[3]].[[1]].Distance Flown by your Traditional Partner\" -> \"$27.13\", \"[[1]].[[1]].Departure Date\" -> \"10/16/2013 - 10/16/2013\", \"[[2]].[[1]].Fuel Burned\" -> \"$30.00\", \"[[3]].[[1]].Tip\" -> \"$0.00\", \"[[1]].[[1]].Distance Limit\" -> \"$91.49\", \"[[2]].[[1]].Distance Flown by your Traditional Partner\" -> \"$16.00\", \"[[1]].[[1]].Flyweight\" -> \"$91.49\", \"[[2]].[[1]].Flyweight\" -> \"$0.00\", \"[[1]].[[1]].Fuel Burned\" -> \"$144.00\", \"[[3]].[[1]].Flyweight\" -> \"$0.00\", \"[[3]].[[1]].Tax\" -> \"$0.00\", \"[[1]].[[1]].Tip\" -> \"$0.00\"))"
+      val text = "fp(Map(\"[[2]].[[1]].Tip\" -> \"$0.00\", \"[[3]].[[1]].Distance Limit\" -> \"$27.13\", \"[[1]].[[1]].Distance Flown by your Best Friend\" -> \"$0.00\", \"[[3]].[[1]].Departure Date\" -> \"10/16/2013 - 10/16/2013\", \"[[3]].[[1]].Distance Flown by your Best Friend\" -> \"$0.00\", \"[[1]].[[1]].Purpose of the Trip\" -> \"Private Beach Party\", \"[[2]].[[1]].Distance Limit\" -> \"$16.00\", \"[[3]].[[1]].Wasted\" -> \"$0.00\", \"[[2]].[[1]].Departure Date\" -> \"10/16/2013 - 10/16/2013\", \"[[3]].[[1]].Official Distance\" -> \"$38.00\", \"[[1]].[[1]].Wasted\" -> \"$91.49\", \"[[2]].[[1]].Wasted\" -> \"$0.00\", \"[[3]].[[1]].Purpose of the Trip\" -> \"Private Show\", \"[[2]].[[1]].Distance Flown by your Best Friend\" -> \"$0.00\", \"[[1]].[[1]].Tax\" -> \"$0.00\", \"[[2]].[[1]].Purpose of the Trip\" -> \"Thai Massage\", \"[[2]].[[1]].Tax\" -> \"$0.00\", \"[[1]].[[1]].Distance Flown by your Traditional Partner\" -> \"$0.00\", \"[[3]].[[1]].Distance Flown by your Traditional Partner\" -> \"$27.13\", \"[[1]].[[1]].Departure Date\" -> \"10/16/2013 - 10/16/2013\", \"[[2]].[[1]].Fuel Burned\" -> \"$30.00\", \"[[3]].[[1]].Tip\" -> \"$0.00\", \"[[1]].[[1]].Distance Limit\" -> \"$91.49\", \"[[2]].[[1]].Distance Flown by your Traditional Partner\" -> \"$16.00\", \"[[1]].[[1]].Flyweight\" -> \"$91.49\", \"[[2]].[[1]].Flyweight\" -> \"$0.00\", \"[[1]].[[1]].Fuel Burned\" -> \"$144.00\", \"[[3]].[[1]].Flyweight\" -> \"$0.00\", \"[[3]].[[1]].Tax\" -> \"$0.00\", \"[[1]].[[1]].Tip\" -> \"$0.00\"))"
       val propsOpt = Props parse text
       propsOpt match {
         case Good(props) =>
@@ -604,6 +523,7 @@ class Props_Test extends Specification with MoreExpectations
           serviceTypes.toList must_== List("Private Beach Party", "Thai Massage", "Private Show")
         case basura => failure(s"Oops, not good: $basura")
       }
+      ok
     }
 
     "regression 1 of 07/03/2014" in {
@@ -614,20 +534,22 @@ class Props_Test extends Specification with MoreExpectations
           props @@ ".Passport Number" must_== Good("9")
         case basura => failure(s"Oops, not good: $basura")
       }
+      ok
     }
+
     "Extract data from list" in {
-      fromTree("first"::"second"::Nil) must_== Good(props("[[1]]"->"first", "[[2]]"->"second"))
+      fromTree("first" :: "second" :: Nil) must_== Good(props("[[1]]" -> "first", "[[2]]" -> "second"))
     }
 
     "parse pair with a list as value" in {
-      isPrimitive("first"::"second"::Nil) must beFalse
-      val actual = parsePair("key", "first"::"second"::Nil)
-      actual must_== Good(props("key.[[1]]"->"first", "key.[[2]]"->"second"))
+      isPrimitive("first" :: "second" :: Nil) must beFalse
+      val actual = parsePair("key", "first" :: "second" :: Nil)
+      actual must_== Good(props("key.[[1]]" -> "first", "key.[[2]]" -> "second"))
     }
 
     "Extract data from list in map" in {
-      val actual = fromTree(Map("key" -> ("first"::"second"::Nil)))
-      actual must_== Good(props("key.[[1]]"->"first", "key.[[2]]"->"second"))
+      val actual = fromTree(Map("key" -> ("first" :: "second" :: Nil)))
+      actual must_== Good(props("key.[[1]]" -> "first", "key.[[2]]" -> "second"))
     }
 
     "Extract data from full tree" in {
@@ -669,9 +591,10 @@ class Props_Test extends Specification with MoreExpectations
       pp match {
         case Good(p) =>
           p @@ "inNetwork.individualGoalsMet.[[1]]" aka p.toString must_== Good("0")
-          p @@ "abroad.individualHome" aka p.toString  must_== Good("7000")
+          p @@ "abroad.individualHome" aka p.toString must_== Good("7000")
         case oops => failure(s"oops: $oops")
       }
+      ok
 
     }
 

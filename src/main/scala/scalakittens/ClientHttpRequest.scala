@@ -127,8 +127,9 @@ class ClientHttpRequest extends Observable {
     * @param value cookie value
     * @throws IOException when something broke
     */
-  def setCookie(name: String, value: String) {
+  def setCookie(name: String, value: String): Unit = {
     cookies += ((name, value))
+    ()
   }
 
   /**
@@ -137,8 +138,9 @@ class ClientHttpRequest extends Observable {
     * @param cookies array of cookie names and values
     * @throws IOException when something broke
     */
-  def setCookies(cookies: Seq[(String, String)]) {
+  def setCookies(cookies: Seq[(String, String)]): Unit = {
     this.cookies ++= cookies
+    ()
   }
 
   /**
@@ -147,8 +149,8 @@ class ClientHttpRequest extends Observable {
     * @param cookies array of cookie names and values
     * @throws IOException when something broke
     */
-  def setCookie(cookies: (String, String)*) {
-    this.cookies ++= cookies
+  def setCookie(cookies: (String, String)*): Unit = {
+    this.cookies ++= cookies; ()
   }
 
   private def writeNameNumBytes(name: String): Long = {
@@ -252,11 +254,12 @@ class ClientHttpRequest extends Observable {
     * @param value parameter value, a File or anything else that can be stringified
     * @throws IOException when something broke
     */
-  def addParameter(name: String, value: Any) {
+  def addParameter(name: String, value: Any): Unit = {
     value match {
       case f: File => addFile(name, f)
       case _ => addParameter(name, value.toString)
     }
+    ()
   }
 
   /**

@@ -1,9 +1,11 @@
 package scalakittens
 
+import java.io.{File, FileOutputStream, OutputStreamWriter}
+
 import org.specs2.mutable.Specification
-import OS._
-import java.io.{OutputStreamWriter, PrintWriter, FileOutputStream, File}
-import io.Source
+
+import scala.io.Source
+import scalakittens.OS._
 
 object OS_Test extends Specification {
   val DIGITS = "(\\d+)".r
@@ -15,6 +17,7 @@ object OS_Test extends Specification {
         case DIGITS(pif) => // ok
         case basura => failure("Bad pid: " + basura)
       }
+      ok
     }
 
     "provide current directory" in {
@@ -46,12 +49,6 @@ object OS_Test extends Specification {
     file.getAbsolutePath startsWith tmp.getAbsolutePath must beTrue
     file.getAbsolutePath.substring(tmp.getAbsolutePath.length)
     file.delete()
-  }
-
-  "this test" should {
-    "do nothing" in {
-      true must beTrue
-    }
   }
 
 }

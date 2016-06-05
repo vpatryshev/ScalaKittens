@@ -100,9 +100,10 @@ trait FS { fs =>
       try{ out.print(content) } finally{ out.close() }
     }
 
-    private def writeAt(os: FileOutputStream, pos: Long)(in: ReadableByteChannel, length: Long) {
+    private def writeAt(os: FileOutputStream, pos: Long)(in: ReadableByteChannel, length: Long): Unit = {
       val out = os.getChannel
       try { out.transferFrom(in, pos, length) } finally { out.close() }
+      ()
     }
 
     def write(in: ReadableByteChannel, length: Long) {

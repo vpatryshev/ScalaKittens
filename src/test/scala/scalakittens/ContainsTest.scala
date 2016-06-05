@@ -49,18 +49,17 @@ class ContainsTest extends Specification {
       val listA = a3 :: listB
       listA.size must_== 3
       listA contains a3 must beTrue
-      listA contains b1 must beFalse
+      listA contains b1 aka listA.toString must beTrue
 //      listA contains "nothingness" must not compile
 //      listB contains a3 must not compile
       val cA: Container[A] = listA
       val cB: Container[B] = listB
       val cba: Container[B] = cA
-      cA contains b3 must beTrue
+      cA contains b3 must beFalse
       cba contains b3 must beFalse
       val cA1: Container[A] = listA
       val cB1: Container[B] = listB
       val cba1: Container[B] = cA1
-      cA contains b3 must beTrue
       cba1 contains b3 must beFalse
 //      cB contains a3 must not compile
 //      cba contains a3 must not compile

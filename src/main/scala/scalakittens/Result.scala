@@ -1,5 +1,6 @@
 package scalakittens
 
+import scala.language.postfixOps
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 import scalakittens.Result.{Errors, NoResult}
@@ -209,6 +210,7 @@ object Result {
     def apply(x:X) = app(fOpt)(Good(x))
   }
 
+  // TODO(vlad): a) don't accept Results; b) don't accept booleans
   def forValue[T](value: ⇒T):              Result[T] = attempt(apply(Option(value)))
   def forValue[T](value: ⇒T, onError: ⇒ String):   Result[T] = attempt(apply(Option(value), onError), onError)
 

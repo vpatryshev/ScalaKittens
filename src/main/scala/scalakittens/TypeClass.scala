@@ -1,5 +1,7 @@
 package scalakittens
 
+import scala.language.reflectiveCalls
+import scala.language.higherKinds
 
 // source: http://infoscience.epfl.ch/record/150280/files/TypeClasses.pdf
 // authors: Bruno C. d. S. Oliveira, Adriaan Moors, Martin Odersky

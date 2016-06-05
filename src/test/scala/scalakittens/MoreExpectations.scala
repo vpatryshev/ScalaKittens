@@ -14,11 +14,11 @@ trait MoreExpectations extends UsefulMocks { actual: Expectations =>
     override def toString = s
   }
 
-  implicit def expectingGood(r: Result[_]) = new {
+  implicit def expectingGood(r: Result[_]): Object {def mustBeGood: MatchResult[Any]} = new {
     def mustBeGood = r.isGood aka ("" + r.listErrors) must_== true
   }
 
-  private implicit def akaMust2[T](tm: Expectable[T]) = MustThrownExpectations.akaMust[T](tm) // jumping through implicit loops
+  private implicit def akaMust2[T](tm: Expectable[T]): MustExpectable[T] = MustThrownExpectations.akaMust[T](tm) // jumping through implicit loops
 
   // private implicit def wrapIt[T](x: T): MustExpectable[T] = MustExpectable(x)
   /*
