@@ -24,9 +24,13 @@ resolvers ++= Seq(
   "Lightbend Releases" at "http://repo.typesafe.com/typesafe/releases"
 )
 
+//"org.specs2" %% "specs2-core" % "3.6" % "test",
+//val specs2 = "org.specs2" %% "specs2" % "2.3.11" % "test"
+
 libraryDependencies ++= Seq(
   "org.scalatest"           %% "scalatest"     % "2.2.3" % "test" withSources(),
-  "org.scala-lang" % "scala-parser-combinators" % "2.11.0-M4"
+//  "org.scala-lang" % "scala-parser-combinators" % "2.11.0-M4",
+  "org.specs2" %% "specs2-core" % "3.6" % "test"
 )
 
 logLevel := Level.Warn

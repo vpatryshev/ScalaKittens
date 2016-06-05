@@ -9,6 +9,7 @@ import java.util.Date
 import scala.io.Source
 import scala.language.{implicitConversions, postfixOps, reflectiveCalls}
 import scala.util.parsing.combinator.RegexParsers
+import scala.util.parsing.json.JSON
 import Result._
 import Props._
 
@@ -605,6 +606,18 @@ object Props extends PropsOps {
         }
     }
     accumulate(collection)
+  }
+
+  def parseJson(source: String): Result[Props] = {
+    JSON.parseFull(source) match {
+      case Some(stuff) =>
+        stuff match {
+          case m:Map[_, _] => Good(fromMap(m))
+          case a:Seq[Any]  => Good(fromMap(mapify(a)))
+          case x           => Good(props("_" -> (""+x)))
+        }
+      case None => Result.error(s"wrong json: $source")
+    }
   }
 
   val parse = new RegexParsers {

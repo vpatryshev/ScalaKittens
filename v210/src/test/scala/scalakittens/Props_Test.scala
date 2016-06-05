@@ -1,8 +1,12 @@
 package scalakittens
 
-import org.specs2.mutable.Specification
+import scala.io.Source
+import scala.language.reflectiveCalls
 
-class Props_Test extends Specification with MoreExpectations
+import scalakittens.Result.OK
+import scalakittens.testing.TestBase
+
+class Props_Test extends TestBase
 {
   import Props._
 
@@ -19,6 +23,7 @@ class Props_Test extends Specification with MoreExpectations
     "not crash on four parameters" in {
       val pf = props("a.b.c.d" -> "<<A B C D>>")
       val res = pf valueOf ("x", "b", "c", "d")
+      ok
     }
 
     "pass a negative real-life case" in {
@@ -97,7 +102,16 @@ class Props_Test extends Specification with MoreExpectations
   }
 
   "Props" should {
-    "addPrefix" in {
+    "be able to add" in {
+      val p1 = props("a" -> "1", "b" -> "2")
+      val p2 = props("c" -> "3", "d" -> "4")
+      val actual = p1 ++ p2
+      actual must_== props("a" -> "1", "b" -> "2", "c" -> "3", "d" -> "4")
+      props() ++ p1 must_== p1
+      p1 ++ props() must_== p1
+    }
+
+    "addPrefix" >> {
       val fp: Props = props("a" -> "1", "b" -> "2")
       val sut = fp.addPrefix(":)")
       sut.isDefinedAt(":).a") must beTrue
@@ -121,12 +135,12 @@ class Props_Test extends Specification with MoreExpectations
     }
 
     "accumulate" in {
-      val x = accumulate(Nil)
+      val x = Props.accumulate(Nil)
       x.toString must_== "Empty()"
       val fp1: Props = props("a" -> "1", "b" -> "2")
       val fp2: Props = props("b" -> "42", "c" -> "4")
       val fp3: Props = props("c" -> "88", "d" -> "6")
-      val sut = accumulate(fp1::fp2::fp3::Nil)
+      val sut = Props.accumulate(fp1::fp2::fp3::Nil)
       sut.isDefinedAt("a") must beTrue
       sut.isDefinedAt("b") must beTrue
       sut.isDefinedAt("c") must beTrue
@@ -141,14 +155,14 @@ class Props_Test extends Specification with MoreExpectations
     "@@ behave on four parameters" in {
       val pf = props("a.b.c.d" -> "<<A B C D>>")
       pf valueOf ("a", "b", "c", "d") must_== Good("<<A B C D>>")
-      (pf valueOf ("x", "b", "c", "d")).isBad must beTrue
+      (pf valueOf ("x", "b", "c", "d")) mustBeBad
     }
 
     "work with regexes" in {
       val pf = props("a1.b2.c3.d4" -> "<<A B C D>>")
       val actual: Result[String] = pf @@("a?", "b?", "c3", "d?")
       actual must_== Good("<<A B C D>>")
-      (pf @@ ("x", "b", "c", "d")).isBad must beTrue
+      (pf @@ ("x", "b", "c", "d")) mustBeBad
     }
 
     "reorder params" in {
@@ -156,7 +170,7 @@ class Props_Test extends Specification with MoreExpectations
       val reordered = pf reorder(4,2,1,3)
       reordered valueOf ("c", "b", "d", "a") must_== Good("<<A B C D>>")
       reordered valueOf ("c1", "b1", "d1", "a1") must_== Good("<<A1 B1 C1 D1>>")
-      (reordered valueOf ("a", "b", "c", "d")).isBad must beTrue
+      (reordered valueOf ("a", "b", "c", "d")) mustBeBad
     }
 
     "reorder params, heterogeneous" in {
@@ -181,6 +195,7 @@ class Props_Test extends Specification with MoreExpectations
       sut.findHaving("a").isBad must beTrue
       sut.findHaving("ab").isBad must beTrue
       sut.findHaving("y.d") must_== Good("<<ADXY>>")
+      sut.findHaving("k") must_== Good("K1")
     }
 
     "find and replace" in {
@@ -188,18 +203,18 @@ class Props_Test extends Specification with MoreExpectations
       val sut2 = props("a.b.c.d" -> "<<ABCDZZ>>", "x" -> "<<X>>", "a.d.x.y" -> "<<ADXY>>")
       val replaced = sut1.findAndReplace("c", "<<ABCDZZ>>")
       replaced == sut2 must beTrue
-      false must beTrue
       sut1.findAndReplace("ab", "oh really?!") must_== sut1
       val sut3 = Props parse "fp(Map(\"Back to Transaction History.Account #2014151 Details.Health Net ID#\" -> \"R0000000-00\", \"Back to Transaction History.Account #20140101 Details.Name\" -> \"SCOTT GRISCHY\"))"
       sut3 match {
         case Good(props) =>
           val newOne = props.findAndReplace("Name", "Lia Van Damm")
-          val newName = newOne.findHaving("Name").value
+          val newName = newOne.findHaving("Name")
           newName must_== Good("Lia Van Damm")
         case bad => failure(s"wrong text: $bad")
       }
+      ok
     }
-//
+
     "discard empty subtrees" in {
       val sut = props("a.b.c.d" -> "<<ABCD>>", "x" -> "<<X>>", "a.d.x.y" -> "<<ADXY>>")
       sut.findAllHaving("d").toString must_== """fp(Map("a.b.c.d" -> "<<ABCD>>", "a.d.x.y" -> "<<ADXY>>"))"""
@@ -212,7 +227,7 @@ class Props_Test extends Specification with MoreExpectations
     "trim prefixes wisely" in {
       val p = props("a.b.c" -> "ABC")
       val t = p.trimPrefixes
-      val s = t.toString()
+      val s = t.toString
       s must_==props("c"->"ABC").toString
       props(  "a.b" -> "ABC").trimPrefixes.toString must_==props("b"->"ABC").toString
       props(    "a" -> "ABC").trimPrefixes.toString must_==props("a"->"ABC").toString
@@ -313,7 +328,9 @@ class Props_Test extends Specification with MoreExpectations
           props @@ "C" must_== Good("c1")
         case bad => failure(s"Oops, $bad")
       }
+      ok
     }
+
     "extract data when headers are messed up" in {
       val got = Props.fromParallelLists(List("D", "B", "A", "C"), List("d1", "b1", "a1", "c1"), List("A", "B", "C"))
       got match {
@@ -323,14 +340,16 @@ class Props_Test extends Specification with MoreExpectations
           props @@ "C" must_== Good("c1")
         case bad => failure(s"Oops, $bad")
       }
+      ok
     }
 
     "fail if headers are missing" in {
       val got = Props.fromParallelLists(List("A", "C"), List("a1", "c1"), List("A", "B", "C"))
       got match {
-        case bad: Bad[_] => bad.toString() contains "(b)" must beTrue
+        case bad: Bad[_] => bad.toString contains "(b)" must beTrue
         case shozanah => failure(s"Expected an error in $shozanah")
       }
+      ok
     }
   }
 
@@ -360,16 +379,37 @@ class Props_Test extends Specification with MoreExpectations
           sut @@ "a" must_== Good("b")
         case orelse => failure(s"Oops, not good: $orelse")
       }
+      ok
+    }
+
+    "parse formatted too" in {
+      val text: String = """fp(
+                             |Map(
+                             |    "What was it" -> "Day Dream",
+                             |    "How much" -> "$12.34",
+                             |    "From whom" -> "Jane Doe",
+                             |    "Money Left" -> "$56.78"
+                             |))
+                             | """.stripMargin
+      val sutOpt = Props parse text
+      sutOpt match {
+        case Good(sut) =>
+          sut @@ "What was it" must_== Good("Day Dream")
+        case orelse => failure(s"Oops, not good: $orelse")
+      }
+      ok
+
     }
 
     "have left inverse" in {
-      val txt = props("a" -> "b").toString()
+      val txt = props("a" -> "b").toString
       val sutOpt = Props parse txt
       sutOpt match {
         case Good(sut) =>
           sut @@ "a" must_== Good("b")
         case orelse => failure(s"Oops, not good: $orelse in $txt")
       }
+      ok
     }
 
     "parse simple sample with dictionary as text" in {
@@ -379,6 +419,7 @@ class Props_Test extends Specification with MoreExpectations
           sut @@ "z" must_== Good("b")
         case orelse => failure(s"Oops, not good: $orelse")
       }
+      ok
     }
 
     "parse simple sample with reordering as text" in {
@@ -386,8 +427,9 @@ class Props_Test extends Specification with MoreExpectations
       sutOpt match {
         case Good(sut) =>
           sut @@ "d.c.a.b" must_== Good("cdba")
-        case orelse => failure(s"Oops, not good: $orelse")
+          case orelse => failure(s"Oops, not good: $orelse")
       }
+      ok
     }
 
     "parse simple sample with dictionary and reordering as text" in {
@@ -397,6 +439,7 @@ class Props_Test extends Specification with MoreExpectations
           sut @@ "d.c.z.b" must_== Good("cdba")
         case orelse => failure(s"Oops, not good: $orelse")
       }
+      ok
     }
 
     "parse OOP sample as text" in {
@@ -408,6 +451,7 @@ class Props_Test extends Specification with MoreExpectations
           sut @@ "Private.Somewhere.Bribe.max" must_== Good("$4,0.00")
         case orelse => failure(s"Oops, not good: $orelse")
       }
+      ok
     }
 
     "parse suspicious Wednesday Addams data" in {
@@ -418,35 +462,53 @@ class Props_Test extends Specification with MoreExpectations
           sut @@ "Private.Somewhere.Bribe.max" must_== Good("$4,0.00")
         case orElse => failure(s"Oops, not good: $orElse")
       }
+      ok
     }
   }
 
-  "JSON parser" should {
-    "behave" in {
-      val parse = Function[String, Props]("json parser",
-        (s:String) => {
-        val propOpt = Props.parseJson(s)
-        propOpt match {
-          case Good(p) =>  p
-          case bad => failure(s"Failed to parse <<$s>> got $bad"); ???
-        }
-      },
-      (t:Throwable) => {t.printStackTrace(); throw t})
+  "JSON" in {
+    val samples = List(
+      "{}"  -> Props.empty,
+      "{ \"v\":\"1\"}" -> props("v" -> "1"),
+      "{ \"v\":\"ab'c\"}" -> props("v" -> "ab'c"),
+      "{ \"v\":\"ab\\\"c\"}" -> props("v" -> "ab\"c"),
+      "[ \"1\",\"2\",\"3\",\"4\"]" -> props("[[1]]" -> "1", "[[2]]" -> "2", "[[3]]" -> "3", "[[4]]" -> "4"),
+      "{\"a\":\"hp://foo\"}" -> props("a" -> "hp://foo"),
+      "{\"x\":[\"1.0\",\"2.0\",\"3.0\"]}" -> props("x.[[1]]" -> "1.0", "x.[[2]]" -> "2.0", "x.[[3]]" -> "3.0"),
+      "[{\"a\":\"1.0\"},{\"b\":\"2.0\"},[\"3.0\",\"4.0\"]]" -> props("[[1]].a" -> "1.0", "[[2]].b" -> "2.0", "[[3]].[[1]]" -> "3.0", "[[3]].[[2]]" -> "4.0"),
+      "{\"a\":{\"b\":\"c\"}}" -> props("a.b" -> "c"),
+      "{\"c\":{\"p\":\"q\"}}" -> props("c.p" -> "q"),
+      """{"affectedIDs":["11620"],"frameType":"2.0","date":"1405445271804","httpCode":"200","type":"Attachment","item":{"attachedOn":"1405445271","mimeType":"application/pdf","updatedAt":"1405445271","EOBID":"0","ID":"11620","userID":"10204","updatedMS":"1405445271","name":"statement.pdf","size":"790523"},"message":"OK"}""" -> props(
+        "type" -> "Attachment",
+        "date" -> "1405445271804",
+        "frameType" -> "2.0",
+        "message" -> "OK",
+        "httpCode" -> "200",
+        "affectedIDs.[[1]]" -> "11620",
+        "item.ID" -> "11620",
+        "item.EOBID" -> "0",
+        "item.subsID" -> "",
+        "item.uid" -> "",
+        "item.userID" -> "10204",
+        "item.name" -> "statement.pdf",
+        "item.attachedOn" -> "1405445271", // pretty dumb eh
+        "item.updatedAt" -> "1405445271",
+        "item.mimeType" -> "application/pdf",
+        "item.updatedMS" -> "1405445271",
+        "item.size" -> "790523"
+    ))
 
-      parse maps (
-        "{}"  -> Props.empty,
-        "{ \"v\":\"1\"}" -> props("v" -> "1"),
-//bad json lib        "{\"v\":\"1\"\\n}"  -> props("v" -> "1"),
-//bad json lib        "{\"v\":\"1\"\\r\\n}"  -> props("v" -> "1"),
-//bad json lib        "{\t\"v\":\"1\"\\n}"  -> props("v" -> "1"),
-//bad json lib        "{\t\"v\":\"1\"\\r\\n}"  -> props("v" -> "1"),
+    "parse" >> {
+      val extraSamples = List(
+        //bad json lib        "{\"v\":\"1\"\\n}"  -> props("v" -> "1"),
+        //bad json lib        "{\"v\":\"1\"\\r\\n}"  -> props("v" -> "1"),
+        //bad json lib        "{\t\"v\":\"1\"\\n}"  -> props("v" -> "1"),
+        //bad json lib        "{\t\"v\":\"1\"\\r\\n}"  -> props("v" -> "1"),
         "{ \"v\":1}" -> props("v" -> "1.0"), // why?!
-        "{ \"v\":\"ab'c\"}" -> props("v" -> "ab'c"),
-//bad json lib        "{\"v\":123456789123456789123456789}" -> props("v" -> "123456789123456789123456789"),
+        //bad json lib        "{\"v\":123456789123456789123456789}" -> props("v" -> "123456789123456789123456789"),
         "[ 1,2,3,4]" -> props("[[1]]" -> "1.0", "[[2]]" -> "2.0", "[[3]]" -> "3.0", "[[4]]" -> "4.0"),
         "[ \"1\",\"2\",\"3\",\"4\"]" -> props("[[1]]" -> "1", "[[2]]" -> "2", "[[3]]" -> "3", "[[4]]" -> "4"),
         "[ { }, { },[]]" -> Props.empty,
-        "{\"a\":\"hp://foo\"}" -> props("a" -> "hp://foo"),
         "{\"a\":null}" -> Props.empty,
         "{\"a\":true}" -> props("a" -> "true"),
         "{\"x\":[1,2,3]}" -> props("x.[[1]]" -> "1.0", "x.[[2]]" -> "2.0", "x.[[3]]" -> "3.0"),
@@ -493,11 +555,33 @@ class Props_Test extends Specification with MoreExpectations
           "item.mimeType" -> "application\\/pdf",
           "item.updatedMS" -> "1.405445271E12",
           "item.size" -> "790523.0"
-        )
-        )
+        ))
+      val parse = Function[String, Props]("json parser",
+        (s:String) => {
+        val propOpt = Props.parseJson(s)
+        propOpt match {
+          case Good(p) =>  p
+          case bad => failure(s"Failed to parse <<$s>> got $bad"); ???
+        }
+      },
+      (t:Throwable) => {t.printStackTrace(); throw t})
+
+      parse maps ((samples++extraSamples).toArray:_*)
 
       Props.parseJson("{'X':'s").isBad must beTrue
       Props.parseJson("{'X").isBad must beTrue
+    }
+
+    "generate" >> {
+      props("[[1]]" -> "1", "[[2]]" -> "2", "[[3]]" -> "3", "[[4]]" -> "4").toJsonString must_== """["1", "2", "3", "4"]"""
+
+      val generate = Function[Props, String]("json stringifier",
+        (p:Props) => {
+          val s = p.toJsonString
+          s.replaceAll("[ \\n]", "")
+        },
+        (t:Throwable) => {t.printStackTrace(); throw t})
+        generate maps (samples.map { case (j, p) => (p, j.replaceAll(" ", ""))}.toArray: _*)
     }
   }
 
@@ -521,6 +605,7 @@ class Props_Test extends Specification with MoreExpectations
            j <- 1 to 2) {
         sut(i)(s"key$i$j") must_== s"val$i$j"
       }
+      ok
     }
 
     "Group by index in double index case" in {
@@ -535,6 +620,7 @@ class Props_Test extends Specification with MoreExpectations
            j <- 1 to 2) {
         sut(i)(s"[[1]].key$i$j") must_== s"val$i$j"
       }
+      ok
     }
 
     "Behave in a modified regression case of embedded array" in {
@@ -552,6 +638,7 @@ class Props_Test extends Specification with MoreExpectations
           serviceTypes.toList must_== List("I0", "I1", "I2")
         case basura => failure(s"Oops, not good: $basura")
       }
+      ok
     }
 
     "parse when keys contain commas" in {
@@ -562,6 +649,7 @@ class Props_Test extends Specification with MoreExpectations
           props @@ "HERMIONE GRANGER, MUGGLE.Passport Number" must_== Good("9")
         case basura => failure(s"Oops, not good: $basura")
       }
+      ok
     }
 
     "Group by index using real data" in {
@@ -575,6 +663,7 @@ class Props_Test extends Specification with MoreExpectations
           empty.isEmpty aka s"#{empty._2}" must beTrue
         case basura => failure(s"Oops, not good: $basura")
       }
+      ok
     }
 
     "Group by index in transitional" in {
@@ -591,6 +680,7 @@ class Props_Test extends Specification with MoreExpectations
           val serviceTypes = sut map (_.getOrElse("[[1]].key", "oops..."))
         case basura => failure(s"Oops, not good: $basura")
       }
+      ok
     }
 
     "Behave in a regression of 10/16/2013" in {
@@ -604,6 +694,7 @@ class Props_Test extends Specification with MoreExpectations
           serviceTypes.toList must_== List("Private Beach Party", "Thai Massage", "Private Show")
         case basura => failure(s"Oops, not good: $basura")
       }
+      ok
     }
 
     "regression 1 of 07/03/2014" in {
@@ -614,6 +705,7 @@ class Props_Test extends Specification with MoreExpectations
           props @@ ".Passport Number" must_== Good("9")
         case basura => failure(s"Oops, not good: $basura")
       }
+      ok
     }
     "Extract data from list" in {
       fromTree("first"::"second"::Nil) must_== Good(props("[[1]]"->"first", "[[2]]"->"second"))
@@ -672,6 +764,22 @@ class Props_Test extends Specification with MoreExpectations
           p @@ "abroad.individualHome" aka p.toString  must_== Good("7000")
         case oops => failure(s"oops: $oops")
       }
+      ok
+    }
+
+    "Group Indices from a unordered set of indices" >> {
+      val source = props(
+        "[[1]].name" -> "ABC",
+        "[[1]].foo" -> "abcbar",
+        "[[3]].name" -> "DEF",
+        "[[3]].foo" -> "defbar",
+        "[[5]].name" -> "GHI",
+        "[[5]].bar" -> "ghifoo"
+      )
+      val groupedProps = source.groupByIndex
+      groupedProps.size must_== 5
+      groupedProps.count(_.isEmpty) must_== 2
+      groupedProps(4) @@ "bar" map (_=="ghifoo") must_== Good(true)
 
     }
 

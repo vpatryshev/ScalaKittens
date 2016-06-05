@@ -127,7 +127,7 @@ class ClientHttpRequest extends Observable {
     * @param value cookie value
     * @throws IOException when something broke
     */
-  def setCookie(name: String, value: String) {
+  def setCookie(name: String, value: String): Unit = {
     cookies += ((name, value))
   }
 

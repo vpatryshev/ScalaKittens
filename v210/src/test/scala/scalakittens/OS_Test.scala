@@ -15,6 +15,7 @@ object OS_Test extends Specification {
         case DIGITS(pif) => // ok
         case basura => failure("Bad pid: " + basura)
       }
+      ok
     }
 
     "provide current directory" in {
@@ -50,7 +51,7 @@ object OS_Test extends Specification {
 
   "this test" should {
     "do nothing" in {
-      true must beTrue
+      ok
     }
   }
 

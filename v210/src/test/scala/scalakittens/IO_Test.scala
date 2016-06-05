@@ -1,5 +1,6 @@
 package scalakittens
 
+import scala.language.reflectiveCalls
 import org.specs2.mutable.Specification
 import IO._
 import OS._
@@ -73,6 +74,7 @@ class IO_Test extends Specification {
           using (renamed.f) (in => { "this is a test" forall (in.read == _) }) must_== Good(true)
         case bad => failure(s"oops, $bad")
       }
+      ok
     }
 
     "provide file extension handling for the case where there's no exception" in {
@@ -89,6 +91,7 @@ class IO_Test extends Specification {
           using (renamed.f) (in => { "this is a test" forall (in.read == _) }) must_== Good(true)
         case bad => failure(s"oops, $bad")
       }
+      ok
     }
 
   }
