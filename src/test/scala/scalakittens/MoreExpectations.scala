@@ -2,6 +2,7 @@ package scalakittens
 
 import org.specs2.matcher._
 import Functions._
+import StandardMatchResults._
 
 trait MoreExpectations extends UsefulMocks { actual: Expectations =>
   def aka(alt: Any):Expectable[Any] = actual.aka(alt.toString)
@@ -56,10 +57,12 @@ trait MoreExpectations extends UsefulMocks { actual: Expectations =>
 
     private def expectPositive(op: predicate[X]): X => Unit = x => {
       op(x) aka ("False negative on \"" + x + "\"") must_== true
+      ok
     }
 
     private def expectNegative(op: predicate[X]): X => Unit = x => {
       op(x) aka ("False positive on \"" + x + "\"") must_== false
+      ok
     }
 
     def maps(samples:X*) {
@@ -80,10 +83,12 @@ trait MoreExpectations extends UsefulMocks { actual: Expectations =>
 
     private def expectPositive(op: predicate2[X, Y]):(X,Y) => Unit = (x, y) => {
       op(x, y) aka ("False negative on (\"" + x + "\", \"" + y + "\")") must_== true
+      ok
     }
 
     private def expectNegative(op: predicate2[X, Y]):(X,Y) => Unit = (x, y) => {
       op(x, y) aka ("False positive on (\"" + x + "\", \"" + y + "\")") must_== false
+      ok
     }
 
     def maps(samples:(X, Y)*) {

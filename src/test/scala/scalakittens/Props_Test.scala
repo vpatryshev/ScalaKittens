@@ -1,5 +1,6 @@
 package scalakittens
 
+import scala.language.reflectiveCalls
 import org.specs2.mutable.Specification
 import Props._
 
@@ -190,7 +191,7 @@ class Props_Test extends Specification {
     "dropPrefix work on four parameters" in {
       val pf = props("a.b.c.d" -> "<<ABCD>>", "x" -> "<<X>>")
       val dp = pf.dropPrefix
-      dp @@("b", "c", "d") must_== Good("<<ABCD>>")
+      dp @@ ("b", "c", "d") must_== Good("<<ABCD>>")
       (dp @@ "x").isBad must beTrue
     }
 
@@ -598,5 +599,29 @@ class Props_Test extends Specification {
 
     }
 
+  }
+
+  "HL7 sample" should {
+    "work" in {
+      val map = Map(
+                   "evn.when" -> "201605222005",
+                   "msh.from" -> "RXIHEALTHCONNECT BELLEMEADERPHARMACY",
+                   "msh.id" -> "IDofThisMsg",
+                   "nk1.[[1]].address" -> "277 Allen MyLastName Bonnie    ",
+                   "nk1.[[1]].name" -> "Roe Marie",
+                   "nk1.[[1]].phone" -> "(216)123­4567",
+                   "nk1.[[1]].rel" -> "spo",
+                   "pid.address" -> "Sunny Acres 123 Sunny Acres Santa Rosa CA 95403",
+                   "pid.dob" -> "19500101120000",
+                   "pid.gender" -> "M",
+                   "pid.homePhone" -> "(707)5471711",
+                   "pid.id" -> "000000216490",
+                   "pid.name" -> "Sample Joe",
+                   "pid.workPhone" -> "(707)5471712"
+                  )
+      val sut = Props(map)
+      val ours = sut.startingWith("nk1")
+      ours @@ "[[1]].name" must_== Good("Roe Marie")
+    }
   }
 }

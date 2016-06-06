@@ -345,10 +345,9 @@ case class Props(private val innerMap: PropMap) extends PartialFunction[String, 
       (kv._1.substring(0, newLength), kv._2)
     })
 
-  def startingWith(postfix: String): Props = Props(
-    innerMap collect { case kv if kv._1.startsWith(postfix + ".") =>
-      val newLength = kv._1.length - postfix.length - 1
-      (kv._1.substring(0, newLength), kv._2)
+  def startingWith(prefix: String): Props = Props(
+    innerMap collect { case kv if kv._1.startsWith(prefix + ".") =>
+      (kv._1.substring(prefix.length+1), kv._2)
     })
 
   // for testing
