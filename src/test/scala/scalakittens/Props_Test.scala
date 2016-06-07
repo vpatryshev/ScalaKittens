@@ -420,7 +420,7 @@ class Props_Test extends Specification {
       val pp = props(Map("key1" -> "val1", "key2" -> "val2"))
       val sut = pp.groupByIndex
       sut.size must_== 1
-      sut(0) must_== pp
+      sut.head must_== pp
     }
 
     "Group by index in simple case" in {
@@ -622,6 +622,19 @@ class Props_Test extends Specification {
       val sut = Props(map)
       val ours = sut.startingWith("nk1")
       ours @@ "[[1]].name" must_== Good("Roe Marie")
+      val bundles = ours.extractIndexed
+
+      bundles.length must_== 1
+
+      val nk1expected = Props(Map(
+        "address" -> "277 Allen MyLastName Bonnie    ",
+        "name" -> "Roe Marie",
+        "phone" -> "(216)123­4567",
+        "rel" -> "spo"
+      ))
+
+      bundles must_== nk1expected::Nil
+
     }
   }
 }
