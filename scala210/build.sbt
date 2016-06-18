@@ -28,6 +28,7 @@ libraryDependencies ++= Seq(
   "org.scalatest"  %% "scalatest"     % "2.2.3" % "test" withSources(),
   "org.scala-lang" % "scala-compiler" % "2.10.6",
   "org.scala-lang" % "scala-library" % "2.10.6",
+  "org.scala-lang" % "scala-reflect" % "2.10.6",
   "org.specs2" %% "specs2-core" % "3.6" % "test",
   "org.scalacheck" %% "scalacheck" % "1.12.4" % "test"
 )

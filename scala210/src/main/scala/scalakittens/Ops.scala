@@ -9,17 +9,17 @@ import scala.concurrent.duration._
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.LockSupport
 
-trait Ops { self:AnyRef ⇒
+trait Ops {
+  self: AnyRef ⇒
   def scale = 1000
 
   def askUser(what: String) = {
-    println(what+"?")
+    println(s"$what?")
     what -> readLine
   }
 
   def sleepSome(dt: Long): Outcome = {
-    val actually = (dt + math.random*dt/2+1).toInt * scale / 1000
-    //print(s"  Sleeping ${dt*0.001} seconds (actually, $actually ms, scale is $scale)  ")
+    val actually = (dt + math.random * dt / 2 + 1).toInt * scale / 1000
     Thread sleep actually
     OK
   }
@@ -28,31 +28,41 @@ trait Ops { self:AnyRef ⇒
     sleepSome(dt.toMillis)
   }
 
-  implicit class CanTap[T](x:T) {
-    def tap(op:T⇒Unit):T = {op(x); x}
+  implicit class CanTap[T](x: T) {
+    def tap(op: T ⇒ Unit): T = {
+      op(x); x
+    }
   }
 
-  def tryOr  [T](eval: ⇒T, onError: Exception ⇒ T) =
-    try { eval } catch { case e: Exception ⇒
-      onError(e)
+  def tryOr[T](eval: ⇒ T, onError: Exception ⇒ T) =
+    try {
+      eval
+    } catch {
+      case e: Exception ⇒
+        onError(e)
     }
 
-  def tryOr  [T](eval: ⇒T, orElse: ⇒T) =
-    try { eval } catch { case e: Exception ⇒
-      orElse
+  def tryOr[T](eval: ⇒ T, orElse: ⇒ T) =
+    try {
+      eval
+    } catch {
+      case e: Exception ⇒
+        orElse
     }
 
-  implicit class Ternary(b: ⇒Boolean) {
-    def ?[T](x: ⇒T) = new { def |(y: ⇒T) = if(b) x else y}
+  implicit class Ternary(b: ⇒ Boolean) {
+    def ?[T](x: ⇒ T) = new {
+      def |(y: ⇒ T) = if (b) x else y
+    }
   }
 
   def toSource(x: Any): String = {
     x match {
       case null ⇒ "null"
       case s: String ⇒ "\"" + s.replaceAll("\"", "\\\"") + "\""
-      case list:List[_] ⇒ "List(" + list.map(toSource).mkString(", ") + ")"
-      case array:Array[_] ⇒ "Array(" + array.map(toSource).mkString(", ") + ")"
-      case map:Map[_, _] ⇒ "Map(" + map.map{case(k,v) ⇒ toSource(k) + "->" + toSource(v)}.mkString(", ") + ")"
+      case list: List[_] ⇒ "List(" + list.map(toSource).mkString(", ") + ")"
+      case array: Array[_] ⇒ "Array(" + array.map(toSource).mkString(", ") + ")"
+      case map: Map[_, _] ⇒ "Map(" + map.map { case (k, v) ⇒ toSource(k) + "->" + toSource(v) }.mkString(", ") + ")"
       case fp@Props(pf) ⇒ pf match {
         case map: Map[_, _] ⇒ "PropTree(" + toSource(map) + ")"
         case _ ⇒ fp.toString()
@@ -61,7 +71,7 @@ trait Ops { self:AnyRef ⇒
     }
   }
 
-  def union[T](sets:TraversableOnce[Set[T]]) = (Set.empty[T]/:sets) (_++_)
+  def union[T](sets: TraversableOnce[Set[T]]) = (Set.empty[T] /: sets) (_ ++ _)
 
   import java.util.{Map ⇒ jum}
   import java.util.{Set ⇒ jus}
@@ -77,20 +87,20 @@ trait Ops { self:AnyRef ⇒
     x match {
       case null ⇒ Empty
       case r: Result[_] ⇒ r map asScala
-      case e: jum.Entry[_,_] ⇒
+      case e: jum.Entry[_, _] ⇒
         val p = asScala(e.getKey) -> asScala(e.getValue)
         p
       case m: jum[_, _] ⇒
         val pairs = iterate(m.entrySet)
-        val map = pairs .collect {case(k,v) ⇒ (k,v)} .toMap
+        val map = pairs.collect { case (k, v) ⇒ (k, v) }.toMap
         map
 
       case s: jus[_] ⇒
-        val transformed:Iterable[_] = iterate(s)
+        val transformed: Iterable[_] = iterate(s)
         transformed.toSet
 
       case i: jli[_] ⇒
-        val transformed:Iterable[_] = iterate(i)
+        val transformed: Iterable[_] = iterate(i)
         transformed.toList
 
       case a: Array[_] ⇒ a.toList.map(asScala)
@@ -104,8 +114,8 @@ trait Ops { self:AnyRef ⇒
   }
 
   /** Returns shortest possible list of lists xss such that
-    *   - xss.flatten == xs
-    *   - No sublist in xss contains an element matching p in its tail
+    * - xss.flatten == xs
+    * - No sublist in xss contains an element matching p in its tail
     * See Martin Odersky's answer in
     * http://stackoverflow.com/questions/7293617/split-up-a-list-at-each-element-satisfying-a-predicate-scala
     */
@@ -117,44 +127,66 @@ trait Ops { self:AnyRef ⇒
   }
 
   /**
-   * Grouping a list by a binary relationship, splitting it into segments where neighbors satisfy p
-   * @param xs the list to split
-   * @param p the predicate (T,T) ⇒ Boolean
-   * @tparam T whatever the type of list elements is
-   * @return list of groups, List[List[T] ]
-   */
-  def groupByRelationship[T](p: (T,T) ⇒ Boolean)(xs: Traversable[T]) = {
-    val (seg,acc) = ((List[T](),List[List[T]]()) /: xs) {
-      case ((y::ys, a), x) if p(y,x) ⇒ (x ::y ::ys, a)
-      case (   (ys, a), x)           ⇒ (x::Nil, ys.reverse::a)
+    * Grouping a list by a binary relationship, splitting it into segments where neighbors satisfy p
+    *
+    * @param xs the list to split
+    * @param p  the predicate (T,T) ⇒ Boolean
+    * @tparam T whatever the type of list elements is
+    * @return list of groups, List[List[T] ]
+    */
+  def groupByRelationship[T](p: (T, T) ⇒ Boolean)(xs: Traversable[T]) = {
+    val (seg, acc) = ((List[T](), List[List[T]]()) /: xs) {
+      case ((y :: ys, a), x) if p(y, x) ⇒ (x :: y :: ys, a)
+      case ((ys, a), x) ⇒ (x :: Nil, ys.reverse :: a)
     }
-    (seg.reverse::acc).reverse drop 1
+    (seg.reverse :: acc).reverse drop 1
   }
 
-  def groupListBy[T,U](xs: List[T])(f: T ⇒ U): List[List[T]] = groupByRelationship[T]((x,y) ⇒ f(x)==f(y))(xs)
+  def groupListBy[T, U](xs: List[T])(f: T ⇒ U): List[List[T]] = groupByRelationship[T]((x, y) ⇒ f(x) == f(y))(xs)
 
   def thread(op: ⇒ Unit) = new Thread {
     override def run() = op
   }
 
-  def spendNotMoreThan[T](time: Duration, extraTimePercent:Int = 1) = new {
-    val millis = time.toMillis
-    def on(op: ⇒ Result[T]): Result[T] = {
-      import LockSupport._
-      var res:Result[T] = Empty
+  object Job {
+
+    sealed trait Status
+    case object Starting extends Status
+    case object Running extends Status
+    case object Timeout extends Status
+    case object Hung extends Status
+    case object Done extends Status
+    case class  Failed(x: Exception) extends Status
+
+  }
+
+  private abstract class Runner[T](op: ⇒ Result[T], time: Duration, extraTimePercent: Int = 1) {
+
+    import LockSupport._
+
+    protected def onStatus(status: Job.Status): Unit
+
+    private val millis = time.toMillis
+
+    def apply():Result[T] = {
+      onStatus(Job.Starting)
+      var res: Result[T] = Empty
       val finalDeadline = System.currentTimeMillis + millis * (100 + extraTimePercent) / 100 + 1
       val done = new AtomicBoolean(false)
-      var thrown: Option[Exception] = None
+
       val worker = new Thread {
         override def run() {
-          res = Result.attempt ({
+          onStatus(Job.Running)
+          res = Result.attempt({
             val r = op
             done.set(true)
+            onStatus(Job.Done)
             r
           }, (_: Exception) match {
-              case ie: InterruptedException ⇒ Empty
-              case x: Exception ⇒
-                Result.exception(x)
+            case ie: InterruptedException ⇒ Empty
+            case x: Exception ⇒
+              onStatus(Job.Failed(x))
+              Result.exception(x)
           })
         }
       }
@@ -163,18 +195,29 @@ trait Ops { self:AnyRef ⇒
       worker.start()
       worker.join(millis)
       if (worker.isAlive) {
-//        Logging.info("Timeout on operation, interrupting...")
+        onStatus(Job.Timeout)
         worker.interrupt()
         Thread.`yield`()
         parkUntil(finalDeadline)
       }
-//      if (worker.isAlive) {
-//        Logging.anError(s"Operation hung, called by $caller")
-//      }
-      if (done.get) res else {
+      if (worker.isAlive) {
+        onStatus(Job.Hung)
+      }
+      if (done.get) res
+      else {
         Result.error(s"Timeout after $time")
       }
     }
+  }
+
+  def spendNotMoreThan[T](time: Duration, extraTimePercent: Int = 1) = new {
+    val millis = time.toMillis
+
+    //    def reporting(onStatus: Job.Status ⇒ Unit) =
+
+    def on(op: ⇒ Result[T]): Result[T] = (new Runner(op, time, extraTimePercent) {
+        override def onStatus(status: Job.Status) = ()
+    }) ()
   }
 
   def stringify(el: StackTraceElement) = el.getFileName + "[" + el.getLineNumber + "]"
