@@ -1,6 +1,5 @@
 package scalakittens
 
-import scala.language.implicitConversions
 import org.specs2.mutable.Specification
 
 class Result_Test extends Specification {
