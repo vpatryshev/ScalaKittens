@@ -12,7 +12,7 @@ scalacOptions ++= Seq("-deprecation", "-encoding", "UTF-8", "-feature", "-target
     "-Ywarn-adapted-args", "-Ywarn-value-discard", "-Xlint")
 
 scalacOptions in (Compile, doc) <++= baseDirectory.map {
-  (bd: File) => Seq[String](
+  (bd: File) ⇒ Seq[String](
      "-sourcepath", bd.getAbsolutePath,
      "-doc-source-url", "https://github.com/mslinn/changeMe/tree/master€{FILE_PATH}.scala"
   )

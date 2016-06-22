@@ -3,8 +3,9 @@ package scalakittens.logic
 import language.{higherKinds, implicitConversions, existentials, reflectiveCalls}
 
 /**
- * my experimental stuff.
- */
+  * My experimental stuff.
+  * Checking if linear logic can be efficiently implemented in Scala
+  */
 object LinearLogic {
   type &[+T,+U] = (T,U)
   type |[+T,+U] = Either[T,U]

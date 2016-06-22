@@ -1,5 +1,6 @@
 package scalakittens
 
+import scala.language.implicitConversions
 import org.specs2.mutable.Specification
 
 class Result_Test extends Specification {
@@ -82,14 +83,14 @@ class Result_Test extends Specification {
     "list errors" in {
       val errors = new Exception("Whose life is it?")::
                    new Exception("Hey Euler!"):: Nil
-      Bad(errors).listErrors must_== errors
+      bad(errors).listErrors must_== errors
     }
     "behave on error" in {
       val errors = new Exception("Say hi")::
                    new Exception("Say bye"):: Nil
       var beenThere = false
       var ed: Errors = Nil
-      Bad(errors).onError((es:Errors) ⇒ { beenThere = true; ed=es})
+      bad(errors).onError((es:Errors) ⇒ { beenThere = true; ed=es})
       beenThere aka "visited what you were not supposed to visit" must beTrue
       ed must_== errors
     }
@@ -149,7 +150,7 @@ class Result_Test extends Specification {
       Result.error[String]("oops") filter ((s:String) ⇒ s.startsWith("lo"), "oi vei") must_== Result.error("oops")
     }
     "Merge errorDetails" in {
-      val detailsOpt: Option[String] = Bad(new ResultException("beer too expensive"):: new ResultException("are we there?") :: Nil).errorDetails
+      val detailsOpt: Option[String] = bad(new ResultException("beer too expensive"):: new ResultException("are we there?") :: Nil).errorDetails
       detailsOpt.isEmpty must beFalse
       val desc = detailsOpt.get
       val expectedDesc = "beer too expensive; are we there?"
@@ -332,8 +333,8 @@ class Result_Test extends Specification {
     }
     "produce Bad from exceptional values" in {
       val x = new UnsupportedOperationException("brain surgery")
-      Result.forValue(throw x) must_== Bad(x)
-      Result.forValue(throw x, "oi vei") must_== Bad(x) .orCommentTheError ("oi vei")
+      Result.forValue(throw x) must_== bad(x::Nil)
+      Result.forValue(throw x, "oi vei") must_== bad(x::Nil) .orCommentTheError ("oi vei")
     }
     "work properly with Either" in {
       Result(Left("life is bad")) must_== Result.error("life is bad")

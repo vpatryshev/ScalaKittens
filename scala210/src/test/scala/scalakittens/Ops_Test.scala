@@ -1,11 +1,13 @@
 package scalakittens
 
-import language.{implicitConversions, reflectiveCalls}
 import java.util
 
-import Result._
 import org.specs2.mutable.Specification
-import Ops._
+
+import scala.collection.mutable.ListBuffer
+import scala.language.{implicitConversions, reflectiveCalls}
+import scalakittens.Ops._
+import scalakittens.Result._
 
 class Ops_Test extends Specification {
 
@@ -72,15 +74,19 @@ class Ops_Test extends Specification {
       sut must_== Set(Set("red", "blue"), Set("old", "nu"))
     }
   }
+
   "OnTimer" should {
+    import scala.concurrent.duration._
+    val msInTimeout = 50
+    val tooLong = msInTimeout * 2
+    val tooFast = msInTimeout / 2
+    val timeout = msInTimeout milliseconds
+
     "Delimit execution of stuff using timer" in {
       val startTime = System.currentTimeMillis()
       var lastChecked = startTime
-      import scala.concurrent.duration._
-      val ten: DurationInt = 300 // thank you specs2 for overriding Duration class
-      val timeout = ten milliseconds
       val result = spendNotMoreThan(timeout) on {
-        for (i <- 1 to 600) {
+        for (i <- 1 to tooLong) {
           lastChecked = System.currentTimeMillis()
           Thread.sleep(1)
         }
@@ -88,37 +94,55 @@ class Ops_Test extends Specification {
       }
       result must_== Result.error(s"Timeout after $timeout")
     }
+
     "Delimit execution of stuff using timer, graciously" in {
       val startTime = System.currentTimeMillis()
-      var lastChecked = startTime
-      import scala.concurrent.duration._
-      val ten: DurationInt = 300 // thank you specs2 for overriding Duration class
-      val timeout = ten milliseconds
       val result = spendNotMoreThan(timeout) on {
-        for (i <- 1 to 1000) {
-          lastChecked = System.currentTimeMillis()
-          Thread.sleep(1)
-        }
+        Thread sleep tooLong
         OK
       }
 
       result.isGood must beFalse
     }
+
+    "Report status when asked, timeout" in {
+      val startTime = System.currentTimeMillis()
+      val report = new ListBuffer[Job.Status]
+
+      val result = spendNotMoreThan(timeout) reporting ((s:Job.Status) ⇒ {report += s; ()}) on {
+        Thread sleep tooLong
+        OK
+      }
+
+      result.isGood must beFalse
+      report.toList must_== Job.Starting::Job.Running::Job.Timeout::Nil
+    }
+
     "Return the right stuff if calculated in due time" in {
       val startTime = System.currentTimeMillis()
-      var lastChecked = startTime
-      import scala.concurrent.duration._
-      val ten: DurationInt = 1000 // thank you specs2 for overriding Duration class
-      val timeout = ten milliseconds
+
       val result = spendNotMoreThan(timeout) on {
-        for (i <- 1 to 5) {
-          lastChecked = System.currentTimeMillis()
-          Thread.sleep(1)
-        }
+        Thread sleep tooFast
         Good(":)")
       }
       result must_== Good(":)")
     }
+
+    "Report status when asked, positive outcome" in {
+      val startTime = System.currentTimeMillis()
+      val report = new ListBuffer[Job.Status]
+
+      val result = spendNotMoreThan(msInTimeout milliseconds).
+        reporting ((s:Job.Status) ⇒ {report += s; ()}).
+        on {
+          Thread sleep tooFast
+          Good(":)")
+        }
+
+      result must_== Good(":)")
+      report.toList must_== Job.Starting::Job.Running::Job.Done::Nil
+    }
+
   }
 
   "group by relationship" should {

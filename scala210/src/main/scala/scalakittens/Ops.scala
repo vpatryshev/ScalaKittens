@@ -160,20 +160,17 @@ trait Ops {
 
   }
 
-  private abstract class Runner[T](op: ⇒ Result[T], time: Duration, extraTimePercent: Int = 1) {
+  private class Runner[T](op: ⇒ Result[T], time: Duration, extraTimePercent: Int, onStatus: Job.Status ⇒ Unit) {
 
     import LockSupport._
 
-    protected def onStatus(status: Job.Status): Unit
-
     private val millis = time.toMillis
+    private var res: Result[T] = Empty
+    private val done = new AtomicBoolean(false)
 
     def apply():Result[T] = {
-      onStatus(Job.Starting)
-      var res: Result[T] = Empty
       val finalDeadline = System.currentTimeMillis + millis * (100 + extraTimePercent) / 100 + 1
-      val done = new AtomicBoolean(false)
-
+      onStatus(Job.Starting)
       val worker = new Thread {
         override def run() {
           onStatus(Job.Running)
@@ -197,27 +194,23 @@ trait Ops {
       if (worker.isAlive) {
         onStatus(Job.Timeout)
         worker.interrupt()
-        Thread.`yield`()
         parkUntil(finalDeadline)
+        Thread sleep 1
       }
       if (worker.isAlive) {
         onStatus(Job.Hung)
       }
-      if (done.get) res
-      else {
-        Result.error(s"Timeout after $time")
-      }
+      OKif(done.get, s"Timeout after $time") andThen res
     }
   }
 
-  def spendNotMoreThan[T](time: Duration, extraTimePercent: Int = 1) = new {
-    val millis = time.toMillis
+  protected class Starter[T](time: Duration, extraTimePercent: Int, reporter: Job.Status ⇒ Unit) {
 
-    //    def reporting(onStatus: Job.Status ⇒ Unit) =
+    def on(op: ⇒ Result[T]): Result[T] = (new Runner(op, time, extraTimePercent, reporter)) ()
+  }
 
-    def on(op: ⇒ Result[T]): Result[T] = (new Runner(op, time, extraTimePercent) {
-        override def onStatus(status: Job.Status) = ()
-    }) ()
+  def spendNotMoreThan[T](time: Duration, extraTimePercent: Int = 1) = new Starter[T](time, extraTimePercent, _ ⇒ ()) {
+    def reporting(reporter: Job.Status ⇒ Unit) = new Starter[T](time, extraTimePercent, reporter)
   }
 
   def stringify(el: StackTraceElement) = el.getFileName + "[" + el.getLineNumber + "]"
