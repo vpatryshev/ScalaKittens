@@ -102,3 +102,8 @@ This class comes from my old Java code on myjavatools.com
 Pls refer to the test to see how to use it. It's easy actually.
 Note that in your web app you can also trace the progress. Might be convenient.
 And you can cancel it half way through.
+
+## Scala Versions ##
+
+Currently the base version was moved to scala210 directory, since it targets scala 2.10. A version for Scala 2.11, when finished, will be deployed in scala211 directory.
+
