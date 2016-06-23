@@ -1,5 +1,7 @@
 #Scala Kittens Project#
 
+*Attention Please*
+This project is currently split into two versions: scala210 and scala211 (which is not there yet).
 
 In this project I plan to store small solutions to typical problems, which are free to grab and too small for building a "library".
 [Scala kittens][slides] has examples of this kind of stuff, one-liners. Probably they deserve to be put to gist.
