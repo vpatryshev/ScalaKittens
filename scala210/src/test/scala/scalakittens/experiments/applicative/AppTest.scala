@@ -1,13 +1,11 @@
-package scalakittens
 package scalakittens.experiments.applicative
-/*
-import org.specs._
-import org.specs.runner.JUnit4
-import scalakittens.applicative.All._
-import scala.collection.immutable.List
-import scala.collection.{Set, Seq}
 
-class AppTest extends JUnit4(AppTest)
+import org.specs2.mutable.Specification
+
+import scala.collection.immutable.List
+import scala.collection.{Seq, Set}
+import scalakittens.experiments.algebra.{Semigroup, Monoid}
+import scalakittens.experiments.applicative.All._
 
 object AppTest extends Specification {
 
@@ -19,9 +17,8 @@ object AppTest extends Specification {
 
   "ApplicativeList" should {
     "combine two lists" in {
-      import applicative.All.AppList._
       def pp(i: Int) = (j: Int) ⇒ i + j * j
-
+      import AppList._
       val combinations:List[Int] = ap(List(pp(1), pp(2)))(List(10, 20, 30))
       combinations must_== List(101, 401, 901, 102, 402, 902)
     }
@@ -39,7 +36,7 @@ object AppTest extends Specification {
     "be able to zip functions with values" in {
 
       def prepend(prefix: String) = (s: String) ⇒ prefix + " " + s
-      val result = (List(prepend("a"), prepend("the")) <*> List("quick brown fox jumps over ", "lazy dog "))
+      val result = List(prepend("a"), prepend("the")) <*> List("quick brown fox jumps over ", "lazy dog ")
       result must_== List("a quick brown fox jumps over ", "the lazy dog ")
     }
 
@@ -52,9 +49,7 @@ object AppTest extends Specification {
         def transposeNonempty(m: matrix): matrix = {
           m match {
             case Nil ⇒ pure(Nil)
-            case row :: rows ⇒ {
-              glue <*> row <*> transposeNonempty(rows)
-            }
+            case row :: rows ⇒ glue <*> row <*> transposeNonempty(rows)
           }
         }
       }
@@ -82,7 +77,7 @@ object AppTest extends Specification {
     "combine Johns and Pauls" in {
       import All.AppSet._
       val combinations = pure(appender) <*> Set("John", "Paul") <*> Set("the 1st", "the 2nd")
-      combinations == Set("John the 1st", "John the 2nd", "Paul the 1st", "Paul the 2nd") mustBe true
+      combinations == Set("John the 1st", "John the 2nd", "Paul the 1st", "Paul the 2nd") must beTrue
     }
   }
   
@@ -138,7 +133,7 @@ object AppTest extends Specification {
       val treeOfLists:Tree[List[String]] = Node(Leaf(List("a", "b")), Node(Leaf(List("x", "y", "z")), Leaf(List("1"))))
       val listOfTrees = distributor(treeOfLists)
       println(listOfTrees)
-      def tree(s: String) = Node(Leaf("" + s(0)), Node(Leaf("" + s(1)), Leaf("" + s(2))))
+      def tree(s: String) = Node(Leaf("" + s.charAt(0)), Node(Leaf("" + s.charAt(1)), Leaf("" + s.charAt(2))))
       listOfTrees must_== List(tree("ax1"), tree("ay1"), tree("az1"), tree("bx1"), tree("by1"), tree("bz1"))
     }
   }
@@ -149,9 +144,8 @@ object AppTest extends Specification {
         val _0 = ""
         def add(x: String, y: String) = x + y
       }
-      import StringMonoid._
       import TraversableTree._
-      def tree(s: String) = Node(Leaf("" + s(0)), Node(Leaf("" + s(1)), Leaf("" + s(2))))
+      def tree(s: String) = Node(Leaf(s.substring(0,1)), Node(Leaf(s.substring(1,2)), Leaf(s.substring(2,3))))
       val sut: Tree[String] = tree("abc")
       val collected: String = traverse(StringMonoid.App)((s: String) ⇒ "<<" + s + ">>")(sut).value
       collected must_== "<<a>><<b>><<c>>"
@@ -176,7 +170,7 @@ object AppTest extends Specification {
         val errorLog =  new Semigroup[Oops] { def add(x: Oops, y: Oops) = OiVei(x, y) }
       }
 
-      implicit def applicable[A, B](maybeF: Either[Oops, A ⇒ B]) = Accumulator.App.applicable(maybeF)
+      implicit def applicable[A, B](maybeF: Either[Oops, A ⇒ B]): Applicable[A, B, Accumulator.Maybe] = Accumulator.App.applicable(maybeF)
 
       val goodFun    = Right((s: String) ⇒ "<<" + s + ">>")
       val badFun     = Left(Omg("snafu"))
@@ -189,4 +183,3 @@ object AppTest extends Specification {
     }
   }
 }
-*/
