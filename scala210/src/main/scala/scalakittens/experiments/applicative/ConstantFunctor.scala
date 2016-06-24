@@ -1,4 +1,4 @@
-package scalakittens.applicative
+package scalakittens.experiments.applicative
 
 import language.{higherKinds, implicitConversions}
 

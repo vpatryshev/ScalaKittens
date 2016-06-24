@@ -38,7 +38,7 @@ trait OS {
     val args: Array[String] = cmd.toArray.map(_.toString)
 
     val command = args mkString " "
-    // the following solution is good for scala 2.9 usw
+    // the following solution is good for scala 2.9 usw - so why bother?
 //    import scala.sys.process._
 //    "convert -density 600 %s -monochrome %s".format(pdf, png) !
     val process = Runtime.getRuntime.exec(args, envArray)

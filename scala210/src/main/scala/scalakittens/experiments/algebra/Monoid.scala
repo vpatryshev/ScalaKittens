@@ -1,6 +1,7 @@
-package scalakittens.applicative
+package scalakittens.experiments.algebra
 
-import language.{higherKinds, implicitConversions}
+import scala.language.{higherKinds, implicitConversions}
+import scalakittens.experiments.applicative._
 
 trait Monoid[X] extends Semigroup[X] {
   val _0: X
@@ -9,7 +10,7 @@ trait Monoid[X] extends Semigroup[X] {
 
     override def pure[A](a: A) = value[A](_0)
 
-    override implicit def applicable[A, B](ff: Value[A ⇒ B]) = new Applicable[A, B, Value] {
+    override implicit def applicable[A, B](ff: Value[A ⇒ B]): Applicable[A, B, Value] = new Applicable[A, B, Value] {
       def <*>(fa: Value[A]) = Value(ff + fa.value)
     }
   }

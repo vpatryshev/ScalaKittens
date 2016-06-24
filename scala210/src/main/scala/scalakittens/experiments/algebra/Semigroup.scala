@@ -1,5 +1,6 @@
-package scalakittens.applicative
-import language.{higherKinds, implicitConversions}
+package scalakittens.experiments.algebra
+
+import scala.language.{higherKinds, implicitConversions}
 
 trait Semigroup[X] {
   def add(x: X, y: X): X

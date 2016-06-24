@@ -5,7 +5,7 @@ import java.io.IOException
 import java.net.{ServerSocket, Socket, SocketException}
 
 import scala.io.Source
-import scalakittens.IO._
+import IO._
 
 
 trait Response {

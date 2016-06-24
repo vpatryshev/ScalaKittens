@@ -1,6 +1,6 @@
-package scalakittens
+package scalakittens.experiments
 
-import scala.language.{implicitConversions, postfixOps,reflectiveCalls,higherKinds}
+import scala.language.{higherKinds, implicitConversions, postfixOps, reflectiveCalls}
 
 // source: http://infoscience.epfl.ch/record/150280/files/TypeClasses.pdf
 // authors: Bruno C. d. S. Oliveira, Adriaan Moors, Martin Odersky
@@ -22,7 +22,7 @@ object TypeClass {
     def binary_op (x :A,y :A):A
     def identity :A
   }
-  def acc [A] (l :List[A]) (implicit m:Monoid [A]):A =
+  def acc[A] (l :List[A]) (implicit m:Monoid [A]):A =
     l.foldLeft (m.identity) ((x,y) ⇒ m.binary_op (x,y))
 
   object A {

@@ -1,8 +1,10 @@
 package scalakittens
 
 /**
- * Created by vpatryshev on 10/18/15.
- */
+  * A trait that describe a goodness of data or outcome or something
+  *
+  * Created by vpatryshev on 10/18/15.
+  */
 trait Goodness {
   def isGood: Boolean
   def isBad: Boolean = !isGood

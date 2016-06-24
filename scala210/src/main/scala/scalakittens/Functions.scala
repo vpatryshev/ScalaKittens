@@ -5,7 +5,7 @@ import scala.language.implicitConversions
 import util.control.ControlThrowable
 
 /**
- * a function with name; good for representing steps
+ * a function with name; good for representing something in a DSL
  */
 case class Function[-From, +To]
 (name:  String,
@@ -28,7 +28,9 @@ object Functions {
   type predicate[-P] = Function1[P, Boolean]
   type predicate2[-P1, -P2] = Function2[P1, P2, Boolean]
 
-  implicit def nameIt[From, To](f: From ⇒ To) = new {
+  sealed protected class CanName[From, To](f: From ⇒ To) {
     def named(name: String) = new Function[From, To](name, f)
   }
+
+  implicit def nameIt[From, To](f: From ⇒ To): CanName[From, To] = new CanName[From, To](f)
 }

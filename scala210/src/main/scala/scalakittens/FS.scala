@@ -10,14 +10,14 @@ import java.nio.channels.{Channels, ReadableByteChannel}
  */
 trait FS { fs ⇒
 
-  implicit def asFile(file: TextFile)                   = file.file
+  implicit def asFile(file: TextFile):File              = file.file
   implicit def existingFile(file: File):   ExistingFile = new ExistingFile(file)
   implicit def existingFile(path: String): ExistingFile = existingFile(file(path))
   implicit def textFile(file: File):       TextFile     = new TextFile(file)
   implicit def textFile(path: String):     TextFile     = new TextFile(file(path))
   implicit def folder(file: File):         Folder       = new Folder(file)
   implicit def folder(path: String):       Folder       = new Folder(file(path))
-  implicit def file(path: String)                       = new File(path)
+  implicit def file(path: String): File                 = new File(path)
   def tempFile(prefix: String)                          = new TextFile(File.createTempFile(prefix, "tmp"))
 
   def probablyFile(path: String): Either[Any, ExistingFile] = try { Right(existingFile(file(path)))} catch { case x: Exception ⇒ Left(x) }
@@ -75,9 +75,9 @@ trait FS { fs ⇒
 
     def existingFile(name: String) = new ExistingFile(file(name).file)
     def contains(name: String) = fs.exists(new File(path, name))
-    def listFiles: List[File] = Option(canonicalFile.listFiles).toList.map(_.toList).flatten
-    def files: List[ExistingFile] = listFiles.filter(_.isFile).map(f ⇒ existingFile(f.getName)).toList
-    def subfolders: List[Folder]  = listFiles.filter(_.isDirectory).map(Folder).toList
+    def listFiles: List[File] = Option(canonicalFile.listFiles).toList.flatMap(_.toList)
+    def files: List[ExistingFile] = listFiles.filter(_.isFile).map(f ⇒ existingFile(f.getName))
+    def subfolders: List[Folder]  = listFiles.filter(_.isDirectory).map(Folder)
     def entries: List[Entry] = files ++ subfolders
 
     override def size: Long = entries.map(_.size).sum

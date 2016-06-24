@@ -3,7 +3,7 @@ package scalakittens
 import scala.language.{implicitConversions, postfixOps}
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
-import scalakittens.Result.{Errors, NoResult}
+import Result.{Errors, NoResult}
 
 sealed trait Result[+T] extends Container[T] {
   def listErrors: Errors

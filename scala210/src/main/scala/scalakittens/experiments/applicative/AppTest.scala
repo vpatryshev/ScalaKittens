@@ -1,5 +1,5 @@
 package scalakittens
-package applicative
+package scalakittens.experiments.applicative
 /*
 import org.specs._
 import org.specs.runner.JUnit4

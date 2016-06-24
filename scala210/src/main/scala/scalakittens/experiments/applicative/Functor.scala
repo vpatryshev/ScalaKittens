@@ -1,6 +1,6 @@
-package scalakittens.applicative
+package scalakittens.experiments.applicative
 
-import language.{higherKinds, implicitConversions, existentials}
+import language.{higherKinds, implicitConversions, existentials, reflectiveCalls}
 
 trait Functor[T[_]] { self ⇒
   // mapping on objects of a category
@@ -10,7 +10,7 @@ trait Functor[T[_]] { self ⇒
   def f1[A, B](f: A ⇒ B): T[A] ⇒ T[B]
 
   // the following thing we need for some obscure scala reason
-  implicit def as[A](t: f0[A]) = t.asInstanceOf[T[A]]
+  implicit def as[A](t: f0[A]): T[A] = t.asInstanceOf[T[A]]
 
   // builds a composition of two functors
   def andThen[U[_]](u: Functor[U]) = new Functor[({type UT[X] = U[T[X]]})#UT] {
@@ -18,6 +18,6 @@ trait Functor[T[_]] { self ⇒
   }
 }
 
-object Base { // todo: figure out how it might work
-  type Comp[F[_], G[_]] = ({type GF[X] = G[F[X]]})#GF[_]
+object Functor {
+  type o[F[_], G[_]] = G[F[_]]
 }
