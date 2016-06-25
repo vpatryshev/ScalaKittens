@@ -84,7 +84,7 @@ class WebServer[State](port:Int, initial:State, sitemap: PartialFunction[String,
     actOnInput applyOrElse (k, (x:String) ⇒ ignore)
   }
 
-  val Format = "([A-Z]+) /([^ ?]+)([^ ]*) .*".r
+  val Format = "([A-Z]+) / ?([^ ?]+)([^ ]*)".r
 
   def processRequest(serverSocket: ServerSocket)(state: State): State = {
     def process(s: Socket, rq: String): State = {
@@ -102,9 +102,10 @@ class WebServer[State](port:Int, initial:State, sitemap: PartialFunction[String,
       input <- Result.forValue(Source fromInputStream s.getInputStream)
       lines <- Result.forValue(input.getLines() take 1 toList)
       rq    <- Result(lines.headOption)
+      _ = println(s"request=$rq")
       processed = process(s, rq)
     } yield processed
-
+    println(s"Server Result: $result")
     sOpt.foreach(_.close()) andThen result onError log getOrElse state
   }
 
