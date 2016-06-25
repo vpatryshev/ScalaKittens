@@ -1,10 +1,11 @@
-package scalakittens
+package scalakittens.web
 
-import scala.language.postfixOps
-import java.util.{Random, Observable}
-import java.net.{URL, URLConnection}
 import java.io._
-import collection.mutable.ListBuffer
+import java.net.{URL, URLConnection}
+import java.util.{Observable, Random}
+
+import scala.collection.mutable.ListBuffer
+import scala.language.postfixOps
 
 /**
   * TODO(vlad): this code was written years ago, and needs a lot of refresh.
@@ -22,8 +23,10 @@ import collection.mutable.ListBuffer
   * @version 2.9.2
   */
 
-class ClientHttpRequest extends Observable {
-  private var connection: URLConnection = null
+class ClientHttpRequest(val connection: URLConnection) extends Observable {
+  connection.setDoOutput(true)
+  connection.setDoInput(true)
+  connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundaryString)
   lazy val os: OutputStream = connection.getOutputStream
   private val cookies = new ListBuffer[(String, String)]
   private var rawCookies = ""
@@ -68,20 +71,6 @@ class ClientHttpRequest extends Observable {
   private var boundaryString: String = "---------------------------" + randomString + randomString + randomString
 
   private def writeBoundary = write("--", boundaryString)
-
-  /**
-    * Creates a new multipart POST HTTP request on a freshly opened URLConnection
-    *
-    * @param connection an already open URL connection
-    * @throws IOException when something broke
-    */
-  def this(connection: URLConnection) {
-    this()
-    this.connection = connection
-    connection.setDoOutput(true)
-    connection.setDoInput(true)
-    connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundaryString)
-  }
 
   /**
     * Creates a new multipart POST HTTP request for a specified URL

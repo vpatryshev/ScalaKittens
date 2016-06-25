@@ -32,6 +32,8 @@ libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-library" % WhichScala,
   "org.scala-lang" % "scala-reflect" % WhichScala,
   "org.scalaz" %% "scalaz-core" % "7.1.4" withSources(),
+  "org.apache.httpcomponents" % "httpclient" % "4.3.6",
+  "org.apache.httpcomponents" % "httpmime"   % "4.3.6",
   "org.specs2" %% "specs2-core" % "3.6" % "test",
   "org.scalacheck" %% "scalacheck" % "1.12.4" % "test"
 )

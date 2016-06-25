@@ -7,7 +7,6 @@ import scala.io.{Codec, Source}
 import java.net.URL
 import java.nio.channels.Channels
 import scala.util.Try
-import scala.reflect.io.Streamable
 
 trait IO { self ⇒
   implicit def asFile(path: String): File = new File(path)
@@ -20,7 +19,8 @@ trait IO { self ⇒
     /**
      * Writes an array of bytes to a file.
      * Has a side-effect
-     * @param f Any [[File]]
+      *
+      * @param f Any [[File]]
      * @return [[Result]]
      */
     def #>(f: File): Result[File] = {
@@ -100,16 +100,22 @@ trait IO { self ⇒
 
   def resource(url: String) = Result.forValue(self.getClass.getResource(url.replaceAll("%20", " "))) orCommentTheError s"Resource not found: $url"
 
-  def fromResource(url: String) = resource(url) map (_.openStream)
+  def fromResource(url: String):Result[InputStream] = resource(url) map (_.openStream)
 
-  def readResource(path: String, codec:Codec = Codec.UTF8) = fromResource(path) map (in ⇒ {
+  def readResource(path: String, codec:Codec = Codec.UTF8) = fromResource(path) flatMap (in ⇒ Result.forValue {
     val text = Source.fromInputStream(in)(codec).mkString
     in.close()
     text
   })
 
-  def readResourceBytes(path: String): Result[Array[Byte]] = fromResource(path) map (in ⇒ {
-    val bytes = Streamable.bytes(in)
+  def bytesOf(inputStream: InputStream): Result[Array[Byte]] = Result.forValue {
+    val in = new BufferedInputStream(inputStream)
+    val it = Iterator continually in.read() takeWhile (-1 !=) map (_.toByte)
+    it.toArray
+  }
+
+  def readResourceBytes(path: String): Result[Array[Byte]] = fromResource(path) flatMap (in ⇒ {
+    val bytes = bytesOf(in)
     in.close()
     bytes
   })
@@ -119,7 +125,7 @@ trait IO { self ⇒
 
   private lazy val PropertyFormat = "([\\w\\.]+)\\b*=\\b*(.*)".r
 
-  def propsFromSource(source: ⇒Source) = {
+  def propsFromSource(source: ⇒ Source) = {
     var lines = tryOr(source.getLines().toList, List(""))
 
     lines.

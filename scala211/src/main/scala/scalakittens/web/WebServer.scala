@@ -1,12 +1,13 @@
-package scalakittens
+package scalakittens.web
 
-import scala.language.postfixOps
-import java.io.IOException
-import java.net.{ServerSocket, Socket, SocketException}
+import java.net.{ServerSocket, Socket}
+import java.util.Date
 
 import scala.io.Source
-import IO._
-
+import scala.language.postfixOps
+import scalakittens.IO._
+import scalakittens.Result._
+import scalakittens.{Good, Result}
 
 trait Response {
   def contentType: String
@@ -51,7 +52,7 @@ object ServerOps {
 class WebServer[State](port:Int, initial:State, sitemap: PartialFunction[String, State ⇒ (State, Response)]) {
   private val myLog:StringBuilder = new StringBuilder
   private def log(event:Any) = myLog.append("\n" + event)
-  def logged = myLog.toString()
+  def logged = myLog.toString
   import ServerOps._
 
   type Action = State ⇒ (State, Responder)
@@ -86,46 +87,61 @@ class WebServer[State](port:Int, initial:State, sitemap: PartialFunction[String,
   val Format = "([A-Z]+) /([^ ?]+)([^ ]*) .*".r
 
   def processRequest(serverSocket: ServerSocket)(state: State): State = {
-    try {
-      val s = serverSocket.accept
+    def process(s: Socket, rq: String): State = {
 
-      try {
-        val src = Source fromInputStream s.getInputStream
-        val stateOption = for (rq <- (src.getLines take 1).toList headOption) yield {
-          val Format(method, key, params) = rq
-//          print(s"$method($key)")
-          val (newState, resp) = dispatch(key)(state)
-          resp(s)
-          newState
-        }
-        stateOption getOrElse state
+      val Format(method, key, params) = rq
+      val (newState, resp) = dispatch(key)(state)
+      resp(s)
+      newState
 
-      } catch { case se : SocketException ⇒ log(se); state }
-      finally { s.close() }
-    } catch {
-      case ioe: IOException ⇒ log(ioe); state
     }
+    val sOpt = Result.forValue(serverSocket.accept())
+
+    val result = for {
+      s     <- sOpt
+      input <- Result.forValue(Source fromInputStream s.getInputStream)
+      lines <- Result.forValue(input.getLines() take 1 toList)
+      rq    <- Result(lines.headOption)
+      processed = process(s, rq)
+    } yield processed
+
+    sOpt.foreach(_.close()) andThen result onError log getOrElse state
   }
 
+  lazy val secMgr = new java.lang.SecurityManager()
+
+  /**
+    * you may need to do this:
+    * sudo nano /Library/Java/JavaVirtualMachines/jdk1.7.0_45.jdk/Contents/Home/jre/lib/security/java.policy
+    * and add the following:
+    *
+    *         permission java.net.SocketPermission "localhost:54777", "accept,connect,listen";
+    */
+  lazy val canRun: Outcome = Result.forValue(secMgr.checkAccept("localhost", port))
+
   def runUntilInterrupted() {
-    val serverSocket = new ServerSocket(port)
-    val result = Stream.iterate(initial)(processRequest(serverSocket)) takeWhile((_:State) ⇒ !Thread.interrupted()) foreach(s ⇒ ()/*print(s)*/)
-    println(s"r=$result")
+
+    canRun match {
+      case Good(_) =>
+        val serverSocket = new ServerSocket(port)
+        println(s"Server Socket = $serverSocket")
+        val result = Stream.iterate(initial)(processRequest(serverSocket)) takeWhile((_:State) => !Thread.interrupted()) foreach(s => ()/*print(s)*/)
+        println(s"${new Date()} r=$result")
+      case noGood => println(s"Check java security config, it does not allow to run web server: $noGood")
+    }
   }
 
   private lazy val t: Thread = new Thread("Server at " + port) {
     override def run() = runUntilInterrupted()
   }
 
-
-
-  def start() = this.synchronized {
+  def start(): Outcome = this.synchronized {
     myLog.clear()
     try {
-      println(s"Starting webserver thread $t")
       if (!t.isAlive) t.start()
+      canRun
     } catch {
-      case x:Exception ⇒ x.printStackTrace()
+      case x:Exception ⇒ Result.exception(x)
     }
   }
 

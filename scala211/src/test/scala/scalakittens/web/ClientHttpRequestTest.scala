@@ -1,23 +1,22 @@
-package scalakittens
-/*
-import org.specs.runner.JUnit4
-import org.specs.Specification
-import java.io._
-import java.net.URL
-import java.io
+package scalakittens.web
 
-class ClientHttpRequestTest extends JUnit4(ClientHttpRequestTest)
+import java.io._
+
+import org.specs2.mutable.Specification
 
 /**
  * To run this test you kind of need to jump through the loops.
- * I have a jps that checks if the file sent to it is the right file;
+ * I have a jsp that checks if the file sent to it is the right file;
  * this jsp uses my other class, ServerHttpRequest, which I am not sure
  * whether it is worth publishing. Maybe later.
  * So, hmm, trust me, it passes, but this project does not have enough
  * information to prove it.
  */
 object ClientHttpRequestTest extends Specification {
-  private val testJsp = "/kopala/test3.jsp"
+  val Url = MockWebServer.root
+  val server = MockWebServer.launch
+
+  private val testJsp = "/test3.jsp"
   private val testFileName = "testfile.tmp"
   private val testFileData = "This is the test file"
 
@@ -26,13 +25,12 @@ object ClientHttpRequestTest extends Specification {
     val data: Writer = new FileWriter(testFile)
     data.write(testFileData)
     data.close
-    return testFile
+    testFile
   }
 
   "ClientHttpRequest" should {
     "succeed when we set parameters" in {
-      val url: URL = new URL("http://localhost:8080" + testJsp)
-      val request = new ClientHttpRequest(url)
+      val request = new ClientHttpRequest(Url)
       request.addParameter("name", "J.Doe")
       request.addParameter("email", "abuse@spamcop.com")
       request.addParameter("file-upload", makeTestFile)
@@ -42,8 +40,7 @@ object ClientHttpRequestTest extends Specification {
     }
 
     "succeed when we use single post()" in {
-      val url: URL = new URL("http://localhost:8080" + testJsp)
-      val is: InputStream =  new ClientHttpRequest(url).post(
+      val is: InputStream =  new ClientHttpRequest(Url).post(
                                          "name" -> "J.Doe",
                                          "email" -> "abuse@spamcop.com",
                                          "file-upload" -> makeTestFile)
@@ -53,8 +50,7 @@ object ClientHttpRequestTest extends Specification {
     }
 
     "succeed when we pass file via stream" in {
-      val url: URL = new URL("http://localhost:8080" + testJsp)
-      val request = new ClientHttpRequest(url)
+      val request = new ClientHttpRequest(Url)
       request.addParameter("name", "J.Doe")
       request.addParameter("email", "abuse@spamcop.com")
       request.addFile("file-upload", testFileName, new ByteArrayInputStream(testFileData.getBytes))
@@ -71,4 +67,3 @@ object ClientHttpRequestTest extends Specification {
 //    }
   }
 }
-*/
