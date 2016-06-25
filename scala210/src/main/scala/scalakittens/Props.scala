@@ -2,8 +2,8 @@ package scalakittens
 
 import java.util.Date
 
-import scalakittens.Props._
-import scalakittens.Result.Outcome
+import Props._
+import Result.Outcome
 
 import scala.io.Source
 import scala.language.{implicitConversions, postfixOps, reflectiveCalls}

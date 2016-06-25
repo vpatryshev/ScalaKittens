@@ -1,24 +1,29 @@
-package scalakittens.logic
+package scalakittens.experiments.logic
 
 import language.{higherKinds, implicitConversions, existentials, reflectiveCalls}
 
 /**
   * My experimental stuff.
-  * Checking if linear logic can be efficiently implemented in Scala
+  * Checking if linear logic can be reasonably implemented in Scala
   */
 object LinearLogic {
   type &[+T,+U] = (T,U)
   type |[+T,+U] = Either[T,U]
 
-  implicit def lowLevel[T](t:T) = new {
+  trait ConjunctionDisjunction[T] {
+    def & [U](u:U): &[T,U]
+    def | [U](u:U): |[T,U]
+  }
+
+  implicit def lowLevel[T](t:T): ConjunctionDisjunction[T] = new ConjunctionDisjunction[T] {
     def & [U](u:U) = (t,u)
-    def | [U](u:U) = ???
+    def | [U](u:U) = ??? // I just don't know how to implement it
   }
 
   object ⊤
   object ⊥
   val _1_ : Unit = ()
-  val _0_ : Nothing = ???
+  val _0_ : Nothing = ??? // this may be the right implementation
 
   // The exchange rule: If a sequent is valid, then any permutation of it (created by permuting its left and right sides independently) is valid.
   def swap[X,Y] = (x:X,y:Y) ⇒ (y,x)

@@ -35,7 +35,7 @@ import annotation.tailrec
  */
 trait Caching {
   var debugme = false
-  def debug(s: ⇒ String) = if (debugme) println("" + now + "](" + Thread.currentThread.getId + ")" + s)
+  def debug(s: ⇒ String) = if (debugme) println(s"$now](${Thread.currentThread.getId})$s")
   // indirection that is good for applying cake pattern: see the object below and the test where time is mocked
   protected def now: Long // expecting nanos
 
@@ -55,9 +55,9 @@ trait Caching {
     private val forever = timeout_nano > maxTime
 
     private def newHolder = {
-      val theEnd = if (forever) maxTime else (now + timeout_nano)
+      val theEnd = if (forever) maxTime else now + timeout_nano
       debug("new holder! now is " + now +
-        (if (forever) "- it's forever" else (", timeout=" + timeout_nano + ", so " + (now + timeout_nano))))
+        (if (forever) "- it's forever" else s", timeout=$timeout_nano, so " + (now + timeout_nano)))
       newRef(new Container[T](fun, theEnd))
     }
 
@@ -67,15 +67,15 @@ trait Caching {
       val latest = atom.get
       debug("getValue at " + now + ": latest = @" + latest.toString.split("@")(1) + ", valid? " + latest.get.get.stillValid)
       latest.get.flatMap(_.get) match {
-        case Some(t) ⇒ {
+        case Some(t) ⇒
           debug("extracted value " + t)
           t
-        }
-        case None    ⇒ {
+
+        case None    ⇒
           debug("there's nothing there; let's set new value")
           atom.compareAndSet(latest, newHolder)
           getValue
-        }
+
       }
     }
 

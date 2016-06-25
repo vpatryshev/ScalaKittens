@@ -5,15 +5,10 @@ import scala.util.matching.Regex
 
 trait Strings {
 
-  val HasDigits = "\\d".r
-
   def isEmpty(s: String) = s == null || s.trim.isEmpty
 
-  private def cp(s1:String, s2:String):String = if (s1.isEmpty || s2.isEmpty || s1(0) != s2(0)) "" else s1.head + cp(s1.tail, s2.tail)
-
   def commonPrefix(s1:String, s2:String):String = {
-    val cp1 = cp(s1, s2)
-    cp1
+    if (s1.isEmpty || s2.isEmpty || s1(0) != s2(0)) "" else s1.head + commonPrefix(s1.tail, s2.tail)
   }
 
   implicit class powerString(s: String) {
@@ -40,15 +35,6 @@ trait Strings {
 
   // Do the short string show up in the long one? (case in-sensitive)
   def isInStrStrict(sLong:String, sShort:String): Boolean = sLong strictContainsIgnoreCase sShort
-
-  // Removes starting chars that are not [A-Za-z...] (unicode letters)
-  def TrimLeftToAlpha(s:String):String =
-  {
-    val pattern = "(\\p{L}+)".r
-    val matcher  = pattern.pattern.matcher(s)
-    if (!matcher.find()) return s.trim // there's no text in it, just return
-    s.substring(matcher.start).trim
-  }
 
   // 000123 -> 123
   def trimLeftLeading0(s:String): String = s.trim.dropWhile('0'==).trim

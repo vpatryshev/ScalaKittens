@@ -1,8 +1,9 @@
-package scalakittens.logic
+package scalakittens.experiments.logic
 
 /**
- * Created by vpatryshev on 12/10/14.
- */
+  * Experiments with logic and typed/untyped lambda implemented in Scala
+  * Created by vpatryshev on 12/10/14.
+  */
 trait Lambda[T] {
 
 }
