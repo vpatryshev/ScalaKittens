@@ -2,10 +2,12 @@ package scalakittens.web
 
 import java.io._
 import java.net.{URL, URLConnection}
+import sun.net.www.protocol.http.HttpURLConnection
 import java.util.{Observable, Random}
 
 import scala.collection.mutable.ListBuffer
 import scala.language.postfixOps
+import scalakittens.Result
 
 /**
   * TODO(vlad): this code was written years ago, and needs a lot of refresh.
@@ -23,7 +25,8 @@ import scala.language.postfixOps
   * @version 2.9.2
   */
 
-class ClientHttpRequest(val connection: URLConnection) extends Observable {
+@deprecated("use newman library instead; this one is just ancient", "06/26/2016")
+class ClientHttpRequest(val connection: HttpURLConnection) extends Observable {
   connection.setDoOutput(true)
   connection.setDoInput(true)
   connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundaryString)
@@ -60,7 +63,7 @@ class ClientHttpRequest(val connection: URLConnection) extends Observable {
 
   protected def writeln(s: String) = write(s, CRLF)
 
-  private var random: Random = new Random
+  private val random: Random = new Random
 
   protected def randomString: String = {
     java.lang.Long.toString(random.nextLong, 36)
@@ -68,7 +71,7 @@ class ClientHttpRequest(val connection: URLConnection) extends Observable {
 
   private def boundaryNumBytes: Long = boundaryString.length + 2
 
-  private var boundaryString: String = "---------------------------" + randomString + randomString + randomString
+  private lazy val boundaryString: String = "---------------------------" + randomString + randomString + randomString
 
   private def writeBoundary = write("--", boundaryString)
 
@@ -79,7 +82,7 @@ class ClientHttpRequest(val connection: URLConnection) extends Observable {
     * @throws IOException when something broke
     */
   def this(url: URL) {
-    this(url.openConnection)
+    this(url.openConnection.asInstanceOf[HttpURLConnection]) // it is an http connection
   }
 
   /**
@@ -202,6 +205,7 @@ class ClientHttpRequest(val connection: URLConnection) extends Observable {
     * @param is       input stream to read the contents of the file from
     * @throws IOException when something broke
     */
+  @SuppressWarnings(Array("deprecated", "this file will soon go away"))
   def addFile(name: String, filename: String, is: InputStream): ClientHttpRequest = {
     writeBoundary
     writeName(name)
@@ -226,6 +230,7 @@ class ClientHttpRequest(val connection: URLConnection) extends Observable {
     * @param file the file to upload
     * @throws IOException when something broke
     */
+  @SuppressWarnings(Array("deprecated", "this file will soon go away"))
   def addFile(name: String, file: File): ClientHttpRequest = {
     val fis = new FileInputStream(file)
     try {
@@ -256,20 +261,20 @@ class ClientHttpRequest(val connection: URLConnection) extends Observable {
     *
     * @throws IOException when something broke
     */
-  private def close(): InputStream = {
+  private def close(): Result[InputStream] = Result.forValue {
     writeBoundary
     writeln("--")
     _isOpen = false
     os.close()
     connection.getInputStream
-  }
+  } orCommentTheError(s"Failed with status " + connection.getResponseCode + " " + connection.getResponseMessage)
 
   /**
     * Posts the requests to the server, with all the cookies and parameters that were added
     *
     * @throws IOException when something broke
     */
-  def post: InputStream = {
+  def post: Result[InputStream] = {
     postCookies(); close()
   }
 
@@ -280,7 +285,7 @@ class ClientHttpRequest(val connection: URLConnection) extends Observable {
     * @throws IOException when something broke
     * @see setParameters
     */
-  def post(parameters: (String, Any)*): InputStream = {
+  def post(parameters: (String, Any)*): Result[InputStream] = {
     postCookies()
     parameters.foreach(p ⇒ addParameter(p._1, p._2))
     close()
@@ -304,7 +309,6 @@ object ClientHttpRequest {
     * @throws IOException when something broke
     * @see setParameters
     */
-  def post(url: URL, parameters: (String, Any)*): InputStream = {
-    new ClientHttpRequest(url).post(parameters: _*)
-  }
+  @SuppressWarnings(Array("deprecated", "this file will soon go away"))
+  def post(url: URL, parameters: (String, Any)*): Result[InputStream] = new ClientHttpRequest(url).post(parameters: _*)
 }

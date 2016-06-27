@@ -70,7 +70,7 @@ class WebServer[State](port:Int, initial:State, sitemap: PartialFunction[String,
       val action = (s: State) ⇒
         f(s) match {
         case (s1, resp) ⇒
-          //println(s"->$resp")
+          println(s"->$resp")
           (s1, respond(resp))
       }
 
@@ -88,7 +88,7 @@ class WebServer[State](port:Int, initial:State, sitemap: PartialFunction[String,
 
   def processRequest(serverSocket: ServerSocket)(state: State): State = {
     def process(s: Socket, rq: String): State = {
-
+      println(s"Got request $rq")
       val Format(method, key, params) = rq
       val (newState, resp) = dispatch(key)(state)
       resp(s)
@@ -105,6 +105,7 @@ class WebServer[State](port:Int, initial:State, sitemap: PartialFunction[String,
       _ = println(s"request=$rq")
       processed = process(s, rq)
     } yield processed
+
     println(s"Server Result: $result")
     sOpt.foreach(_.close()) andThen result onError log getOrElse state
   }
@@ -123,12 +124,12 @@ class WebServer[State](port:Int, initial:State, sitemap: PartialFunction[String,
   def runUntilInterrupted() {
 
     canRun match {
-      case Good(_) =>
+      case Good(_) ⇒
         val serverSocket = new ServerSocket(port)
         println(s"Server Socket = $serverSocket")
-        val result = Stream.iterate(initial)(processRequest(serverSocket)) takeWhile((_:State) => !Thread.interrupted()) foreach(s => ()/*print(s)*/)
+        val result = Stream.iterate(initial)(processRequest(serverSocket)) takeWhile((_:State) ⇒ !Thread.interrupted()) foreach(s ⇒ ()/*print(s)*/)
         println(s"${new Date()} r=$result")
-      case noGood => println(s"Check java security config, it does not allow to run web server: $noGood")
+      case noGood ⇒ println(s"Check java security config, it does not allow to run web server: $noGood")
     }
   }
 
