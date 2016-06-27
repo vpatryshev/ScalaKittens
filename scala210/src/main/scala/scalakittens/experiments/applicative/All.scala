@@ -87,11 +87,11 @@ object All {
 
     implicit def K[A](a: A): (Env ⇒ A) = (env: Env) ⇒ a
 
-    trait HaveS[Env, A, B] { def S: (Env ⇒ A) ⇒ Env ⇒ B }
+    trait HaveS[A, B] { def S: (Env ⇒ A) ⇒ Env ⇒ B }
 
     // combinators
-    implicit def ski[Env, A, B](fe: Env ⇒ A ⇒ B): HaveS[Env, A, B] =
-      new HaveS[Env, A, B] {
+    implicit def ski[A, B](fe: Env ⇒ A ⇒ B): HaveS[A, B] =
+      new HaveS[A, B] {
         val S = (ae: Env ⇒ A) ⇒ (env: Env) ⇒ fe(env)(ae(env))
       }
 

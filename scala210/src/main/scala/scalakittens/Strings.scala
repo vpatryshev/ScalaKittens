@@ -36,10 +36,10 @@ trait Strings {
   // Do the short string show up in the long one? (case in-sensitive)
   def isInStrStrict(sLong:String, sShort:String): Boolean = sLong strictContainsIgnoreCase sShort
 
-  // 000123 -> 123
+  // 000123 → 123
   def trimLeftLeading0(s:String): String = s.trim.dropWhile('0'==).trim
 
-  // (abcd,ab) -> (cd)
+  // (abcd,ab) → (cd)
   def dropPrefix(s: String, prefix: String):String =
   {
     val leftPos = s.toUpperCase.indexOf(prefix.toUpperCase)

@@ -6,8 +6,9 @@ import java.io._
 import java.nio.channels.{Channels, ReadableByteChannel}
 
 /**
- * File system ops
- */
+  *
+  * File system ops
+  */
 trait FS { fs ⇒
 
   implicit def asFile(file: TextFile):File              = file.file
@@ -65,11 +66,10 @@ trait FS { fs ⇒
         (absolutePath startsWith (parent.absolutePath + File.separatorChar))
     }
 
+    // TODO(vlad): stop returning and throwing; it's ancient
     def subfolder(name: String): Folder = {
-      try {
-        val tentative = new Folder(file(name).file)
-        if (tentative isSubfolderOf this) return tentative
-      }
+      val tentative = new Folder(file(name).file)
+      if (tentative isSubfolderOf this) return tentative
       throw new IllegalArgumentException("Could not create subfolder '" + name + "' in '" + this + "'")
     }
 

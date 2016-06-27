@@ -59,7 +59,7 @@ class Ops_Test extends Specification {
 
       }
       val sut = asScala(source)
-      sut must_== Map("first" -> Map("one"->"1", "two"->"2"), "second"->Map("ten"->"10", "twenty"->"20"))
+      sut must_== Map("first" → Map("one"→"1", "two"→"2"), "second"→Map("ten"→"10", "twenty"→"20"))
     }
 
     "Convert a set into a set" in {

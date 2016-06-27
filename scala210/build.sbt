@@ -6,7 +6,9 @@ name := "Scala Kittens Library"
 
 version := "0.1.3"
 
-scalaVersion := "2.10.6"
+val WhichScala = "2.10.6"// "2.11.8"
+
+scalaVersion := WhichScala
 
 scalacOptions ++= Seq("-deprecation", "-encoding", "UTF-8", "-feature", "-target:jvm-1.7", "-unchecked",
     "-Ywarn-adapted-args", "-Ywarn-value-discard", "-Xlint")
@@ -26,12 +28,19 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   "org.scalatest"  %% "scalatest"     % "2.2.3" % "test" withSources(),
-  "org.scala-lang" % "scala-compiler" % "2.10.6",
-  "org.scala-lang" % "scala-library" % "2.10.6",
-  "org.scala-lang" % "scala-reflect" % "2.10.6",
+  "org.scala-lang" % "scala-compiler" % WhichScala,
+  "org.scala-lang" % "scala-library" % WhichScala,
+  "org.scala-lang" % "scala-reflect" % WhichScala,
+  "org.scalaz" %% "scalaz-core" % "7.1.4" withSources(),
+  "org.apache.httpcomponents" % "httpclient" % "4.3.6",
+  "org.apache.httpcomponents" % "httpmime"   % "4.3.6",
   "org.specs2" %% "specs2-core" % "3.6" % "test",
   "org.scalacheck" %% "scalacheck" % "1.12.4" % "test"
 )
+
+resolvers ++= Seq("snapshots" at "http://oss.sonatype.org/content/repositories/snapshots",
+  "releases"  at "http://oss.sonatype.org/content/repositories/releases",
+  "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases")
 
 logLevel := Level.Warn
 
