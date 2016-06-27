@@ -33,7 +33,7 @@ trait OS {
   def exec(cmd: Any*): Result[String] = {
     val env0 = Map[String, String]() ++ System.getenv().asScala
     val path = env0("PATH")
-    val env = if (path.contains("/usr/local/bin")) env0 else env0 + ("PATH" -> (path + ":" + additionalPath))
+    val env = if (path.contains("/usr/local/bin")) env0 else env0 + ("PATH" → (path + ":" + additionalPath))
     val envArray = env.map(p ⇒ p._1+"="+p._2).toArray
     val args: Array[String] = cmd.toArray.map(_.toString)
 

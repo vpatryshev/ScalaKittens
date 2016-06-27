@@ -105,7 +105,7 @@ trait MoreExpectations extends UsefulMocks { actual: Expectations ⇒
 
   class ValidatingFunction[X, Y](name: String, f: X ⇒ Y) extends CheckThis[X, Y] {
 
-    def expectMatch[X,Y](f: X ⇒ Y) = (x: X, y: Y) ⇒ {
+    def expectMatch(f: X ⇒ Y) = (x: X, y: Y) ⇒ {
       try {
         val y1 = f(x)
         y1 aka (name + "(" + x + ")=" + y) must_== y

@@ -113,7 +113,7 @@ object AppTest extends Specification {
       import Expressions._
 
       val expr = Add(Var("one"), Add(Var("three"), Val(11))).eval
-      expr (Map("one" -> 1, "two" -> 2, "three" -> 3)) must_== 15
+      expr (Map("one" → 1, "two" → 2, "three" → 3)) must_== 15
     }
   }
 

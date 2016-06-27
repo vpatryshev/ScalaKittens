@@ -9,13 +9,12 @@ import scala.concurrent.duration._
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.LockSupport
 
-trait Ops {
-  self: AnyRef ⇒
+trait Ops { self: AnyRef ⇒
   def scale = 1000
 
   def askUser(what: String) = {
     println(s"$what?")
-    what -> readLine
+    what → readLine()
   }
 
   def sleepSome(dt: Long): Outcome = {
@@ -62,7 +61,7 @@ trait Ops {
       case s: String ⇒ "\"" + s.replaceAll("\"", "\\\"") + "\""
       case list: List[_] ⇒ "List(" + list.map(toSource).mkString(", ") + ")"
       case array: Array[_] ⇒ "Array(" + array.map(toSource).mkString(", ") + ")"
-      case map: Map[_, _] ⇒ "Map(" + map.map { case (k, v) ⇒ toSource(k) + "->" + toSource(v) }.mkString(", ") + ")"
+      case map: Map[_, _] ⇒ "Map(" + map.map { case (k, v) ⇒ toSource(k) + "→" + toSource(v) }.mkString(", ") + ")"
       case fp@Props(pf) ⇒ pf match {
         case map: Map[_, _] ⇒ "PropTree(" + toSource(map) + ")"
         case _ ⇒ fp.toString()
@@ -88,7 +87,7 @@ trait Ops {
       case null ⇒ Empty
       case r: Result[_] ⇒ r map asScala
       case e: jum.Entry[_, _] ⇒
-        val p = asScala(e.getKey) -> asScala(e.getValue)
+        val p = asScala(e.getKey) → asScala(e.getValue)
         p
       case m: jum[_, _] ⇒
         val pairs = iterate(m.entrySet)

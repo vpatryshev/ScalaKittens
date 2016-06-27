@@ -47,7 +47,7 @@ trait EmptyTraversability[T] extends TraversabilityOfResult[T] with NothingInsid
 
   override def count(p: (T) ⇒ Boolean): Int = 0
 
-  override def aggregate[B](z: B)(seqop: (B, T) ⇒ B, combop: (B, B) ⇒ B): B = z
+  def aggregate[B](z: ⇒ B)(seqop: (B, T) ⇒ B,combop: (B, B) ⇒ B): B = z
 
   override def maxBy[B](f: (T) ⇒ B)(implicit cmp: Ordering[B]): T = I cant "maxBy"
 
