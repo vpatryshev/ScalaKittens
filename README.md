@@ -1,9 +1,9 @@
 #Scala Kittens Project#
 
 *Attention Please*
-This project is currently split into two versions: scala210 and scala211 (which is not there yet).
+This project is currently split into two versions: scala210 and scala211. Libraries are different in these two versions of Scala.
 
-In this project I plan to store small solutions to typical problems, which are free to grab and too small for building a "library".
+In this project I store small solutions to typical problems, which are free to grab and too small for building a "library".
 [Scala kittens][slides] has examples of this kind of stuff, one-liners. Probably they deserve to be put to gist.
 
 Currently there are Caching, FS, OS, ClientHttpRequest, Result and some samples.
