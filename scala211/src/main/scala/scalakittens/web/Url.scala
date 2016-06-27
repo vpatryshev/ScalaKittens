@@ -105,7 +105,7 @@ protected class UrlWithParameters(_schema:String, _path:String, parameters:Seq[(
   override lazy val secure = new UrlWithParameters("https", _path, parameters)
   lazy val paramsAsString = parameters map {case (k,v) ⇒ue(k) + "=" + ue(v)} mkString "&"
   override lazy val path = _path + (if(paramsAsString.isEmpty) "" else "?" + paramsAsString)
-  override def /(key: String, value:String) = new UrlWithParameters(schema, _path, parameters :+ (key->value))
+  override def /(key: String, value:String) = new UrlWithParameters(schema, _path, parameters :+ (key→value))
 
   override def replace(key:String, oldValue:String, newValue: String) = if (parameters.contains((key, oldValue))) {
     val index = parameters indexOf ((key, oldValue))
@@ -122,7 +122,7 @@ object Url {
 
   def parameters(href: String): Map[String, String] = href split("?",2) toList match {
     case url::params::Nil ⇒ params split "&" map (_.split("=") toList) collect {
-      case k::v::Nil ⇒ k->v
+      case k::v::Nil ⇒ k→v
     } toMap
 
     case otherwise ⇒ Map.empty
@@ -140,7 +140,7 @@ object Url {
           val params = URLDecoder.decode(p, "UTF-8") split "&" toList
 
           val keyValuePairs: List[(String, String)] = params collect {
-            case KeyValue(key, value) ⇒ key -> value
+            case KeyValue(key, value) ⇒ key → value
           }
           new UrlWithParameters(su(0), h, keyValuePairs)
 

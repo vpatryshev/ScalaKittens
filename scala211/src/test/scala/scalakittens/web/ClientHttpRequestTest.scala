@@ -42,9 +42,9 @@ object ClientHttpRequestTest extends Specification { /*
 
     "succeed when we use single post()" in {
       val is: Result[InputStream] =  new ClientHttpRequest(Url).post(
-                                         "name" -> "J.Doe",
-                                         "email" -> "abuse@spamcop.com",
-                                         "file-upload" -> makeTestFile)
+                                         "name" → "J.Doe",
+                                         "email" → "abuse@spamcop.com",
+                                         "file-upload" → makeTestFile)
 
       val result = is map (s ⇒ new LineNumberReader(new InputStreamReader(s)).readLine)
       result aka (result + serverLog) must_== Good("Success")

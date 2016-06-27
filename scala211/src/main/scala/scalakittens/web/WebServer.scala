@@ -70,7 +70,7 @@ class WebServer[State](port:Int, initial:State, sitemap: PartialFunction[String,
       val action = (s: State) ⇒
         f(s) match {
         case (s1, resp) ⇒
-          println(s"->$resp")
+          println(s"→$resp")
           (s1, respond(resp))
       }
 

@@ -83,7 +83,7 @@ case class Props(private val innerMap: PropMap) extends PartialFunction[String, 
   private def quote(s:String) = Q+escape(s)+Q
   private def formatPf(pad:Int) = {
     val keysAndValues = innerMap.map(kv ⇒ (escape(kv._1), escape(kv._2))).toList.sorted
-    val pairsFormatted = keysAndValues map { case(k,v) ⇒ "\"" + k + "\" -> \"" + v + "\""}
+    val pairsFormatted = keysAndValues map { case(k,v) ⇒ "\"" + k + "\" → \"" + v + "\""}
     pairsFormatted.mkString("Map(\n" + spaces(pad+2), "\n" + spaces(pad+2), "")
   }
   protected def formatted(pad: Int):String = spaces(pad) + (
@@ -93,7 +93,7 @@ case class Props(private val innerMap: PropMap) extends PartialFunction[String, 
   val Q = "\""
 
   private def toStringPf = {
-    val keysAndValues = innerMap.map(kv ⇒ quote(kv._1) + " -> " + quote(kv._2)).toList.sorted
+    val keysAndValues = innerMap.map(kv ⇒ quote(kv._1) + " → " + quote(kv._2)).toList.sorted
 
     "Map(" + keysAndValues.mkString(", ") + ")"
   }
@@ -146,7 +146,7 @@ case class Props(private val innerMap: PropMap) extends PartialFunction[String, 
     def remap(key: String) = {
       keyAsArray(key) map mapper mkString "."
     }
-    Props(innerMap map { case(k,v) ⇒ remap(k) -> v })
+    Props(innerMap map { case(k,v) ⇒ remap(k) → v })
   }
 
   def translate(dictionary:Traversable[(String, String)]):Props = if (isEmpty) this else {
@@ -320,7 +320,7 @@ case class Props(private val innerMap: PropMap) extends PartialFunction[String, 
       else newOrder map keys mkString "."
     }
 
-    Props(innerMap map { case(k,v) ⇒ remap(k) -> v })
+    Props(innerMap map { case(k,v) ⇒ remap(k) → v })
   }
 
   def addPrefixes(ps: Seq[String]): Props = if (isEmpty) self else ps.foldRight(self)((p, t) ⇒ t.addPrefix(p))
@@ -415,7 +415,7 @@ trait PropsOps {
     }
   }
 
-  def props(map: Map[_, _]): Props = props(map map {case (k,v) ⇒ k.toString->v.toString})
+  def props(map: Map[_, _]): Props = props(map map {case (k,v) ⇒ k.toString→v.toString})
 
   def props(pairs: (String, String)*)(implicit keyTransformer: String⇒String): Props = {
     props(pairs.toMap)(keyTransformer)
@@ -426,7 +426,7 @@ trait PropsOps {
       case List(x, y)  ⇒ (x, y)
       case Array(x, y) ⇒ (x, y)
       case (x, y)      ⇒ (x, y)
-    } .map ({case (k,v) ⇒ ("" + k) -> ("" + v)}).
+    } .map ({case (k,v) ⇒ ("" + k) → ("" + v)}).
       toMap[String, String]
     props(raw)(keyTransformer)
   }
@@ -441,13 +441,13 @@ trait PropsOps {
     })
 
     props(cleanedUp._1.reverse.grouped(2) .collect{
-      case k::v::Nil ⇒ k.toLowerCase.replaceAll(" ", "") -> v
+      case k::v::Nil ⇒ k.toLowerCase.replaceAll(" ", "") → v
     }.toMap)(keyTransformer)
   }
 
   // opportunistically extract props from sequence of strings, some of them being empty etc
   def fromStrings(source: Seq[String], separator: String=":"): Props = {
-    props(source map (_.split(separator, 2)) filter (_.length == 2) map (kv ⇒ kv(0).trim->kv(1).trim) toMap)
+    props(source map (_.split(separator, 2)) filter (_.length == 2) map (kv ⇒ kv(0).trim→kv(1).trim) toMap)
   }
 
   private lazy val PropertyFormat = "([\\w\\.]+) *= *(.*)".r
@@ -467,7 +467,7 @@ trait PropsOps {
     def trim(s: String) = unquote(s.trim)
     val map = lines.
       filter(line ⇒ !line.startsWith("#") && !line.isEmpty).
-      collect { case PropertyFormat(key, value) ⇒ key -> trim(value) }.
+      collect { case PropertyFormat(key, value) ⇒ key → trim(value) }.
       toMap
 
     props(map)
@@ -480,7 +480,7 @@ trait PropsOps {
     result.filter((p:Props) ⇒ missing.isEmpty, s"Missing column(s) (${missing mkString ","}) in ${names mkString ","}")
   }
 
-  def fromList(source:List[String]) = propsFromTable(source.zipWithIndex map { case (a, i) ⇒ numberKey(i+1) -> a})
+  def fromList(source:List[String]) = propsFromTable(source.zipWithIndex map { case (a, i) ⇒ numberKey(i+1) → a})
 
   def isPrimitive(x: Any) = x match {
     case u: Unit    ⇒ true
@@ -496,8 +496,8 @@ trait PropsOps {
   }
 
   private[scalakittens] def parsePair(k:Any, v:Any):Result[Props] = v match {
-    case s:String            ⇒ Good(props(k.toString -> s))
-    case x if isPrimitive(x) ⇒ Good(props(k.toString -> v.toString))
+    case s:String            ⇒ Good(props(k.toString → s))
+    case x if isPrimitive(x) ⇒ Good(props(k.toString → v.toString))
     case other               ⇒ fromTree(other) map(_ addPrefix k.toString)
   }
 
@@ -596,7 +596,7 @@ object Props extends PropsOps {
   }
 
   private def mapify(seq: Seq[Any]) = seq.zipWithIndex map {
-    case (x, i) ⇒ numberKey(i+1) -> x
+    case (x, i) ⇒ numberKey(i+1) → x
   } toMap
 
   def fromMap(source: Map[_, _]): Props = {
@@ -607,7 +607,7 @@ object Props extends PropsOps {
           case null        ⇒ Props.empty
           case m:Map[_, _] ⇒ fromMap(m).addPrefix(k)
           case s:Seq[_]    ⇒ fromMap(mapify(s)).addPrefix(k)
-          case x: Any      ⇒ props(k -> (""+x))
+          case x: Any      ⇒ props(k → (""+x))
         }
     }
     accumulate(collection)
@@ -618,8 +618,8 @@ object Props extends PropsOps {
     def number = "\\d+".r
     def numbers = "(" ~> repsep(number, ",") <~ ")"
     def text = "\"" ~> "[^\"]+".r <~ "\""
-    def mapPair:Parser[(String, String)] = text ~ " -> " ~ text ^^ {
-      case k ~ _ ~ v ⇒ k -> v
+    def mapPair:Parser[(String, String)] = text ~ " → " ~ text ^^ {
+      case k ~ _ ~ v ⇒ k → v
     }
 
     def mapContents:Parser[List[(String, String)]] = (mapPair ~ rep(",\\s*".r ~> mapPair)) ^^ {

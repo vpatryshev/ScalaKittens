@@ -86,13 +86,13 @@ trait NoGood[T] extends NothingInside[T] { self:Result[T] ⇒
   def tag: String = s"${ts2b32(timestamp)}"
   override def toString = s"Error: ~$tag($errors)"
 
-  private def base32map = "abdeghjklmnopqrstvxyz.".zipWithIndex.map{case (c,i) ⇒ ('a'+i).toChar -> c}.toMap.withDefault(identity)
+  private def base32map = "abdeghjklmnopqrstvxyz.".zipWithIndex.map{case (c,i) ⇒ ('a'+i).toChar → c}.toMap.withDefault(identity)
 
   /**
     * Transforms a timestamp to a string
     * First, takes timestamp mod year length, in seconds
     * Then transforms it to base32, skipping probably offending letters (bad words all contain c,f,u letters
-    * e.g. 08/28/2015 @ 12:35am (UTC) -> 1440722109 -> "molly"
+    * e.g. 08/28/2015 @ 12:35am (UTC) → 1440722109 → "molly"
     *
     * @param n time (millis)
     * @return a string
@@ -193,7 +193,7 @@ object Result {
     throw new UnsupportedOperationException("This is not a good result, and we can never produce it")
   }
 
-  private def base32map = "bdeghijklmnopqrstvxyz".zipWithIndex.map{case (c,i) ⇒ ('a'+i).toChar -> c}.toMap.withDefault(identity)
+  private def base32map = "bdeghijklmnopqrstvxyz".zipWithIndex.map{case (c,i) ⇒ ('a'+i).toChar → c}.toMap.withDefault(identity)
 
   def fiveCharsIn32(n: Long): String = {
     val s0 = java.lang.Long.toString(n, 32)

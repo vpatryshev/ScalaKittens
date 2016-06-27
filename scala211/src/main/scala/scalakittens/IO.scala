@@ -130,7 +130,7 @@ trait IO { self ⇒
 
     lines.
       filter(line ⇒ !line.startsWith("#") && !line.isEmpty).
-      collect { case PropertyFormat(key, value) ⇒ key->value}.
+      collect { case PropertyFormat(key, value) ⇒ key→value}.
       toMap
   }
 
