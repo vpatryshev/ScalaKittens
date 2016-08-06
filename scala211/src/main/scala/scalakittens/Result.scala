@@ -321,7 +321,6 @@ object Result {
   implicit class StreamOfResults[T](source: Stream[Result[T]]) {
     def |>[U](op: T ⇒ Result[U]) = source map (t ⇒ t flatMap op)
     def filter(p: T ⇒ Outcome) = source |> (x => p(x) andThen Good(x))
-    def filter(p: T ⇒ Boolean, whyNot: => String) = source |> (x ⇒ OKif(p(x), whyNot))
     def map[U](f: T ⇒ U) = source map (_ map f)
   }
 
