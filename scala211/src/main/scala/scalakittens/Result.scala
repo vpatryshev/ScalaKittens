@@ -110,7 +110,7 @@ sealed trait Bad[T] extends Result[T] with NoGood[T] {
 
   def onError[X >: Errors, Y](op: X ⇒ Y):Result[T] = {op(listErrors); this}
   def map[U](f: T⇒U) = bad[U](listErrors)
-  def flatMap[U](f: T ⇒ Result[U]) = bad(listErrors)
+    def flatMap[U](f: T ⇒ Result[U]) = bad(listErrors)
   def collect[U](pf: PartialFunction[T, U], onError: T ⇒ String) = bad(listErrors)
   def <*>[U](other: Result[U]): Result[(T, U)] = bad(listErrors ++ (other.listErrors dropWhile (Some(_) == lastError)))
   def lastError = listErrors.lastOption
@@ -320,7 +320,7 @@ object Result {
 
   implicit class StreamOfResults[T](source: Stream[Result[T]]) {
     def |>[U](op: T ⇒ Result[U]) = source map (t ⇒ t flatMap op)
-    def filter(p: T ⇒ Outcome) = source |> (x => p(x) andThen Good(x))
+    def filter(p: T ⇒ Result[_]) = source |> (x ⇒ p(x) returning x)
     def map[U](f: T ⇒ U) = source map (_ map f)
   }
 
