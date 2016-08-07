@@ -112,7 +112,7 @@ sealed trait Bad[T] extends Result[T] with NoGood[T] {
   def map[U](f: T⇒U) = bad[U](listErrors)
     def flatMap[U](f: T ⇒ Result[U]) = bad(listErrors)
   def collect[U](pf: PartialFunction[T, U], onError: T ⇒ String) = bad(listErrors)
-  def <*>[U](other: Result[U]): Result[(T, U)] = bad(listErrors ++ (other.listErrors dropWhile (Some(_) == lastError)))
+  def <*>[U](other: Result[U]): Result[(T, U)] = bad(listErrors ++ (other.listErrors dropWhile (lastError contains)))
   def lastError = listErrors.lastOption
 
   private def listMessages(t: Throwable):String =
@@ -318,10 +318,11 @@ object Result {
 
   private def bad[T](results: Result[_]*): Result[T] = bad(results flatMap (_.listErrors))
 
-  implicit class StreamOfResults[T](source: Stream[Result[T]]) {
-    def |>[U](op: T ⇒ Result[U]) = source map (t ⇒ t flatMap op)
-    def filter(p: T ⇒ Result[_]) = source |> (x ⇒ p(x) returning x)
+  implicit class StreamOfResults[T](val source: Stream[Result[T]]) extends AnyVal {
     def map[U](f: T ⇒ U) = source map (_ map f)
+    def |>[U](op: T ⇒ Result[U]) = source map (t ⇒ t flatMap op)
+    def filter(p: T ⇒ Result[_]) = |> (x ⇒ p(x) returning x)
+    def toList = source.toList
   }
 
   def traverse[T](results: TraversableOnce[Result[T]]): Result[Traversable[T]] = {
