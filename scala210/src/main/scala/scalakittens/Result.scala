@@ -393,5 +393,14 @@ object Result {
   def OKifNot(cond: ⇒ Boolean) = OK filterNot (_ ⇒ cond)
   def Oops[T](complaint: Any) = error(complaint)
   def NotImplemented[T] = Oops[T]("not implemented")
+
+  implicit class StreamOfResults[T](val source: Stream[Result[T]]) extends AnyVal {
+    def map[U](f: T ⇒ U) = source map (_ map f)
+    def |>[U](op: T ⇒ Result[U]) = source map (t ⇒ t flatMap op)
+    def filter(p: T ⇒ Result[_]) = |> (x ⇒ p(x) returning x)
+    def toList = source.toList
+  }
+
 }
+
 
