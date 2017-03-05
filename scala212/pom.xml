@@ -2,10 +2,10 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>group</groupId>
   <artifactId>ScalaKittens</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>0.1.4</version>
   <inceptionYear>2012</inceptionYear>
   <properties>
-    <scala.version>2.11.8</scala.version>
+    <scala.version>2.12.1</scala.version>
   </properties>
 
   <repositories>
@@ -35,11 +35,11 @@
       <artifactId>scala-library</artifactId>
       <version>${scala.version}</version>
     </dependency>
-    <!-- https://mvnrepository.com/artifact/org.scala-lang/scala-parser-combinators -->
+    <!-- https://mvnrepository.com/artifact/org.scala-lang.modules/scala-parser-combinators_2.12 -->
     <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-parser-combinators</artifactId>
-      <version>2.11.0-M4</version>
+      <groupId>org.scala-lang.modules</groupId>
+      <artifactId>scala-parser-combinators_2.12</artifactId>
+      <version>1.0.5</version>
     </dependency>
     <!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient -->
     <dependency>
@@ -71,11 +71,12 @@
       <version>1.6.9</version>
       <scope>test</scope>
     </dependency>
-      <dependency>
-          <groupId>org.scalaz</groupId>
-          <artifactId>scalaz-core_2.9.2</artifactId>
-          <version>7.0.0-M3</version>
-      </dependency>
+    <!-- https://mvnrepository.com/artifact/org.scalaz/scalaz-core_2.12.0-RC1 -->
+    <dependency>
+      <groupId>org.scalaz</groupId>
+      <artifactId>scalaz-core_2.12.0-RC1</artifactId>
+      <version>7.2.6</version>
+    </dependency>
 
       <dependency>
           <groupId>org.scalaz</groupId>
