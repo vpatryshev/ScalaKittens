@@ -13,27 +13,27 @@ import java.util.concurrent.TimeUnit
 class TestHexString {
 
   @Benchmark
-  def interpolation = toHexStringInterp(randomArray)
+  def interpolation: String = toHexStringInterp(randomArray)
 
   @Benchmark
-  def format = toHexStringFormat(randomArray)
+  def format: String = toHexStringFormat(randomArray)
 
 
   @Benchmark
-  def stringManip = toHexString(randomArray)
+  def stringManip: String = toHexString(randomArray)
 
-  def toHexStringInterp(bytes: Array[Byte]) =
+  def toHexStringInterp(bytes: Array[Byte]): String =
     bytes.map(b => f"$b%02x").mkString
 
-  def toHexString(bytes: Array[Byte]) = {
+  def toHexString(bytes: Array[Byte]): String = {
     val hexArray: Array[Byte] = Array(
       '0', '1', '2', '3', '4',
       '5', '6', '7', '8', '9',
       'A', 'B', 'C', 'D', 'E',
       'F')
-    val hexChars = Array.fill(bytes.size * 2)(0.toByte)
+    val hexChars = Array.fill(bytes.length * 2)(0.toByte)
     for {
-      j <- 0 to bytes.length - 1
+      j <- bytes.indices
       v = bytes(j) & 0xFF
     } {
       hexChars(j * 2) = hexArray(v >>> 4)
@@ -42,7 +42,7 @@ class TestHexString {
     new String(hexChars)
   }
 
-  def toHexStringFormat(bytes: Array[Byte]) =
+  def toHexStringFormat(bytes: Array[Byte]): String =
     bytes.map(b => "%02x".format(b)).mkString
 
 
