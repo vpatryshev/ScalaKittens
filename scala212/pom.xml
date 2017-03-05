@@ -2,10 +2,11 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>group</groupId>
   <artifactId>ScalaKittens</artifactId>
-  <version>0.1.4</version>
+  <version>1.0.0</version>
   <inceptionYear>2012</inceptionYear>
   <properties>
-    <scala.version>2.12.1</scala.version>
+    <scala.version>2.12.0</scala.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
   <repositories>
@@ -39,7 +40,7 @@
     <dependency>
       <groupId>org.scala-lang.modules</groupId>
       <artifactId>scala-parser-combinators_2.12</artifactId>
-      <version>1.0.5</version>
+      <version>1.0.4</version>
     </dependency>
     <!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient -->
     <dependency>
@@ -47,11 +48,11 @@
       <artifactId>httpclient</artifactId>
       <version>4.5.3</version>
     </dependency>
-    <!-- https://mvnrepository.com/artifact/org.specs2/specs2-core_2.11 -->
+    <!-- https://mvnrepository.com/artifact/org.specs2/specs2-core_2.12 -->
     <dependency>
       <groupId>org.specs2</groupId>
-      <artifactId>specs2-core_2.11</artifactId>
-      <version>3.8.8</version>
+      <artifactId>specs2-core_2.12</artifactId>
+      <version>3.8.7</version>
     </dependency>
     <!-- https://mvnrepository.com/artifact/org.openjdk.jmh/jmh-core -->
     <dependency>
@@ -65,12 +66,6 @@
       <version>4.4</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.scala-tools.testing</groupId>
-      <artifactId>specs_2.9.2</artifactId>
-      <version>1.6.9</version>
-      <scope>test</scope>
-    </dependency>
     <!-- https://mvnrepository.com/artifact/org.scalaz/scalaz-core_2.12.0-RC1 -->
     <dependency>
       <groupId>org.scalaz</groupId>
@@ -78,18 +73,7 @@
       <version>7.2.6</version>
     </dependency>
 
-      <dependency>
-          <groupId>org.scalaz</groupId>
-          <artifactId>scalaz-effect_2.9.2</artifactId>
-          <version>7.0.0-M3</version>
-      </dependency>
-      <dependency>
-          <groupId>org.scalaz</groupId>
-          <artifactId>scalaz-concurrent_2.9.2</artifactId>
-          <version>7.0.0-M3</version>
-      </dependency>
   </dependencies>
-
   <build>
     <sourceDirectory>src/main/scala</sourceDirectory>
     <testSourceDirectory>src/test/scala</testSourceDirectory>

@@ -4,7 +4,6 @@ import language.implicitConversions
 
 import Result._
 
-import collection.JavaConversions
 import scala.concurrent.duration._
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.LockSupport
@@ -13,7 +12,7 @@ trait Ops {
   self: AnyRef ⇒
   def scale = 1000
 
-  def askUser(what: String) = {
+  def askUser(what: String): (String, String) = {
     println(s"$what?")
     what → scala.io.StdIn.readLine()
   }
@@ -34,7 +33,7 @@ trait Ops {
     }
   }
 
-  def tryOr[T](eval: ⇒ T, onError: Exception ⇒ T) =
+  def tryOr[T](eval: ⇒ T, onError: Exception ⇒ T): T =
     try {
       eval
     } catch {
@@ -42,7 +41,7 @@ trait Ops {
         onError(e)
     }
 
-  def tryOr[T](eval: ⇒ T, orElse: ⇒ T) =
+  def tryOr[T](eval: ⇒ T, orElse: ⇒ T): T =
     try {
       eval
     } catch {
@@ -52,7 +51,7 @@ trait Ops {
 
   implicit class Ternary(b: ⇒ Boolean) {
     def ?[T](x: ⇒ T) = new {
-      def |(y: ⇒ T) = if (b) x else y
+      def |(y: ⇒ T): T = if (b) x else y
     }
   }
 
@@ -71,15 +70,16 @@ trait Ops {
     }
   }
 
-  def union[T](sets: TraversableOnce[Set[T]]) = (Set.empty[T] /: sets) (_ ++ _)
+  def union[T](sets: TraversableOnce[Set[T]]): Set[T] = (Set.empty[T] /: sets) (_ ++ _)
 
   import java.util.{Map ⇒ jum}
   import java.util.{Set ⇒ jus}
   import java.lang.{Iterable ⇒ jli}
+  import collection.JavaConverters._
 
   def asScala(x: Any): Any = {
     def iterate[T](i: jli[T]): Iterable[Any] = {
-      val in = JavaConversions.iterableAsScalaIterable(i)
+      val in: Iterable[T] = i.asScala
       val out = for (y <- in) yield asScala(y)
       out
     }
@@ -91,7 +91,8 @@ trait Ops {
         val p = asScala(e.getKey) → asScala(e.getValue)
         p
       case m: jum[_, _] ⇒
-        val pairs = iterate(m.entrySet)
+        val set = m.entrySet
+        val pairs = iterate(set)
         val map = pairs.collect { case (k, v) ⇒ (k, v) }.toMap
         map
 
@@ -134,7 +135,7 @@ trait Ops {
     * @tparam T whatever the type of list elements is
     * @return list of groups, List[List[T] ]
     */
-  def groupByRelationship[T](p: (T, T) ⇒ Boolean)(xs: Traversable[T]) = {
+  def groupByRelationship[T](p: (T, T) ⇒ Boolean)(xs: Traversable[T]): List[List[T]] = {
     val (seg, acc) = ((List[T](), List[List[T]]()) /: xs) {
       case ((y :: ys, a), x) if p(y, x) ⇒ (x :: y :: ys, a)
       case ((ys, a), x) ⇒ (x :: Nil, ys.reverse :: a)
@@ -145,7 +146,7 @@ trait Ops {
   def groupListBy[T, U](xs: List[T])(f: T ⇒ U): List[List[T]] = groupByRelationship[T]((x, y) ⇒ f(x) == f(y))(xs)
 
   def thread(op: ⇒ Unit) = new Thread {
-    override def run() = op
+    override def run(): Unit = op
   }
 
   object Job {
@@ -213,9 +214,9 @@ trait Ops {
     def reporting(reporter: Job.Status ⇒ Unit) = new Starter[T](time, extraTimePercent, reporter)
   }
 
-  def stringify(el: StackTraceElement) = el.getFileName + "[" + el.getLineNumber + "]"
+  def stringify(el: StackTraceElement): String = el.getFileName + "[" + el.getLineNumber + "]"
 
-  def callerStackTrace = {
+  def callerStackTrace: Array[StackTraceElement] = {
     val stack = new Exception("STACK TRACE").getStackTrace
     val tail = stack.dropWhile(el ⇒ (el.getMethodName contains "caller") || (el.getMethodName contains "REPL"))
     tail.tail
@@ -225,6 +226,7 @@ trait Ops {
 
   def caller: String = {
     val el = callerStackTrace.head
+    
     stringify(el)
   }
 }

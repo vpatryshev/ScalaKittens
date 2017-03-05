@@ -6,11 +6,11 @@ val WhichScala = "2.12.0"
 
 name := s"Scala Kittens Library, Scala $WhichScala"
 
-version := "0.1.4"
+version := "1.0.0"
 
 scalaVersion := WhichScala
 
-scalacOptions ++= Seq("-deprecation", "-encoding", "UTF-8", "-feature", "-target:jvm-1.7", "-unchecked",
+scalacOptions ++= Seq("-feature", "-deprecation", "-encoding", "UTF-8", "-feature", "-target:jvm-1.8", "-unchecked",
     "-Ywarn-adapted-args", "-Ywarn-value-discard", "-Xlint")
 
 scalacOptions in (Compile, doc) <++= baseDirectory.map {
