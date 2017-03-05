@@ -1,0 +1,144 @@
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>group</groupId>
+  <artifactId>ScalaKittens</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <inceptionYear>2012</inceptionYear>
+  <properties>
+    <scala.version>2.11.8</scala.version>
+  </properties>
+
+  <repositories>
+    <repository>
+      <id>scala-tools.org</id>
+      <name>Scala-Tools Maven2 Repository</name>
+      <url>http://scala-tools.org/repo-releases</url>
+    </repository>
+      <repository>
+          <id>sonatype.org</id>
+          <name>Scala-Tools another Repository</name>
+          <url>https://oss.sonatype.org/content/repositories/releases</url>
+      </repository>
+  </repositories>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>scala-tools.org</id>
+      <name>Scala-Tools Maven2 Repository</name>
+      <url>http://scala-tools.org/repo-releases</url>
+    </pluginRepository>
+  </pluginRepositories>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+      <version>${scala.version}</version>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/org.scala-lang/scala-parser-combinators -->
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-parser-combinators</artifactId>
+      <version>2.11.0-M4</version>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient -->
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>4.5.3</version>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/org.specs2/specs2-core_2.11 -->
+    <dependency>
+      <groupId>org.specs2</groupId>
+      <artifactId>specs2-core_2.11</artifactId>
+      <version>3.8.8</version>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/org.openjdk.jmh/jmh-core -->
+    <dependency>
+      <groupId>org.openjdk.jmh</groupId>
+      <artifactId>jmh-core</artifactId>
+      <version>1.17.5</version>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.4</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-tools.testing</groupId>
+      <artifactId>specs_2.9.2</artifactId>
+      <version>1.6.9</version>
+      <scope>test</scope>
+    </dependency>
+      <dependency>
+          <groupId>org.scalaz</groupId>
+          <artifactId>scalaz-core_2.9.2</artifactId>
+          <version>7.0.0-M3</version>
+      </dependency>
+
+      <dependency>
+          <groupId>org.scalaz</groupId>
+          <artifactId>scalaz-effect_2.9.2</artifactId>
+          <version>7.0.0-M3</version>
+      </dependency>
+      <dependency>
+          <groupId>org.scalaz</groupId>
+          <artifactId>scalaz-concurrent_2.9.2</artifactId>
+          <version>7.0.0-M3</version>
+      </dependency>
+  </dependencies>
+
+  <build>
+    <sourceDirectory>src/main/scala</sourceDirectory>
+    <testSourceDirectory>src/test/scala</testSourceDirectory>
+    <plugins>
+      <plugin>
+        <groupId>org.scala-tools</groupId>
+        <artifactId>maven-scala-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>compile</goal>
+              <goal>testCompile</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <scalaVersion>${scala.version}</scalaVersion>
+          <args>
+            <arg>-target:jvm-1.6</arg>
+          </args>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-eclipse-plugin</artifactId>
+        <configuration>
+          <downloadSources>true</downloadSources>
+          <buildcommands>
+            <buildcommand>ch.epfl.lamp.sdt.core.scalabuilder</buildcommand>
+          </buildcommands>
+          <additionalProjectnatures>
+            <projectnature>ch.epfl.lamp.sdt.core.scalanature</projectnature>
+          </additionalProjectnatures>
+          <classpathContainers>
+            <classpathContainer>org.eclipse.jdt.launching.JRE_CONTAINER</classpathContainer>
+            <classpathContainer>ch.epfl.lamp.sdt.launching.SCALA_CONTAINER</classpathContainer>
+          </classpathContainers>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.scala-tools</groupId>
+        <artifactId>maven-scala-plugin</artifactId>
+        <configuration>
+          <scalaVersion>${scala.version}</scalaVersion>
+        </configuration>
+      </plugin>
+    </plugins>
+  </reporting>
+</project>
