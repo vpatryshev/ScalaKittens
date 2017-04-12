@@ -368,10 +368,7 @@ case class Props(private val innerMap: PropMap) extends PartialFunction[String, 
   }
 
   def toJsonString: String = {
-    Props.DEPTH_COUNTER = Props.DEPTH_COUNTER + 1
     def stringifyAt(k: String) = {
-      val pref:String = "-"*Props.DEPTH_COUNTER
-      //      println(s"2JS.sA:$pref$k.")
       stringAt(k, pp ⇒ pp.toJsonString)
     }
 
@@ -380,11 +377,8 @@ case class Props(private val innerMap: PropMap) extends PartialFunction[String, 
       strings mkString("[", ", ", "]")
     } else {
       val keys = keySet
-      val fks = fullKeys
-      val ks0 = fks map (_.split("\\.", 2)(0))
       val stringifiedValues = keys map (k ⇒ s""""$k": ${stringifyAt(k)}""")
       val result = stringifiedValues mkString("{", ", ", "}")
-      Props.DEPTH_COUNTER = Props.DEPTH_COUNTER - 1
       result
     }
   }
