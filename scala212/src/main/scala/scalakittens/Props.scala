@@ -362,7 +362,7 @@ case class Props(private val innerMap: PropMap) extends PartialFunction[String, 
     val sub = subtree(key)
     val v = valueOf(key)
     if (!sub.isEmpty) op(sub) else v match {
-      case Good(something) ⇒ Strings.powerString(""+something).quote
+      case Good(something) ⇒ quote(something)
       case bad ⇒ ""
     }
   }

@@ -110,7 +110,7 @@ sealed trait Bad[T] extends Result[T] with NoGood[T] {
 
   def onError[X >: Errors, Y](op: X ⇒ Y):Result[T] = {op(listErrors); this}
   def map[U](f: T⇒U) = bad[U](listErrors)
-    def flatMap[U](f: T ⇒ Result[U]) = bad(listErrors)
+  def flatMap[U](f: T ⇒ Result[U]) = bad(listErrors)
   def collect[U](pf: PartialFunction[T, U], onError: T ⇒ String) = bad(listErrors)
   def <*>[U](other: Result[U]): Result[(T, U)] = bad(listErrors ++ (other.listErrors dropWhile (lastError contains)))
   def lastError = listErrors.lastOption
