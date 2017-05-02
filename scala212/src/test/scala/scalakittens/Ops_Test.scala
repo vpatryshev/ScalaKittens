@@ -132,7 +132,7 @@ class Ops_Test extends Specification {
       val startTime = System.currentTimeMillis()
       val report = new ListBuffer[Job.Status]
 
-      val result = spendNotMoreThan(msInTimeout*10 milliseconds).
+      val result = spendNotMoreThan(msInTimeout milliseconds).
         reporting ((s:Job.Status) ⇒ {report += s; ()}).
         on {
           Thread sleep tooFast
