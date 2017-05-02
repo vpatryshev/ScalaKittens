@@ -203,7 +203,7 @@ object Result {
 
   type Errors = Traversable[Throwable]
   type NoResult = Result[Nothing]
-  type Outcome = Result[Any]
+  type Outcome = Result[Unit]
 
   protected[scalakittens] def forTesting[T](es: Errors, testClock: TimeReader) = new Bad[T]() {
     override def clock = testClock
@@ -215,6 +215,8 @@ object Result {
   def recordEvent(message:Any):Throwable = {
     new ResultException(""+message)
   }
+
+  implicit def asOutcome(r:Result[_]): Outcome = r andThen OK
 
   implicit def asBoolean(r: Result[_]): Boolean = r.isGood
   def attempt[T](eval: ⇒ Result[T], onException: (Exception ⇒ Result[T]) = (e:Exception) ⇒ exception(e)) =
@@ -268,10 +270,11 @@ object Result {
     case notAnOption ⇒ Result.forValue(notAnOption.asInstanceOf[T]).toOption
   }
 
-  def goodOrBad[T](good: T, bad: String):Result[T] = apply(optionize(good), Option(bad))
+  private[scalakittens] def goodOrBad[T](good: T, bad: String):Result[T] = apply(optionize(good), Option(bad))
 
-  def goodOrBad[T](data: Iterable[T]): Outcome = data.toList match {
-    case good::bad::Nil ⇒ goodOrBad(good, if(bad == null) null else bad.toString)
+  def goodOrBad[T](data: Iterable[T]): Result[T] = data.toList match {
+    case good::null::Nil ⇒ forValue(good)
+    case good::bad::Nil ⇒ goodOrBad(good, bad.toString)
     case wrong::Nil     ⇒ error(wrong)
     case x              ⇒ error(s"Wrong iterable $x, need one or two elements")
   }
@@ -322,7 +325,8 @@ object Result {
     else Good(goodOnes.reverse)
   }
 
-  def fold(results:Traversable[Outcome]):Outcome = ((OK:Outcome) /: results)(_<*>_) map (_ ⇒ 'OK)
+  def fold(results:Traversable[Outcome]):Outcome = ((OK:Outcome) /: results)(_<*>_)
+
   def zip[X1,X2](r1: Result[X1], r2: Result[X2]) = r1 andAlso r2
 
   def zip[X1,X2,X3](r1: Result[X1], r2: Result[X2], r3: Result[X3]): Result[(X1,X2,X3)] = {
@@ -381,7 +385,7 @@ object Result {
     }
   }
 
-  object OK extends Good('OK) with Outcome {
+  object OK extends Good(()) with Outcome {
     override def toString = "OK"
   }
   def OKif(cond: ⇒ Boolean) = OK filter(_ ⇒ cond)
@@ -389,5 +393,14 @@ object Result {
   def OKifNot(cond: ⇒ Boolean) = OK filterNot (_ ⇒ cond)
   def Oops[T](complaint: Any) = error(complaint)
   def NotImplemented[T] = Oops[T]("not implemented")
+
+  implicit class StreamOfResults[T](val source: Stream[Result[T]]) extends AnyVal {
+    def map[U](f: T ⇒ U) = source map (_ map f)
+    def |>[U](op: T ⇒ Result[U]) = source map (t ⇒ t flatMap op)
+    def filter(p: T ⇒ Result[_]) = |> (x ⇒ p(x) returning x)
+    def toList = source.toList
+  }
+
 }
+
 
