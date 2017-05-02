@@ -1,0 +1,18 @@
+
+git checkout master
+branch=$1
+if [ -z $branch ]; then
+  echo "Pls specify branch name"
+  exit 1
+fi
+
+git branch | grep $branch >/dev/null
+if [ "$?" != "0" ]; then
+  git checkout -b $branch
+  git push https://github.com/vpatryshev/ScalaKittens $branch
+fi
+
+git checkout $branch
+git merge master
+
+
