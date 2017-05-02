@@ -1,0 +1,1 @@
+cd scala210 && sbt clean test && cd scala211 && sbt clean test && cd scala212 && sbt clean test
