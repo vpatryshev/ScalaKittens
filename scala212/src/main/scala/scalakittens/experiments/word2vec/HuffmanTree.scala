@@ -3,30 +3,40 @@ package scalakittens.experiments.word2vec
 import scala.collection.mutable
 
 /**
+  * Huffman Tree implementation.
+  * @see https://www.siggraph.org/education/materials/HyperGraph/video/mpeg/mpegfaq/huffman_tutorial.html
+  * Will need it for word2vec.
+  * 
   * Created by vpatryshev on 5/2/17.
   */
 class HuffmanTree(source: List[Int]) {
-  val parent = new Array[Int](source.length*2-1)
-  parent(source.length*2-2) = -1
-  val freq = new mutable.Queue[Int]
+  private val _parent = new Array[Int](source.length*2-1)
+  
+  _parent(source.length*2-2) = -1
+  private val _freq = new mutable.Queue[Int]
   private val ordering: Ordering[(Int, Int)] = Ordering.by(-_._1)
   
   private val queue = new mutable.PriorityQueue[(Int, Int)]()(ordering)
 
-  source.zipWithIndex foreach(p => {freq.enqueue(p._1); queue.enqueue(p)})
+  source.zipWithIndex foreach(p => {_freq.enqueue(p._1); queue.enqueue(p)})
 
   while (queue.length > 1) {
     val p = queue.dequeue()
     val q = queue.dequeue()
-    val node = (p._1+q._1, freq.length)
+    val node = (p._1+q._1, _freq.length)
     queue.enqueue(node)
-    parent(p._2) = freq.length
-    parent(q._2) = freq.length
-    freq.enqueue(node._1)
+    _parent(p._2) = _freq.length
+    _parent(q._2) = _freq.length
+    _freq.enqueue(node._1)
   }
   
+  val parent = _parent.toList
+  val freq = _freq.toList
+  
+//  lazy val codes: Array[Int] = ??? // do we need it at all?
+  
   override def toString: String = {
-    s"HuffmanTree($freq, $parent)"
+    s"HuffmanTree($_freq, $_parent)"
   }
   
   def toGraph: String = {
@@ -45,12 +55,12 @@ class HuffmanTree(source: List[Int]) {
     def spaces(n: Int) = " "*n
     
     def dump(i: Int): RT = {
-      val s = freq(i) + ":" + i 
-      if (parent.indexOf(i) < 0) {
+      val s = _freq(i) + ":" + i 
+      if (_parent.indexOf(i) < 0) {
         RT(s::Nil, s.length, s.length/2)
       } else {
-        val i1 = parent.indexOf(i)
-        val i2 = parent.indexOf(i, i1+1)
+        val i1 = _parent.indexOf(i)
+        val i2 = _parent.indexOf(i, i1+1)
         val first = dump(i1)
         val second = dump(i2)
         val merged = merge(first, second)
@@ -71,11 +81,11 @@ class HuffmanTree(source: List[Int]) {
       }
 
     }
-    dump(parent.length - 1).content mkString "\n"
+    dump(_parent.length - 1).content mkString "\n"
   }
   
   def chain(word: Int): List[(Int, Int)] = {
     
-    (word, freq(word)) :: chain(parent(word))
+    (word, _freq(word)) :: chain(_parent(word))
   }
 }
