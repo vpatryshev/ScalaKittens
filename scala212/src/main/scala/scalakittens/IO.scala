@@ -79,7 +79,7 @@ trait IO { self ⇒
   def copyToFile(url: URL, file: File) {
     file.delete()
     val out = new FileOutputStream(file).getChannel
-    val in: InputStream = url.openStream
+    val in: InputStream = url.openStream()
 
     val ch = Channels.newChannel(in)
     try {
@@ -100,13 +100,21 @@ trait IO { self ⇒
 
   def resource(url: String) = Result.forValue(self.getClass.getResource(url.replaceAll("%20", " "))) orCommentTheError s"Resource not found: $url"
 
-  def fromResource(url: String):Result[InputStream] = resource(url) map (_.openStream)
+  def fromResource(url: String): Result[InputStream] = resource(url) map (_.openStream())
 
-  def readResource(path: String, codec:Codec = Codec.UTF8) = fromResource(path) flatMap (in ⇒ Result.forValue {
+  def linesFromResource(path: String, codec:Codec = Codec.UTF8) = fromResource(path) flatMap (in ⇒ Result.forValue {
+    Source.fromInputStream(in)(codec).getLines()
+  })
+  
+  def readResource(path: String, codec:Codec = Codec.UTF8) = {
+    linesFromResource(path, codec).map(_.mkString)
+  }
+    /*
+    fromResource(path) flatMap (in ⇒ Result.forValue {
     val text = Source.fromInputStream(in)(codec).mkString
     in.close()
     text
-  })
+  })*/
 
   def bytesOf(inputStream: InputStream): Result[Array[Byte]] = Result.forValue {
     val in = new BufferedInputStream(inputStream)

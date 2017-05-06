@@ -14,34 +14,38 @@ import scala.collection.mutable
   * Created by vpatryshev on 5/2/17.
   */
 class HuffmanTree(source: List[Int]) {
-  private val size: Int = source.length
-  private val _parent = new Array[Int](source.length*2-1)
+  val numWords: Int = source.length
+  val size = numWords*2-1
+  private val parentRef = new Array[Int](size)
 
-  _parent(source.length*2-2) = 0
-  private val _freq = new mutable.Queue[Int]
+  private val frequencies = new mutable.Queue[Int]
   private val ordering: Ordering[(Int, Int)] = Ordering.by(-_._1)
 
-  private val queue = new mutable.PriorityQueue[(Int, Int)]()(ordering)
+  {
+    val queue = new mutable.PriorityQueue[(Int, Int)]()(ordering)
 
-  source.zipWithIndex foreach(p => {_freq.enqueue(p._1); queue.enqueue(p)})
+    source.zipWithIndex foreach(p => {frequencies.enqueue(p._1); queue.enqueue(p)})
 
-  while (queue.length > 1) {
-    val p = queue.dequeue()
-    val q = queue.dequeue()
-    val node = (p._1+q._1, _freq.length)
-    queue.enqueue(node)
-    _parent(p._2) = _freq.length
-    _parent(q._2) = -_freq.length
-    _freq.enqueue(node._1)
+    while (queue.length > 1) {
+      val p = queue.dequeue()
+      val q = queue.dequeue()
+      val node = (p._1+q._1, frequencies.length)
+      queue.enqueue(node)
+      parentRef(p._2) = frequencies.length
+      parentRef(q._2) = -frequencies.length
+      frequencies.enqueue(node._1)
+    }
   }
 
-  val parent = _parent.toList
-  val freq = _freq.toList
+  def parent(i: Int) = {
+    parentRef(i)
+  }
+  val freq = frequencies.toList
 
   //  lazy val codes: Array[Int] = ??? // do we need it at all?
 
   override def toString: String = {
-    s"HuffmanTree(${_freq}, ${_parent})"
+    s"HuffmanTree(${frequencies}, $parentRef)"
   }
 
   def toGraph: String = {
@@ -60,13 +64,13 @@ class HuffmanTree(source: List[Int]) {
     def spaces(n: Int) = " "*n
 
     def dump(i: Int): RT = {
-      val s = _freq(i) + ":" + i
+      val s = frequencies(i) + ":" + i
 
-      if (i < size) {
+      if (i < numWords) {
         RT(s::Nil, s.length, s.length/2)
       } else {
-        val i1 = _parent.indexOf(i)
-        val i2 = _parent.indexOf(-i)
+        val i1 = parentRef.indexOf(i)
+        val i2 = parentRef.indexOf(-i)
         val first = dump(i1)
         val second = dump(i2)
         val merged = merge(first, second)
@@ -93,11 +97,14 @@ class HuffmanTree(source: List[Int]) {
       }
 
     }
-    dump(_parent.length - 1).content mkString "\n"
+    dump(parentRef.length - 1).content mkString "\n"
   }
 
   def chain(word: Int): List[(Int, Int)] = {
-
-    (word, _freq(word)) :: chain(_parent(word))
+    val idx = math.abs(word)
+    val entry = (idx, frequencies(idx))   
+    val pr = parentRef(idx)
+//    println(s"$word -> $entry")
+    entry :: (if (pr == 0) Nil else chain(pr))
   }
 }

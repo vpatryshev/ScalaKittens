@@ -84,6 +84,25 @@ trait Strings {
     case DIGITS(value) ⇒ Some(value)
     case _ ⇒ None
   }
+
+  private val accented = Set("aàáâäæãåā", "cçćč", "eèéêëēėę", "iîïíīįì", "lł", "nñń", "oôöòóœøōõ", "sßśš", "uûüùúū", "yÿ", "zžźż", "'’")
+  
+  private val accentCharMap = {
+    for {entry <- accented
+         variant <- entry.tail} yield variant -> entry.head
+  } toMap
+  
+  def eliminateAccent(c: Char) = accentCharMap.getOrElse(c, c)
+
+  def normalize(s: String) = {
+    val s1: String = s.toLowerCase
+    val s2: String = s1 map eliminateAccent
+    val s3 = s2.replaceAll("[\\'’][ s]", "")
+    val s4 = s3.replaceAll("[^'a-z]+", " ")
+    s4
+  }
+
+  val isStop = Set("", "a", "an", "if", "of", "the", "he", "she", "on", "him", "her", "this", "that", "it", "we", "us", "our", "their", "there", "here", "i", "my", "mine", "theirs", "whom", "who", "what", "which", "but", "is", "are", "were", "was", "nous", "je", "you", "now", "do", "does", "did", "these", "those", "here", "to", "and", "in", "his", "had", "with", "not", "at", "as", "for", "from", "all", "be", "by", "they", "one", "have", "so", "up", "them", "or", "when", "been", "no", "would", "without", "only", "me", "don't", "s'en", "t", "en", "said", "out", "could", "will", "more", "him", "why", "himself", "about", "how", "into", "then", "some", "after", "before", "went", "go", "won't", "together", "more", "less", "do", "did", "done", "doing", "your", "very", "has", "up", "down", "again", "das")
 }
 
 object Strings extends Strings
