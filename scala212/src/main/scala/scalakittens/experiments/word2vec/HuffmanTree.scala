@@ -37,12 +37,23 @@ class HuffmanTree(source: List[Int]) {
     }
   }
 
-  def parent(i: Int) = {
-    parentRef(i)
-  }
-  val freq = frequencies.toList
+  def parent(i: Int) = parentRef(i)
+  
+  lazy val freq = frequencies.toList
 
-  //  lazy val codes: Array[Int] = ??? // do we need it at all?
+
+  /**
+    * Chain of node indexes starting from word and going up to root
+    * An element of the result list is positive if it is left branch, and negative if it is right
+ *
+    * @param word - id of the word, just an int
+    * @return a list that represents the path from word to the root (inclusive)
+    */
+  def path(word: Int): List[Int] = {
+    val idx = math.abs(word)
+    val pr = parentRef(idx)
+    word :: (if (pr == 0) Nil else path(pr))
+  }
 
   override def toString: String = {
     s"HuffmanTree(${frequencies}, $parentRef)"
@@ -99,13 +110,5 @@ class HuffmanTree(source: List[Int]) {
 
     }
     dump(parentRef.length - 1).content mkString "\n"
-  }
-
-  def chain(word: Int): List[(Int, Int)] = {
-    val idx = math.abs(word)
-    val entry = (idx, frequencies(idx))   
-    val pr = parentRef(idx)
-//    println(s"$word -> $entry")
-    entry :: (if (pr == 0) Nil else chain(pr))
   }
 }

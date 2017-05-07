@@ -17,12 +17,12 @@ class HuffmanTreeTest extends Specification {
 // this is an artistic graph representation
       (0 until sut.size map sut.parent).toList must_== List(6,-6,7,8,-8,10,-7,9,-9,-10,0)
       
-      sut.chain(0) must_== List((0,5), (6,12), (7,22), (9,57), (10,102))
-      sut.chain(1) must_== List((1,7), (6,12), (7,22), (9,57), (10,102))
-      sut.chain(2) must_== List((2,10), (7,22), (9,57), (10,102))
-      sut.chain(3) must_== List((3,15), (8,35), (9,57), (10,102))
-      sut.chain(4) must_== List((4,20), (8,35), (9,57), (10,102))
-      sut.chain(5) must_== List((5,45), (10,102))
+      sut.path(0) must_== List(0, 6, -7, 9, -10)
+      sut.path(1) must_== List(1, -6, -7, 9, -10)
+      sut.path(2) must_== List(2, 7, 9, -10)
+      sut.path(3) must_== List(3, 8, -9, -10)
+      sut.path(4) must_== List(4, -8, -9, -10)
+      sut.path(5) must_== List(5, 10)
       
       sut.freq.toList must_== List(5,7,10,15,20,45,12,22,35,57,102)
       sut.toGraph must_==
@@ -102,7 +102,7 @@ class HuffmanTreeTest extends Specification {
       val tree = new HuffmanTree(freq)
       
       println(cc.size)
-      println(tree.chain(1000))
+      println(tree.path(1000))
 //      println(tree.toGraph)
       
 //      failure(cc.toString)
