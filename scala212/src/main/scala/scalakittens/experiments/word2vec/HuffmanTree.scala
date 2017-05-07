@@ -51,13 +51,13 @@ class HuffmanTree(source: List[Int]) {
   def toGraph: String = {
     case class RT/*rectangular text*/(content: List[String], w: Int, handle: Int)
     def merge(rt1: RT, rt2: RT): RT = {
-      val gap = 4
+      val gap = 2
       val w = rt1.w + gap + rt2.w
       val zip = rt1.content zip rt2.content
-      val commonContent = zip map { case (s1, s2) => s1 + spaces(rt1.w + 2 - s1.length) + s2}
+      val commonContent = zip map { case (s1, s2) => s1 + spaces(rt1.w + gap - s1.length) + s2}
       val newContent = commonContent ++
         rt1.content.drop(zip.length) ++
-        rt2.content.drop(zip.length).map(s => spaces(rt1.w+2) + s)
+        rt2.content.drop(zip.length).map(s => spaces(rt1.w+gap) + s)
       RT(newContent, w, rt1.w+1)
     }
 
