@@ -26,15 +26,16 @@ class HuffmanTreeTest extends Specification {
       
       sut.freq.toList must_== List(5,7,10,15,20,45,12,22,35,57,102)
       sut.toGraph must_==
-        """    102:10
-          |   /      \___________
-          |  /                   \
-          |45:5                57:9
-          |            _______/    \__
-          |           /               \
-          |          22:7            35:8
-          |         /    \          /   \
-          |      10:2     12:6   15:3  20:4
+        """  102:10
+          |   /   \_____________
+          |  /                  \
+          |45:5               57:9
+          |            _______/  \___
+          |           /              \
+          |         22:7            35:8
+          |         /  \__          /  \
+          |        /      \      15:3  20:4
+          |      10:2    12:6
           |              /  \
           |            5:0  7:1""".stripMargin
       ok
@@ -43,15 +44,15 @@ class HuffmanTreeTest extends Specification {
     "render sassa_nf sample" in {
       val sut = new HuffmanTree(List(2,4,4,5,7,8))
       sut.toGraph must_==
-        """             30:10
-          |          __/     \
-          |         /         \
-          |        13:8      17:9
-          |     __/  \      /    \
-          |    /      \   8:5     9:7
-          |   6:6    7:4         /  \
-          |  /  \              4:2  5:3
-          |2:0  4:1""".stripMargin
+        """           30:10
+          |          __/  \__
+          |         /        \
+          |       13:8      17:9
+          |     __/  \      /  \__
+          |    /      \    /      \
+          |  6:6     7:4  8:5    9:7
+          |  /  \                /  \
+          |2:0  4:1            4:2  5:3""".stripMargin
       ok
     }
 

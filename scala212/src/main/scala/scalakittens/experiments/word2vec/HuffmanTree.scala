@@ -74,20 +74,21 @@ class HuffmanTree(source: List[Int]) {
         val first = dump(i1)
         val second = dump(i2)
         val merged = merge(first, second)
-        val pos = merged.handle
-        val space = spaces(first.w)
-        val rightBranchPos = math.min(s.length - 2, second.handle - 1)
+        val pos = first.w - (s.length-1)/2
+        val space = spaces(pos)
+        val rightBranchPos = math.min(s.length/2 - 2, second.handle - 2)
         val spacesBetweenBranches = spaces(rightBranchPos)
 
         val branch1Length: Int = first.w - first.handle - 1
         val branch2Length: Int = second.handle - rightBranchPos/2 - 1
-        val b1 =  if (branch1Length > 2) "_"*(branch1Length-1) + "/" else "/"
+
+        val b1 = if (branch1Length > 2) "_"*(branch1Length-1) + "/" else "/"
         val b2 = if (branch2Length > 2) "\\" + "_"*(branch2Length-1) else "\\"
         val rbStart = first.handle+1 + b1.length + rightBranchPos + 2
         val b1b2 = spaces(first.handle+1) + b1 + spacesBetweenBranches + "  " + b2
         
         val branches = b1b2 :: (if (branch1Length > 2 || branch2Length > 2) {
-          (spaces(first.handle) + "/" + spaces(b1.length + rightBranchPos+2 + b2.length) + "\\") :: Nil
+          (spaces(first.handle) + "/" + spaces(b1.length + rightBranchPos+2 + math.max(b2.length, 2)) + "\\") :: Nil
         } else Nil)
 
         val header = (space + s) :: branches
