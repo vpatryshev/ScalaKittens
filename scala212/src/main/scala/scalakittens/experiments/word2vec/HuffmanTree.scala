@@ -76,21 +76,21 @@ class HuffmanTree(source: List[Int]) {
         val merged = merge(first, second)
         val pos = merged.handle
         val space = spaces(first.w)
-        val rightBranchPos = math.min(s.length - 2, second.handle)
+        val rightBranchPos = math.min(s.length - 2, second.handle - 1)
         val spacesBetweenBranches = spaces(rightBranchPos)
 
         val branch1Length: Int = first.w - first.handle - 1
-        val branch2Length: Int = math.max(1, second.handle - rightBranchPos/2 - 1)
-        val b1 = if (branch1Length == 1) "/" else "-"*branch1Length
-        val b2 = if (branch2Length == 1) "\\" else "-"*branch2Length
+        val branch2Length: Int = second.handle - rightBranchPos/2 - 1
+        val b1 =  if (branch1Length > 2) "_"*(branch1Length-1) + "/" else "/"
+        val b2 = if (branch2Length > 2) "\\" + "_"*(branch2Length-1) else "\\"
+        val rbStart = first.handle+1 + b1.length + rightBranchPos + 2
+        val b1b2 = spaces(first.handle+1) + b1 + spacesBetweenBranches + "  " + b2
         
-        val branches = if (branch1Length > 2 || branch2Length > 2) {
-          (spaces(first.handle+1) + b1 + spacesBetweenBranches + "  " + b2) ::
-            (spaces(first.handle) + "/" + spaces(branch1Length + rightBranchPos+2 + branch2Length) + "\\") ::
-            Nil
-        } else Nil
+        val branches = b1b2 :: (if (branch1Length > 2 || branch2Length > 2) {
+          (spaces(first.handle) + "/" + spaces(b1.length + rightBranchPos+2 + b2.length) + "\\") :: Nil
+        } else Nil)
 
-        val header = (space + s) :: (space + "/" + spaces(rightBranchPos) + "\\") :: branches
+        val header = (space + s) :: branches
 
         val res = RT(header ++ merged.content, merged.w, merged.handle)
         res
