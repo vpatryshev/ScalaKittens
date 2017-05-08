@@ -26,18 +26,21 @@ object LinAlg {
       new Vec((data zip other.data) map {case (a,b) => a-b})
     }
 
-    def *=(scalar: Double): Unit = {
+    def *=(scalar: Double): Vec = {
       for (i <- data.indices) data(i) *= scalar
+      this
     }
     
-    def +=(other: Vec): Unit = {
+    def +=(other: Vec): Vec = {
       require(dim == other.dim)
       for (i <- data.indices) data(i) += other.data(i)
+      this
     }
 
-    def -=(other: Vec): Unit = {
+    def -=(other: Vec): Vec = {
       require(dim == other.dim)
-      for (i <- data.indices) data(i) += other.data(i)
+      for (i <- data.indices) data(i) -= other.data(i)
+      this
     }
   }
 }
