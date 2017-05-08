@@ -115,7 +115,7 @@ class HuffmanTreeTest extends Specification {
 //      println(tree.path(1000))
 //      println(tree.toGraph)
       
-      failure(cc.toString)
+//      failure(cc.toString)
       ok
     }
   }
