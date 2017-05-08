@@ -57,7 +57,6 @@ class HuffmanTreeTest extends Specification {
     }
 
     "process War And Peace" in {
-      val counters = new mutable.HashMap[String, Int] withDefaultValue 0
       def isBeginning(line: String) = line matches "\\s*.{5,10}[Pp]rince.*"
       def isEnd(line: String) = line contains "End of the Project Gutenberg EBook"
       def isHeader(line: String) = line matches "\\s*CHAPTER [CILVX]+\\s*"
@@ -77,35 +76,46 @@ class HuffmanTreeTest extends Specification {
       buonaparte must_== "buonapartes but i warn you if you don't tell me that this means war "
       
       def extractNovel(text: Iterator[String]): Iterator[String] = text dropWhile (!isBeginning(_)) takeWhile (!isEnd(_)) filterNot isHeader
+
+      val counters = new mutable.HashMap[String, Int] withDefaultValue 0
+
+      def isWord(s: String) = s.length > 1 && s.matches("^[a-z].*") && !Strings.isStop(s)
+      
+      def wordStream(source: Iterator[String]) = {
+        for {
+          line <- source
+          l = Strings.normalize(line)
+          word <- l.split(" ") filter isWord
+        } yield {
+          word.matches("^[a-z].*[a-z]") aka s"'$word' in \n<<$l>> from\n<<$line>>" must beTrue
+          word
+        }
+      }
       
       source map extractNovel match {
         case Good(text) =>
-          for {
-            l <- text map Strings.normalize
-            word <- l.split(" ") filterNot Strings.isStop
-          } {
-            counters(word) += 1
-            word == "ti'" aka l must beFalse
-          }
+          for (word <- wordStream(text)) counters(word) += 1
         case bad => failure(bad.listErrors.toString)
       }
+      
       val cc = counters.toList.sortBy(_._2).zipWithIndex
+      
       val dict: Map[String, Int] = {
         for {e: ((String, Int), Int) <- cc} yield e._1._1 -> e._2
       } toMap
       
-      
       val freq: List[Int] = {
         for {e: ((String, Int), Int) <- cc} yield e._1._2
-      } toList
+      } 
       
       val tree = new HuffmanTree(freq)
-      
-      println(cc.size)
-      println(tree.path(1000))
+      tree.path(1000).length > 15 must beTrue
+      tree.path(1000).length < 25 must beTrue
+//      println(cc.size)
+//      println(tree.path(1000))
 //      println(tree.toGraph)
       
-//      failure(cc.toString)
+      failure(cc.toString)
       ok
     }
   }
