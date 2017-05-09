@@ -45,7 +45,7 @@ class HuffmanTree(source: List[Int]) {
   /**
     * Chain of node indexes starting from word and going up to root
     * An element of the result list is positive if it is left branch, and negative if it is right
- *
+    *
     * @param word - id of the word, just an int
     * @return a list that represents the path from word to the root (inclusive)
     */
@@ -56,7 +56,7 @@ class HuffmanTree(source: List[Int]) {
   }
 
   override def toString: String = {
-    s"HuffmanTree(${frequencies}, $parentRef)"
+    s"HuffmanTree($frequencies, $parentRef)"
   }
 
   def toGraph: String = {
@@ -112,3 +112,23 @@ class HuffmanTree(source: List[Int]) {
     dump(parentRef.length - 1).content mkString "\n"
   }
 }
+
+/* please ignore this comment
+def p(tree: Node) {
+  val pq = Queue[(Node, Int)]()
+  pq.enqueue((tree, 0))
+
+  var curLevel = 0 
+
+  while (!pq.isEmpty) {
+    val (node, level) = pq.dequeue
+    if (level > curLevel) {
+      println
+      curLevel += 1
+    }
+    print(node.value)
+    node.left.foreach(n => pq.enqueue((n, level+1)))
+    node.right.foreach(n => pq.enqueue((n, level+1)))
+  }
+}
+ */

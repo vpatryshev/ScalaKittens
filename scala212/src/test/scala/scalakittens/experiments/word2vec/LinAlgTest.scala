@@ -2,8 +2,6 @@ package scalakittens.experiments.word2vec
 
 import org.specs2.mutable.Specification
 
-import scalakittens.experiments.word2vec.LinAlg.Vec
-
 /**
   * Created by vpatryshev on 5/7/17.
   */
