@@ -2,6 +2,7 @@ package scalakittens.experiments.word2vec
 
 import java.util
 
+import org.specs2.matcher.MatchResult
 import org.specs2.mutable.Specification
 
 /**
@@ -27,10 +28,11 @@ class SigmaTest extends Specification {
           y1 > y0-dy aka s"2. @$i: expected $y0 < $y1 + ${sut.δ}" must beTrue
         }
         
-        def checkPrecision(x: Double): Unit = {
+        def checkPrecision(x: Double): MatchResult[Any] = {
           val y0 = 1 / (1+exp(-x))
           val y1 = sut.σ(x)
           abs(y1 - y0) < dy aka s"$x for $dy, size=$size, expected $y0, got $y1" must beTrue
+          ok
         }
         
         for (i <- -10000 until 10000) checkPrecision(i.toDouble / 1000)

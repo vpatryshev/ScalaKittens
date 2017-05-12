@@ -47,6 +47,12 @@ class LinAlgTest extends Specification {
       sut -= Array(6.0, 4.25)
       sut.data must_== Array(-2.75, -11.75)
     }
+
+    "get nudged by another vec" in {
+      val sut = Array(3.25, -7.5)
+      sut.nudge(Array(6.0, 4.75), 2.0)
+      sut.data must_== Array(15.25, 2.0)
+    }
   }
 
 }

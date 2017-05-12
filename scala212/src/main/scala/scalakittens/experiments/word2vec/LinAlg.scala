@@ -42,5 +42,18 @@ object LinAlg {
       for (i <- data.indices) data(i) -= other.data(i)
       this
     }
+
+    /**
+      * Nudge this vector in the direction of other vector, with a coefficient.
+      * Modifies in place.
+      * @param other other vector
+      * @param coeff coefficietn
+      * @return this + coeff * other
+      */
+    def nudge(other: Vec, coeff: Double): Vec = {
+      require(dim == other.dim)
+      for (i <- data.indices) data(i) += coeff * other.data(i)
+      this
+    }
   }
 }

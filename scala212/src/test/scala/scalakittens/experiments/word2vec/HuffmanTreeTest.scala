@@ -1,7 +1,5 @@
 package scalakittens.experiments.word2vec
 
-import java.text.Normalizer
-
 import org.specs2.mutable.Specification
 
 import scala.collection.mutable
@@ -57,65 +55,25 @@ class HuffmanTreeTest extends Specification {
     }
 
     "process War And Peace" in {
-      def isBeginning(line: String) = line matches "\\s*.{5,10}[Pp]rince.*"
-      def isEnd(line: String) = line contains "End of the Project Gutenberg EBook"
-      def isHeader(line: String) = line matches "\\s*CHAPTER [CILVX]+\\s*"
-      val source = IO.linesFromResource("/warandpeace.txt")
-      
-      val line1 = "“Well, Prince, so Genoa and Lucca are now just family estates of the..."
-      val annaPavlovna = isBeginning(line1) 
-      annaPavlovna aka "Anna Pavlovna" must beTrue
-      
-      val line2 = "Buonapartes. But I warn you, if you don’t tell me that this means war,"
-//      
-//      line2.toLowerCase.replaceAll("[^\\w'`]+", " ") must_== "buonapartes but i warn you  if you don’t tell me that this means war "
 
+      val scanner = TextScanner.WarAndPeace
+      
+      def source() = IO.linesFromResource("/warandpeace.txt")
 
-      val buonaparte = Strings.normalize(line2)
-      
-      buonaparte must_== "buonapartes but i warn you if you don't tell me that this means war "
-      
-      def extractNovel(text: Iterator[String]): Iterator[String] = text dropWhile (!isBeginning(_)) takeWhile (!isEnd(_)) filterNot isHeader
+      source map scanner.scan match {
+        case Good((index, words, freqs)) =>
 
-      val counters = new mutable.HashMap[String, Int] withDefaultValue 0
+          val tree = new HuffmanTree(freqs)
+          tree.path(1000).length > 15 must beTrue
+          tree.path(1000).length < 25 must beTrue
+        //      println(cc.size)
+        //      println(tree.path(1000))
+        //      println(tree.toGraph)
 
-      def isWord(s: String) = s.length > 1 && s.matches("^[a-z].*") && !Strings.isStop(s)
-      
-      def wordStream(source: Iterator[String]) = {
-        for {
-          line <- source
-          l = Strings.normalize(line)
-          word <- l.split(" ") filter isWord
-        } yield {
-          word.matches("^[a-z].*[a-z]") aka s"'$word' in \n<<$l>> from\n<<$line>>" must beTrue
-          word
-        }
-      }
-      
-      source map extractNovel match {
-        case Good(text) =>
-          for (word <- wordStream(text)) counters(word) += 1
+        //      failure(cc.toString)
         case bad => failure(bad.listErrors.toString)
       }
       
-      val cc = counters.toList.sortBy(_._2).zipWithIndex
-      
-      val dict: Map[String, Int] = {
-        for {e: ((String, Int), Int) <- cc} yield e._1._1 -> e._2
-      } toMap
-      
-      val freq: List[Int] = {
-        for {e: ((String, Int), Int) <- cc} yield e._1._2
-      } 
-      
-      val tree = new HuffmanTree(freq)
-      tree.path(1000).length > 15 must beTrue
-      tree.path(1000).length < 25 must beTrue
-//      println(cc.size)
-//      println(tree.path(1000))
-//      println(tree.toGraph)
-      
-//      failure(cc.toString)
       ok
     }
   }
