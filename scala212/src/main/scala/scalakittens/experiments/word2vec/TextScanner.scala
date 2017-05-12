@@ -34,7 +34,7 @@ trait TextScanner {
     } yield word
   }
   
-  def scan(source: Iterator[String]): (Map[String, List[Int]], List[String], List[Int]) = {
+  def scan(source: Iterator[String]): ScannedText = {
     val inverseIndex = new mutable.HashMap[String, List[Int]] withDefaultValue Nil
     
     var i: Int = -1
@@ -50,7 +50,7 @@ trait TextScanner {
       for {e: ((String, Int), Int) <- frequencies} yield e._1._2
     }
     
-    (inverseIndex.toMap, words, freq)
+    ScannedText(inverseIndex.toMap mapValues(_.reverse), words, freq)
   }
 }
 

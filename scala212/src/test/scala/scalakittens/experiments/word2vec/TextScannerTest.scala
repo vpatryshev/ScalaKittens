@@ -26,16 +26,22 @@ class TextScannerTest extends Specification {
       buonaparte must_== "buonapartes but i warn you if you don't tell me that this means war "
       
       source map scanner.scan match {
-        case Good((index, words, freqs)) =>
-          words.length must_== 17713
-          freqs.length must_== words.length
-          words.length must_== index.size
-          words take 3 must_== List("arts", "diseases", "discontent")
-          freqs take 3 must_== List(1, 1, 1)
-          words drop (words.length - 3) must_== List("natasha", "prince", "pierre")
-          freqs drop (words.length - 3) must_== List(1213, 1928, 1962)
-          index("buonapartes") must_== List(7)
-          index("natasha") take 5 must_== List(266915, 266866, 266851, 266812, 266793)
+        case Good(st) =>
+          
+          st.words.length must_== 17713
+          st.frequencies.length must_== st.words.length
+          st.words.length must_== st.inverseIndex.size
+          st.words take 3 must_== List("arts", "diseases", "discontent")
+          st.frequencies take 3 must_== List(1, 1, 1)
+          st.words drop (st.words.length - 3) must_== List("natasha", "prince", "pierre")
+          st.frequencies drop (st.words.length - 3) must_== List(1213, 1928, 1962)
+          st.inverseIndex("buonapartes") must_== List(7)
+          st.inverseIndex("natasha") take 5 must_== List(7852, 7886, 7909, 7915, 8063)
+          st.inverseIndex("natasha") takeRight 5 must_== List(266793, 266812, 266851, 266866, 266915)
+          
+          st.positions.head must_== 3076
+          
+          st.positions(17710) must_== 213590
           
         case bad => 
           failure(bad.listErrors.toString)
