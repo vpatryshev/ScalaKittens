@@ -13,6 +13,16 @@ case class ScannedText(inverseIndex: Map[String, List[Int]],
                        words: List[String],
                        frequencies: List[Int]) {
   
-  lazy val positions: List[Int] = words flatMap inverseIndex
+  lazy val index: Array[Int] = {
+    val size = inverseIndex.values.map(_.max).max + 1
+    val index = new Array[Int](size)
+    for {
+      i <- words.indices
+      w = words(i)
+      j <- inverseIndex(w)
+    } { index(j) = i }
+    
+    index
+  }
 
 }

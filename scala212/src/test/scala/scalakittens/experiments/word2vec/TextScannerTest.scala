@@ -39,9 +39,9 @@ class TextScannerTest extends Specification {
           st.inverseIndex("natasha") take 5 must_== List(7852, 7886, 7909, 7915, 8063)
           st.inverseIndex("natasha") takeRight 5 must_== List(266793, 266812, 266851, 266866, 266915)
           
-          st.positions.head must_== 3076
-          
-          st.positions(17710) must_== 213590
+          st.words(st.index.head) must_== "well"
+          st.words(st.index(266812)) must_== "natasha"
+          st.words(st.index(st.index.length - 1)) must_== "conscious"
           
         case bad => 
           failure(bad.listErrors.toString)
