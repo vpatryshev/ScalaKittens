@@ -34,7 +34,7 @@ trait Sigma {
     } yield 1/(1 + math.exp(x))
   
     t.toArray
-}
+  }
   
   def σ(x: Double): Double = {
     if (x < -max) 0                      else
@@ -45,5 +45,5 @@ trait Sigma {
 }
 
 object Sigma extends Sigma {
-  val ε = 0.01
+  def ε = 0.01
 }

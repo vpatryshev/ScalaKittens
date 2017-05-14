@@ -10,15 +10,17 @@ package scalakittens.experiments.word2vec
   * Created by vpatryshev on 5/12/17.
   */
 case class ScannedText(inverseIndex: Map[String, List[Int]],
-                       words: List[String],
+                       dictionary: List[String],
                        frequencies: List[Int]) {
+  lazy val dictionarySize = dictionary.length
+  lazy val length = index.length
   
   lazy val index: Array[Int] = {
     val size = inverseIndex.values.map(_.max).max + 1
     val index = new Array[Int](size)
     for {
-      i <- words.indices
-      w = words(i)
+      i <- dictionary.indices
+      w = dictionary(i)
       j <- inverseIndex(w)
     } { index(j) = i }
     

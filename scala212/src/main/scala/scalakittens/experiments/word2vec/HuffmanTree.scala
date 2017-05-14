@@ -15,7 +15,7 @@ import scala.collection.mutable
   */
 class HuffmanTree(source: List[Int]) {
   val numWords: Int = source.length
-  val size = numWords*2-1
+  val size = numWords * 2 - 1
   private val parentRef = new Array[Int](size)
 
   private val frequencies = new mutable.Queue[Int]
