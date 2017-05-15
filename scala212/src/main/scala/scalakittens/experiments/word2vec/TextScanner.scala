@@ -42,13 +42,9 @@ trait TextScanner {
     
     val frequencies = inverseIndex.toList.map{case (w,l) => (w, l.size)}.sortBy(_._2).zipWithIndex
 
-    val words: List[String] = {
-      for {e: ((String, Int), Int) <- frequencies} yield e._1._1
-    }
+    val words: List[String] = frequencies map (_._1._1)
 
-    val freq: List[Int] = {
-      for {e: ((String, Int), Int) <- frequencies} yield e._1._2
-    }
+    val freq: List[Int] = frequencies map (_._1._2)
     
     ScannedText(inverseIndex.toMap mapValues(_.reverse), words, freq)
   }

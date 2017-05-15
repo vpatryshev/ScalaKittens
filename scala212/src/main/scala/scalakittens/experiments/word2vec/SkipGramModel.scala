@@ -1,20 +1,20 @@
 package scalakittens.experiments.word2vec
 
 import Sigma._
-import LinAlg.{VecFactory, Vec}
+import scalakittens.la._
 
 /**
   * Created by vpatryshev on 5/11/17.
   */
 case class SkipGramModel(text: ScannedText, dim: Int, α: Double, window: Int, numEpochs: Int, seed: Long = System.nanoTime()) {
-  val in: Array[Vec] = new Array[Vec](text.dictionarySize)
-  val vecFactory = VecFactory.RandomSphere(dim, seed)
+  val in: Array[Vector] = new Array[Vector](text.dictionarySize)
+  val vecFactory = Vector.RandomSphere(dim, seed)
   
   for {i <- in.indices} in(i) = vecFactory()
 
   val huffman = new HuffmanTree(text.frequencies)
   
-  val out: Array[Vec] = new Array[Vec](huffman.size)
+  val out: Array[Vector] = new Array[Vector](huffman.size)
 
   for {i <- out.indices} out(i) = vecFactory()
 
@@ -27,7 +27,7 @@ case class SkipGramModel(text: ScannedText, dim: Int, α: Double, window: Int, n
   def update(i: Int, o: Int): Unit = {
 
     val v = in(i)
-    val neu = VecFactory.Zero(dim)()
+    val neu = Vector.Zero(dim)()
   
     for {j <- huffman.path(o)} {
       val w = out(abs(j))
