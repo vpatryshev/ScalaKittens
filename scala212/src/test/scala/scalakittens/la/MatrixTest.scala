@@ -26,9 +26,11 @@ class MatrixTest extends Specification {
       row(j) = value
     }
 
-    override def transpose: Matrix = ???
-    override def +(other: Matrix): Matrix = ???
-    override def copy: Matrix = ???
+    def notImplemented: Nothing = throw new UnsupportedOperationException
+    
+    override def transpose: Matrix = notImplemented
+    override def +(other: Matrix): Matrix = notImplemented
+    override def copy: Matrix = notImplemented
     override def apply(i: Int, j: Int): Double = {
       val row = d(i)
       row(j)
@@ -312,7 +314,7 @@ class MatrixTest extends Specification {
       val mx1: Matrix = build(10, 5, i => j => 1.0 + i * j * 1.0)
       val mx2: Matrix = build(10, 5, i => j => 1.0 - i * j * 1.0)
       val sut = mx1 + mx2
-      sut.foreach(i => j => sut(i,j) must_== 2.0)
+      sut.foreach(i => j => {sut(i,j) must_== 2.0; ()})
       ok
     }
 
@@ -322,7 +324,7 @@ class MatrixTest extends Specification {
       val copy = sut.copy
       copy(4,3) must_== 13.0
       sut += build(10, 5, i => j => 1.0-i*j*1.0)
-      sut.foreach(i => j => sut(i,j) must_== 2.0)
+      sut.foreach(i => j => {sut(i,j) must_== 2.0;()})
       copy(4,3) must_== 13.0
       ok
     }

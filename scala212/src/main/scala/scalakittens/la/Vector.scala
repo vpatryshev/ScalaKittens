@@ -5,6 +5,7 @@ import java.util
 
 import scala.math._
 import scala.util.Random
+import scalaz.Alpha.P
 
 /**
   * real-valued vector with usual operations
@@ -54,6 +55,14 @@ class Vector(private[la] val data: Array[Double]) {
   def *(scalar: Double): Vector = new Vector(data map (scalar *))
 
   /**
+    * this vector divided by a scalar
+    *
+    * @param scalar the value by which to divide 
+    * @return a new vector
+    */
+  def /(scalar: Double): Vector = new Vector(data map (_/scalar))
+
+  /**
     * sum of this vector with another
  *
     * @param other another vector
@@ -61,7 +70,7 @@ class Vector(private[la] val data: Array[Double]) {
     */
   def +(other: Vector): Vector = {
     require(length == other.length)
-    new Vector((data zip other.data) map {case (a,b) => a+b})
+    new Vector(data zip other.data map {case (a,b) => a+b})
   }
 
   /**
@@ -83,6 +92,17 @@ class Vector(private[la] val data: Array[Double]) {
     */
   def *=(scalar: Double): Vector = {
     for (i <- data.indices) data(i) *= scalar
+    this
+  }
+
+  /**
+    * this vector divided by a scalar, in place
+    *
+    * @param scalar the value by which to divide 
+    * @return this, now all its values are divided by scalar
+    */
+  def /=(scalar: Double): Vector = {
+    for (i <- data.indices) data(i) /= scalar
     this
   }
 
@@ -242,4 +262,13 @@ object Vector {
       ()
     }
   }
+  
+  def average(vectors: Iterator[Vector]): Vector = {
+    val (n, sum) = 
+      ((1, vectors.next()) /: vectors){(moments:(Int, Vector), v) => (moments._1+1, moments._2 + v)}
+    
+    sum / n
+  }
+  
+  def average(vectors: Array[Vector]): Vector = average(vectors.iterator)
 }

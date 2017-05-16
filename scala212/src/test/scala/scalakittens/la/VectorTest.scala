@@ -69,43 +69,53 @@ class VectorTest extends Specification {
       sut.data must_== Array(4.5, 6.75)
     }
 
+    "divide by scalar" in {
+      val sut = Array(1.5, 2.25) / 2
+      sut.data must_== Array(0.75, 1.125)
+    }
+
     "multiply by scalar in place" in {
       val sut = Array(1.5, 2.25)
       sut *= 3.0
       sut.data must_== Array(4.5, 6.75)
     }
 
+    "divide by scalar in place" in {
+      val sut = Vector(1.5, 2.25)
+      sut / 2 must_== Vector(0.75, 1.125)
+    }
+
     "multiply by another Vec" in {
-      val sut = Array(1.5, 2.25) * Array(2.0, -3.0)
+      val sut = Vector(1.5, 2.25) * Vector(2.0, -3.0)
       sut must_== -3.75
     }
 
     "add another vec" in {
-      val sut = Array(3.25, -7.5) + Array(6.0, 4.25)
-      sut.data must_== Array(9.25, -3.25)
+      val sut = Vector(3.25, -7.5) + Vector(6.0, 4.25)
+      sut must_== Vector(9.25, -3.25)
     }
 
     "add another vec in place" in {
-      val sut = Array(3.25, -7.5)
-      sut += Array(6.0, 4.25)
-      sut.data must_== Array(9.25, -3.25)
+      val sut = Vector(3.25, -7.5)
+      sut += Vector(6.0, 4.25)
+      sut must_== Vector(9.25, -3.25)
     }
 
     "subtract another vec" in {
-      val sut = Array(3.25, -7.5) - Array(6.0, 4.25)
-      sut.data must_== Array(-2.75, -11.75)
+      val sut = Vector(3.25, -7.5) - Vector(6.0, 4.25)
+      sut must_== Vector(-2.75, -11.75)
     }
 
     "subtract another vec in place" in {
-      val sut = Array(3.25, -7.5)
-      sut -= Array(6.0, 4.25)
-      sut.data must_== Array(-2.75, -11.75)
+      val sut = Vector(3.25, -7.5)
+      sut -= Vector(6.0, 4.25)
+      sut must_== Vector(-2.75, -11.75)
     }
 
     "get nudged by another vec" in {
-      val sut = Array(3.25, -7.5)
-      sut.nudge(Array(6.0, 4.75), 2.0)
-      sut.data must_== Array(15.25, 2.0)
+      val sut = Vector(3.25, -7.5)
+      sut.nudge(Vector(6.0, 4.75), 2.0)
+      sut must_== Vector(15.25, 2.0)
     }
   }
 
@@ -115,12 +125,19 @@ class VectorTest extends Specification {
     }
     
     "build zero vector" in {
-      Zero(3)() must_== Vector(Array(0.0, 0.0, 0.0))
+      Zero(3)() must_== Vector(0.0, 0.0, 0.0)
     }
 
     "build 'random' vector" in {
       val sut = RandomCube(3, 314159)()
       sut forall (abs(_) <= 1.0)
+    }
+  }
+  
+  "Vector object" should {
+    "calculate average" in {
+      Vector.average(Array(Vector(1.0, 2.0, 3.0), Vector(-1.0, -1.0, -1.0))) must_==
+        Vector(0.0, 0.5, 1.0)
     }
   }
 }
