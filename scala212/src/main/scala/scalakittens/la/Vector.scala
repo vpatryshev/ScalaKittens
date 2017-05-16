@@ -11,7 +11,7 @@ import scala.util.Random
   * 
   * Created by vpatryshev on 5/14/17.
   */
-class Vector(val data: Array[Double]) {
+class Vector(private[la] val data: Array[Double]) {
   
   /**
     * length of this vector
@@ -31,6 +31,8 @@ class Vector(val data: Array[Double]) {
   def exists(p: Double => Boolean) = data exists p
   def map[U](f: Double => U) = data map f
   def /:[B](z: B)(op: (B, Double) => B): B = (z/:data)(op)
+  
+  def copy = Vector(util.Arrays.copyOf(data, length))
 
   /**
     * scalar product of this vector with the other

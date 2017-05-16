@@ -53,6 +53,17 @@ class VectorTest extends Specification {
       (-1.0 /: Vector(3.0, 2.0, 1.0))(_+_) must_== 5.0
     }
     
+    "have copy" in {
+      Vector(0).copy.length must_== 0
+      val sut = Vector(Pi, E, 42.0)
+      val copy = sut.copy
+      sut *= 2.0
+      copy must_== Vector(Pi, E, 42.0)
+      sut *= 0.5
+      copy *= 0.0
+      sut must_== Vector(Pi, E, 42.0)
+    }
+    
     "multiply by scalar" in {
       val sut = Array(1.5, 2.25) * 3.0
       sut.data must_== Array(4.5, 6.75)
