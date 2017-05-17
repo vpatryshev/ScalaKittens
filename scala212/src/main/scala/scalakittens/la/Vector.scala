@@ -270,5 +270,5 @@ object Vector {
     sum / n
   }
   
-  def average(vectors: Array[Vector]): Vector = average(vectors.iterator)
+  def average(vectors: Iterable[Vector]): Vector = average(vectors.iterator)
 }

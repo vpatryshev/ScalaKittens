@@ -124,6 +124,18 @@ trait Matrix {
       case _ => false
     }
   }
+  
+  override def toString = {
+    val out = new StringBuilder
+    out append "["
+    for (i <- 0 until nRows) {
+      out append "["
+      out.append(row(i).data mkString ",")
+      out append "]\n"
+    }
+    out append "]"
+    out.toString
+  }
 }
 
 object Matrix {
@@ -267,5 +279,18 @@ object Matrix {
     }
 
     override def apply(i: Int, j: Int): Double = data(index(i, j))
+  }
+  
+  def Zero(height: Int, width: Int): Matrix = apply(height, width, Vector.Zero(height*width)())
+  
+  def covariance(in: Iterable[Vector]): Matrix = {
+    val avg = Vector.average(in)
+    val m = Zero(avg.length, avg.length)
+    for (v <- in) {
+      for {i <- 0 until m.nRows
+           j <- 0 until m.nCols
+      } m.set(i, j, m(i,j) + (v(i)-avg(i))*(v(j)-avg(j)))
+    }
+    m
   }
 }

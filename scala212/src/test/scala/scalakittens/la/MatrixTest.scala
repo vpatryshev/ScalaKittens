@@ -329,4 +329,18 @@ class MatrixTest extends Specification {
       ok
     }
   }
+  
+  "Matrix object" should {
+    "calculate covariance" in {
+      val vectors = Array(Vector(1.0, 3.0, -.5, 1.0), Vector(2.0, 6.0, -1.0, 0.0), Vector(3.0, 9.0, -1.5, 1.0))
+      val sut = Matrix.covariance(vectors)
+      
+      sut must_== Matrix.ofRows(4, Array(
+        Vector(2.0,   6.0, -1.0, 0.0),
+        Vector(6.0,  18.0, -3.0, 0.0),
+        Vector(-1.0, -3.0,  0.5, 0.0),
+        Vector(0.0,   0.0,  0.0, 0.6666666666666667)
+      ))
+    }
+  }
 }
