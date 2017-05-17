@@ -66,6 +66,67 @@ class MatrixTest extends Specification {
       sut1.foreach(i => j => {sut1(i, j) must_== 1.0; ()})
       sut1 must_== TestMatrix(3, 4, i => j => 1.0)
     }
+    
+    "calculate row_l2" in {
+      val sut0 = TestMatrix(1, 2, i => j => 1.0)
+      sut0.row(0) must_== Vector(1.0, 1.0)
+      sut0.row_l2(0) must_== sqrt(2.0)
+      
+      val sut = TestMatrix(3, 4, i => j => 0.5+i*10.0 + j)
+      val vec = Vector(10.5, 11.5, 12.5, 13.5)
+      sut.row(1) must_== vec
+      sut.row_l2(1) must_== vec.l2
+    }
+
+    "calculate column_l2" in {
+      val sut = TestMatrix(3, 4, i => j => 0.5+i*10.0 + j)
+      val vec = Vector(1.5, 11.5, 21.5)
+      sut.column(1) must_== vec
+      sut.column_l2(1) must_== vec.l2
+    }
+    
+    "normalize vertically" in {
+      val sut = TestMatrix(3, 4, i => j => 0.5+i*10.0 + j)
+
+      sut.normalizeVertically()
+
+      sut must_== Matrix.ofRows(4, Array(
+        Vector(0.021703261485649127,0.06140377126253595,0.09667364890456637,0.12807973746712817),
+        Vector(0.45576849119863166,0.4707622463461089,0.48336824452283184,0.49402184451606584),
+        Vector(0.8898337209116142,0.8801207214296819,0.8700628401410972,0.8599639515650035)
+      ))
+
+      ok
+    }
+    
+    "multiply" in {
+      val sut1 = TestMatrix(3, 4, i => j => i*10+j)
+      val sut2 = TestMatrix(4, 5, i => j => (i-j + 1000)%2 * 1.0)
+      sut1 * sut2 aka s"$sut1\n*\n$sut2" must_== Matrix.ofRows(5, Array(
+        Vector(4.0,2.0,4.0,2.0,4.0),
+        Vector(24.0,22.0,24.0,22.0,24.0),
+        Vector(44.0,42.0,44.0,42.0,44.0)
+      ))
+    }
+
+    "multiply in place" in {
+      val sut1 = TestMatrix(3, 4, i => j => i*10+j)
+      val sut2 = TestMatrix(4, 4, i => j => (i-j + 1000)%2 * 1.0)
+      sut1 *= sut2 
+      sut1 aka s"$sut1\n*\n$sut2" must_== Matrix.ofRows(4, Array(
+        Vector(4.0,2.0,4.0,2.0),
+        Vector(24.0,22.0,24.0,22.0),
+        Vector(44.0,42.0,44.0,42.0)
+      ))
+      
+      sut1 *= sut2
+      sut1 must_== Matrix.ofRows(4, Array(
+        Vector(4.0,8.0,4.0,8.0),
+        Vector(44.0,48.0,44.0,48.0),
+        Vector(84.0,88.0,84.0,88.0)
+      ))
+      ok
+    }
   }
   
   "Matrix of rows" should {
@@ -334,13 +395,20 @@ class MatrixTest extends Specification {
     "calculate covariance" in {
       val vectors = Array(Vector(1.0, 3.0, -.5, 1.0), Vector(2.0, 6.0, -1.0, 0.0), Vector(3.0, 9.0, -1.5, 1.0))
       val sut = Matrix.covariance(vectors)
-      
-      sut must_== Matrix.ofRows(4, Array(
-        Vector(2.0,   6.0, -1.0, 0.0),
-        Vector(6.0,  18.0, -3.0, 0.0),
-        Vector(-1.0, -3.0,  0.5, 0.0),
-        Vector(0.0,   0.0,  0.0, 0.6666666666666667)
+
+
+      val expected: Matrix = Matrix.ofRows(4, Array(
+        Vector(1.0, 3.0, -0.5, 0.0),
+        Vector(3.0, 9.0, -1.5, 0.0),
+        Vector(-0.5, -1.5, 0.25, 0.0),
+        Vector(0.0, 0.0, 0.0, 0.33333333333333337)
       ))
+      
+      for {
+        i <- 0 until 4
+      } sut.row(i) aka s"@$i" must_== expected.row(i)
+      
+      sut must_== expected
     }
   }
 }

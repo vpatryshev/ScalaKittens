@@ -144,6 +144,12 @@ class Vector(private[la] val data: Array[Double]) {
     this
   }
 
+  /**
+    * l2 norm 
+    * @return square root of sum of squares of vector elements
+    */
+  def l2 = sqrt(this map (x => x*x) sum)
+  
   def canEqual(other: Any): Boolean = other.isInstanceOf[Vector]
 
   override def equals(other: Any): Boolean = other match {
@@ -262,13 +268,39 @@ object Vector {
       ()
     }
   }
-  
+
+  /**
+    * Calculates 0th and 1st moments of a sequence of vectors
+    * @param vectors those to use in calculation
+    * @return (number, sum)
+    */
+  def moments(vectors: Iterator[Vector]): (Int, Vector) = {
+    ((1, vectors.next()) /: vectors){(moments:(Int, Vector), v) => (moments._1+1, moments._2 + v)}
+  }
+
+
+  /**
+    * Calculates 0th and 1st moments of a sequence of vectors
+    * @param vectors those to use in calculation
+    * @return (number, sum)
+    */
+  def moments(vectors: Iterable[Vector]): (Int, Vector) = moments(vectors.iterator)
+
+
+  /**
+    * Calculates average of a sequence of vectors
+    * @param vectors those to use in calculation
+    * @return average
+    */
   def average(vectors: Iterator[Vector]): Vector = {
-    val (n, sum) = 
-      ((1, vectors.next()) /: vectors){(moments:(Int, Vector), v) => (moments._1+1, moments._2 + v)}
-    
+    val (n, sum) = moments(vectors)
     sum / n
   }
-  
+
+  /**
+    * Calculates average of a sequence of vectors
+    * @param vectors those to use in calculation
+    * @return average
+    */
   def average(vectors: Iterable[Vector]): Vector = average(vectors.iterator)
 }

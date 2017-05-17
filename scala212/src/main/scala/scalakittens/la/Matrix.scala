@@ -1,7 +1,8 @@
 package scalakittens.la
 
 import java.util
-import util.Arrays._
+
+import scala.math._
 
 /**
   * Created by vpatryshev on 5/15/17.
@@ -89,6 +90,37 @@ trait Matrix {
   def +(other: Matrix): Matrix
 
   /**
+    * l2 norm of a column, that is, square root of sum of squares of its elements
+    *
+    * @return
+    */
+  def column_l2(j: Int) = sqrt((0 until nRows) map (i => {
+    val x = this(i, j) 
+    x*x
+  }) sum)
+
+  /**
+    * l2 norm of a row, that is, square root of sum of squares of its elements
+    *
+    * @return
+    */
+  def row_l2(i: Int) = sqrt(
+    (0 until nCols) map (j => { val x = this(i, j); x*x}) sum)
+
+  private def normalizeColumn(j: Int): Unit = {
+    val l2 = column_l2(j)
+    if (l2 > 0.0) 0 until nRows foreach (i => set(i, j, this(i, j) / l2))
+  }
+  
+  private[la] def normalizeVertically(): Unit = {
+    0 until nCols foreach normalizeColumn
+  }
+
+  def eigenValues: (Vector, Array[Vector]) = {
+    ???
+  }
+
+  /**
     * generic value setter (we are probably mutable
     *
     * @param i row number
@@ -111,6 +143,22 @@ trait Matrix {
   def :=(other: Matrix): Matrix = {
     requireCompatibility(other)
     foreach(i => j => set(i, j, other(i, j)))
+  }
+  
+  def *(that: Matrix): Matrix = {
+    require(nCols == that.nRows, s"For a product we need that number of columns ($nCols) is equal to the other matrix' number of rows (${that.nRows}")
+    val product = Matrix(nRows, that.nCols)
+    for {
+      i <- 0 until nRows
+      j <- 0 until that.nCols
+    } product.set(i, j, (0 until nCols) map (k => this(i, k) * that(k, j)) sum)
+    
+    product
+  }
+  
+  def *=(other: Matrix): Matrix = {
+    val product = this * other
+    this := product
   }
   
   override def equals(x: Any): Boolean = {
@@ -284,12 +332,13 @@ object Matrix {
   def Zero(height: Int, width: Int): Matrix = apply(height, width, Vector.Zero(height*width)())
   
   def covariance(in: Iterable[Vector]): Matrix = {
-    val avg = Vector.average(in)
+    val (n, sum) = Vector.moments(in)
+    val avg = sum / n
     val m = Zero(avg.length, avg.length)
     for (v <- in) {
       for {i <- 0 until m.nRows
            j <- 0 until m.nCols
-      } m.set(i, j, m(i,j) + (v(i)-avg(i))*(v(j)-avg(j)))
+      } m.set(i, j, m(i,j) + (v(i)-avg(i))*(v(j)-avg(j)) / (n-1))
     }
     m
   }

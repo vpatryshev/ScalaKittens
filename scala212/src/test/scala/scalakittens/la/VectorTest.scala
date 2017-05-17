@@ -117,6 +117,11 @@ class VectorTest extends Specification {
       sut.nudge(Vector(6.0, 4.75), 2.0)
       sut must_== Vector(15.25, 2.0)
     }
+    
+    "have an l2 norm" in {
+      Vector().l2 must_== 0.0
+      Vector(-3.0, 4.0).l2 must_== 5.0
+    }
   }
 
   "factory" should {
