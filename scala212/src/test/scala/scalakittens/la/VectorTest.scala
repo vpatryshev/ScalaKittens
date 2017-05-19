@@ -122,6 +122,27 @@ class VectorTest extends Specification {
       Vector().l2 must_== 0.0
       Vector(-3.0, 4.0).l2 must_== 5.0
     }
+
+    "have an l∞ norm" in {
+      Vector().linf must_== 0.0
+      Vector(-3.0, -4.0, 2.0).linf must_== 4.0
+    }
+
+    "normalize" in {
+      Vector().normalize must_== Vector()
+      Vector(0).normalize must_== Vector(0)
+      Vector(0, 0, 0).normalize must_== Vector(0, 0, 0)
+      Vector(-sqrt(2), sqrt(2)).normalize must_== Vector(-sqrt(0.5), sqrt(0.5))
+    }
+    
+    "find orthogonal" in {
+      Vector(1, -1).findOrthogonal must_== Vector(-1, -1)
+      Vector(0, 1, 0, -1).findOrthogonal must_== Vector(0, 0, -1, 0)
+      Vector(1, 2, 3, 4).findOrthogonal must_== Vector(-4, 0, 0, 1)
+      val sut = Vector.RandomCube(10, 7688721)()
+      sut * sut.findOrthogonal must_== 0.0
+    }
+    
   }
 
   "factory" should {

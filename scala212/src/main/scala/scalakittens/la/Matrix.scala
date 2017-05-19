@@ -1,7 +1,5 @@
 package scalakittens.la
 
-import java.util
-
 import scala.math._
 
 /**
@@ -90,6 +88,14 @@ trait Matrix {
   def +(other: Matrix): Matrix
 
   /**
+    * A difference of two matrices
+    *
+    * @param other another matrix
+    * @return the diference
+    */
+  def -(other: Matrix): Matrix
+
+  /**
     * l2 norm of a column, that is, square root of sum of squares of its elements
     *
     * @return
@@ -98,6 +104,16 @@ trait Matrix {
     val x = this(i, j) 
     x*x
   }) sum)
+  
+  def l2 = sqrt(
+    (for {
+      i <- 0 until nRows
+      j <- 0 until nCols
+    } yield {
+      val x = this(i, j)
+      x*x
+    }) sum
+  )
 
   /**
     * l2 norm of a row, that is, square root of sum of squares of its elements
@@ -116,10 +132,6 @@ trait Matrix {
     0 until nCols foreach normalizeColumn
   }
 
-  def eigenValues: (Vector, Array[Vector]) = {
-    ???
-  }
-
   /**
     * generic value setter (we are probably mutable
     *
@@ -130,7 +142,18 @@ trait Matrix {
   private[la] def set(i: Int, j: Int, value: Double)
 
   /**
-    * Adds aonther matrix to this one
+    * copies values of another matrix into this one
+    *
+    * @param other another matrix
+    * @return
+    */
+  def :=(other: Matrix): Matrix = {
+    requireCompatibility(other)
+    foreach(i => j => set(i, j, other(i, j)))
+  }
+
+  /**
+    * Adds another matrix to this one
     *
     * @param other another matrix
     * @return this one, modified
@@ -139,10 +162,16 @@ trait Matrix {
     requireCompatibility(other)
     foreach(i => j => set(i, j, this(i, j) + other(i, j)))
   }
-  
-  def :=(other: Matrix): Matrix = {
+
+  /**
+    * Subtracts another matrix from this one
+    *
+    * @param other another matrix
+    * @return this one, modified
+    */
+  def -=(other: Matrix): Matrix = {
     requireCompatibility(other)
-    foreach(i => j => set(i, j, other(i, j)))
+    foreach(i => j => set(i, j, this(i, j) - other(i, j)))
   }
   
   def *(that: Matrix): Matrix = {
@@ -154,6 +183,19 @@ trait Matrix {
     } product.set(i, j, (0 until nCols) map (k => this(i, k) * that(k, j)) sum)
     
     product
+  }
+
+  /**
+    * Multiplies this matrix by a vector
+    * @param v the vector
+    * @return another vector, this * v
+    */
+  def *(v: Vector): Vector = {
+    require(nCols == v.length, s"For a product we need that number of columns ($nCols) is equal to the vector's length (${v.length}")
+
+    0 until nRows map {
+      i => (0.0 /: (0 until v.length))((s, j) => s + this(i, j)*v(j))
+    } toArray
   }
   
   def *=(other: Matrix): Matrix = {
@@ -228,11 +270,30 @@ object Matrix {
       Matrix.ofRows(nCols, newRows)
     }
 
+    def -(other: Matrix): Matrix = {
+      requireCompatibility(other)
+      val newRows = new Array[Vector](nRows)
+
+      for (i <- 0 until nRows) newRows(i) = row(i) - other.row(i)
+
+      Matrix.ofRows(nCols, newRows)
+    }
+
     private[la] def set(i: Int, j: Int, value: Double) = rows(i).data(j) = value
 
     override def +=(other: Matrix): Matrix = {
       requireCompatibility(other)
       foreach(i => j => rows(i).data(j) += other(i, j))
+    }
+
+    override def -=(other: Matrix): Matrix = {
+      requireCompatibility(other)
+      foreach(i => j => rows(i).data(j) -= other(i, j))
+    }
+
+    override def *(v: Vector): Vector = {
+      require(nCols == v.length, s"For a product we need that number of columns ($nCols) is equal to the vector's length (${v.length}")
+      rows map (_ * v)
     }
   }
 
@@ -270,11 +331,25 @@ object Matrix {
       Matrix.ofColumns(nRows, newCols)
     }
 
+    def -(other: Matrix): Matrix = {
+      requireCompatibility(other)
+      val newCols = new Array[Vector](nCols)
+
+      for (j <- 0 until nCols) newCols(j) = column(j) - other.column(j)
+
+      Matrix.ofColumns(nRows, newCols)
+    }
+
     private[la] def set(i: Int, j: Int, value: Double) = cols(j).data(i) = value
 
     override def +=(other: Matrix): Matrix = {
       requireCompatibility(other)
       foreach(i => j => cols(j).data(i) += other(i, j))
+    }
+
+    override def -=(other: Matrix): Matrix = {
+      requireCompatibility(other)
+      foreach(i => j => cols(j).data(i) -= other(i, j))
     }
   }
 
@@ -310,10 +385,17 @@ object Matrix {
       mx
     }
 
-    override def +(other: Matrix): Matrix = {
+    def +(other: Matrix): Matrix = {
       requireCompatibility(other)
       val mx = Matrix(height, width)
       foreach(i => j => mx.set(i, j, this(i, j) + other(i, j)))
+      mx
+    }
+
+    def -(other: Matrix): Matrix = {
+      requireCompatibility(other)
+      val mx = Matrix(height, width)
+      foreach(i => j => mx.set(i, j, this(i, j) - other(i, j)))
       mx
     }
 

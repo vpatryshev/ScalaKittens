@@ -145,10 +145,50 @@ class Vector(private[la] val data: Array[Double]) {
   }
 
   /**
-    * l2 norm 
+    * l<sup>2</sup> norm 
+    *
     * @return square root of sum of squares of vector elements
     */
   def l2 = sqrt(this map (x => x*x) sum)
+
+  /**
+    * l<sup>∞</sup> norm
+    *
+    * @return max abs value of elements
+    */
+  def linf = if (data.isEmpty) 0.0 else this map (x => abs(x)) max
+
+  /**
+    * converts this vector into a vector of l2=1 (if possible)
+    *
+    * @return this / this.l2
+    */
+  def normalize: Vector = {
+    val norm = l2
+    if (norm > 0.0) this * (1.0/norm) else this.copy
+  }
+  
+  def findOrthogonal: Vector = {
+    require(this.length >= 2)
+    val (i, xi) = ((0, data(0)) /: (1 until length)) { 
+      case ((idx, max), i) => 
+        val x = abs(data(i))
+        if (x > max) (i, x) else (idx, max)
+    }  
+
+    val j = (i+1) % length
+    val v = Vector.Zero(length)()
+    v.data(j) = -xi
+    v.data(i) = data(j)
+    v
+  }
+
+  /**
+    * Sum of all elements of this vector
+    *
+    * @return the sum
+    */
+  def sum = data sum
   
   def canEqual(other: Any): Boolean = other.isInstanceOf[Vector]
 
@@ -189,14 +229,7 @@ object Vector {
   /**
     * Vector factory, instantiates vectors
     */
-  trait Factory {
-
-    /**
-      * length of the vectors the factory instantiates
- *
-      * @return the length
-      */
-    protected def dim: Int
+  abstract class Factory(protected val dim: Int) {
 
     /**
       * Fills the vector with some data
@@ -223,8 +256,7 @@ object Vector {
     * @param size vector length
     * @return zero factory
     */
-  def Zero(size: Int) = new Factory {
-    override protected def dim: Int = size
+  def Zero(size: Int) = new Factory(size) {
 
     override private[Vector] def fill(v: Array[Double]): Unit = {
       for {i <- 0 until dim} v(i) = 0.0
@@ -238,8 +270,7 @@ object Vector {
     * @param seed random seed
     * @return random cube factory
     */
-  def RandomCube(size: Int, seed: Long) = new Factory {
-    override def dim: Int = size
+  def RandomCube(size: Int, seed: Long) = new Factory(size) {
     private val rnd = new Random(seed)
 
     override private[Vector] def fill(v: Array[Double]): Unit = {
@@ -254,8 +285,7 @@ object Vector {
     * @param seed random seed
     * @return random sphere factory
     */
-  def RandomSphere(size: Int, seed: Long) = new Factory {
-    override def dim: Int = size
+  def RandomSphere(size: Int, seed: Long) = new Factory(size) {
     private val cube = RandomCube(dim, seed)
 
     override private[Vector] def fill(v: Array[Double]): Unit = {
@@ -268,9 +298,16 @@ object Vector {
       ()
     }
   }
+  
+  def FromFunction(size: Int, f: Int => Double) = new Factory(size) {
+    override private[Vector] def fill(v: Array[Double]): Unit = {
+      for {i <- 0 until dim} v(i) = f(i)
+    }
+  }
 
   /**
     * Calculates 0th and 1st moments of a sequence of vectors
+    *
     * @param vectors those to use in calculation
     * @return (number, sum)
     */
@@ -281,14 +318,15 @@ object Vector {
 
   /**
     * Calculates 0th and 1st moments of a sequence of vectors
+    *
     * @param vectors those to use in calculation
     * @return (number, sum)
     */
   def moments(vectors: Iterable[Vector]): (Int, Vector) = moments(vectors.iterator)
 
-
   /**
     * Calculates average of a sequence of vectors
+    *
     * @param vectors those to use in calculation
     * @return average
     */
@@ -299,8 +337,15 @@ object Vector {
 
   /**
     * Calculates average of a sequence of vectors
+    *
     * @param vectors those to use in calculation
     * @return average
     */
   def average(vectors: Iterable[Vector]): Vector = average(vectors.iterator)
+  
+  def unit(size: Int, at: Int): Vector = {
+    require(size > 0)
+    require (at < size && at >= 0)
+    FromFunction(size, i => if (i == at) 1.0 else 0.0)()
+  }
 }

@@ -30,6 +30,7 @@ class MatrixTest extends Specification {
     
     override def transpose: Matrix = notImplemented
     override def +(other: Matrix): Matrix = notImplemented
+    override def -(other: Matrix): Matrix = notImplemented
     override def copy: Matrix = notImplemented
     override def apply(i: Int, j: Int): Double = {
       val row = d(i)
@@ -125,7 +126,11 @@ class MatrixTest extends Specification {
         Vector(44.0,48.0,44.0,48.0),
         Vector(84.0,88.0,84.0,88.0)
       ))
-      ok
+    }
+    
+    "multiply by a vector" in {
+      val sut = TestMatrix(3, 4, i => j => i*10+j)
+      sut * Vector(0, 1, 2, 3) must_== Vector(14, 74, 134)
     }
   }
   
@@ -187,11 +192,26 @@ class MatrixTest extends Specification {
       ok
     }
 
+    "-" in {
+      val sut = build(10, 5, i => j => 1.0+i*j*1.0) - build(10, 5, i => j => i*j*1.0)
+      sut.foreach(i => j => {sut(i,j) must_== 1.0;()})
+      ok
+    }
+
     "+=" in {
       val sut = build(10, 5, i => j => 1.0+i*j*1.0)
       val copy = sut.copy
       sut += build(10, 5, i => j => 1.0-i*j*1.0)
       sut.foreach(i => j => {sut(i,j) must_== 2.0; ()})
+      copy(4,3) must_== 13.0
+      ok
+    }
+
+    "-=" in {
+      val sut = build(10, 5, i => j => 1.0+i*j*1.0)
+      val copy = sut.copy
+      sut -= build(10, 5, i => j => i*j*1.0)
+      sut.foreach(i => j => {sut(i,j) must_== 1.0; ()})
       copy(4,3) must_== 13.0
       ok
     }
@@ -271,11 +291,28 @@ class MatrixTest extends Specification {
       ok
     }
 
+    "-" in {
+      val mx1: Matrix = build(10, 5, i => j => 1.0 + i * j * 1.0)
+      val mx2: Matrix = build(10, 5, i => j =>       i * j * 1.0)
+      val sut = mx1 - mx2
+      sut.foreach(i => j => {sut(i,j) must_== 1.0; ()})
+      ok
+    }
+
     "+=" in {
       val sut = build(10, 5, i => j => 1.0+i*j*1.0)
       val copy = sut.copy
       sut += build(10, 5, i => j => 1.0-i*j*1.0)
       sut.foreach(i => j => {sut(i,j) must_== 2.0; ()})
+      copy(4,3) must_== 13.0
+      ok
+    }
+
+    "-=" in {
+      val sut = build(10, 5, i => j => 1.0+i*j*1.0)
+      val copy = sut.copy
+      sut -= build(10, 5, i => j => i*j*1.0)
+      sut.foreach(i => j => {sut(i,j) must_== 1.0; ()})
       copy(4,3) must_== 13.0
       ok
     }
@@ -379,6 +416,14 @@ class MatrixTest extends Specification {
       ok
     }
 
+    "-" in {
+      val mx1: Matrix = build(10, 5, i => j => 1.0 + i * j * 1.0)
+      val mx2: Matrix = build(10, 5, i => j =>       i * j * 1.0)
+      val sut = mx1 - mx2
+      sut.foreach(i => j => {sut(i,j) must_== 1.0; ()})
+      ok
+    }
+
     "+=" in {
       val sut = build(10, 5, i => j => 1.0+i*j*1.0)
       sut(4,3) must_== 13.0
@@ -386,6 +431,17 @@ class MatrixTest extends Specification {
       copy(4,3) must_== 13.0
       sut += build(10, 5, i => j => 1.0-i*j*1.0)
       sut.foreach(i => j => {sut(i,j) must_== 2.0;()})
+      copy(4,3) must_== 13.0
+      ok
+    }
+
+    "-=" in {
+      val sut = build(10, 5, i => j => 1.0+i*j*1.0)
+      sut(4,3) must_== 13.0
+      val copy = sut.copy
+      copy(4,3) must_== 13.0
+      sut -= build(10, 5, i => j => i*j*1.0)
+      sut.foreach(i => j => {sut(i,j) must_== 1.0;()})
       copy(4,3) must_== 13.0
       ok
     }
