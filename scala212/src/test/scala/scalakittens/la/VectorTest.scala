@@ -134,15 +134,43 @@ class VectorTest extends Specification {
       Vector(0, 0, 0).normalize must_== Vector(0, 0, 0)
       Vector(-sqrt(2), sqrt(2)).normalize must_== Vector(-sqrt(0.5), sqrt(0.5))
     }
-    
-    "find orthogonal" in {
-      Vector(1, -1).findOrthogonal must_== Vector(-1, -1)
-      Vector(0, 1, 0, -1).findOrthogonal must_== Vector(0, 0, -1, 0)
-      Vector(1, 2, 3, 4).findOrthogonal must_== Vector(-4, 0, 0, 1)
-      val sut = Vector.RandomCube(10, 7688721)()
-      sut * sut.findOrthogonal must_== 0.0
+
+    "project" in {
+      Vector(1, 1) project Vector(2, -2) must_== Vector(0.0, 0.0)
+      Vector(1, 1) project Vector(0, -2) must_== Vector(-1.414213562373095, -1.414213562373095)
     }
     
+    "build orthonormal basis 2x2" in {
+      val vecs = Vector(3, 4).buildOrthonormalBasis
+      for {i <- 0 until 2; j <- 0 until 2} {
+        val prod = vecs(i)*vecs(j)
+        val expected = if (i == j) 1.0 else 0.0
+        abs(prod - expected) < 0.0001 aka s"@($i, $j): ${vecs(i)}*${vecs(j)} = $prod != $expected " must beTrue
+      } 
+      
+      vecs.toList must_== List(Vector(0.6000000000000001, 0.8), Vector(-0.8000000000000002, 0.5999999999999999))
+      ok
+    }
+
+    "build orthonormal basis 3x3" in {
+      val vecs = Vector(3, 5, 4).buildOrthonormalBasis
+      for {i <- 0 until 3; j <- 0 until 3} {
+        val prod = vecs(i)*vecs(j)
+        val expected = if (i == j) 1.0 else 0.0
+        abs(prod - expected) < 0.0001 aka s"@($i, $j): ${vecs(i)}*${vecs(j)} = $prod != $expected " must beTrue
+      }
+      ok
+    }
+
+    "build orthonormal basis 4x4" in {
+      val vecs = Vector(17, -1, 3, 4, 5).buildOrthonormalBasis
+      for {i <- 0 until 4; j <- 0 until 4} {
+        val prod = vecs(i)*vecs(j)
+        val expected = if (i == j) 1.0 else 0.0
+        abs(prod - expected) < 0.0001 aka s"@($i, $j): ${vecs(i)}*${vecs(j)} = $prod != $expected " must beTrue
+      }
+      ok
+    }
   }
 
   "factory" should {

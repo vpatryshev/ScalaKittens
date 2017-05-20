@@ -35,13 +35,18 @@ class PCATest extends Specification {
     "produce two eigenvectors for a 3x3" in {
       val m = matrix(3, 3, 5, 1, 2, 1, 4, 1, 2, 1, 3)
       val method = PCA.Iterations(0.001, 100)
-      val Some((value: Double, vector: Vector, nIter)) = method.eigenValue(m)
+      val Some((value1: Double, vector1: Vector, nIter1)) = method.eigenValue(m)
 
-      value must_== 6.895482499314163
-      vector must_== Vector(0.7528109532832238, 0.431249716162522, 0.4972920177587291)
-      vector.l2 must_== 1.0
-      
-      nIter < 20 must beTrue
+      value1 must_== 6.895482499314163
+      vector1 must_== Vector(0.7528109532832238, 0.431249716162522, 0.4972920177587291)
+      vector1.l2 must_== 1.0
+//      val v20 = vector1.findOrthogonal
+//      v20 * vector1 must_== 0.0
+//      val Some((value2: Double, vector2: Vector, nIter2)) = method.eigenValue(m, v20)
+//      value2 must_== 6.894606873951901
+//      vector2 must_== Vector(-0.7522630311855281, -0.4323086999940413, -0.49720168927812713)
+//      vector2.l2 must_== 1.0
+//      vector2 * vector1 must_== 0.0
     }
   }
 }

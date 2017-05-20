@@ -1,6 +1,7 @@
 package scalakittens.la
 
 import language.implicitConversions
+import language.postfixOps
 import java.util
 
 import scala.math._
@@ -168,19 +169,24 @@ class Vector(private[la] val data: Array[Double]) {
     if (norm > 0.0) this * (1.0/norm) else this.copy
   }
   
-  def findOrthogonal: Vector = {
-    require(this.length >= 2)
-    val (i, xi) = ((0, data(0)) /: (1 until length)) { 
-      case ((idx, max), i) => 
-        val x = abs(data(i))
-        if (x > max) (i, x) else (idx, max)
-    }  
-
-    val j = (i+1) % length
-    val v = Vector.Zero(length)()
-    v.data(j) = -xi
-    v.data(i) = data(j)
-    v
+  def project(other: Vector) = this * (this * other / l2)
+  
+  def buildOrthonormalBasis: Array[Vector] = {
+    val (maxValue, whereMax) = data.zipWithIndex map {case (x, i) => (abs(x), i)} max
+    
+    val vs = new Array[Vector](length)
+    
+    vs(0) = this.copy.normalize
+    
+    for {
+      i <- 1 until length
+    } {
+      val v = Vector.unit(length, if (i < whereMax) i-1 else i)
+      for (j <- 0 until i) v -= vs(j).project(v)
+      vs(i) = v.normalize
+    }
+    
+    vs
   }
 
   /**

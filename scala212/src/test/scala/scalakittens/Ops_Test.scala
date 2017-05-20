@@ -78,7 +78,7 @@ class Ops_Test extends Specification {
   "OnTimer" should {
     import scala.concurrent.duration._
     val msInTimeout = 50
-    val tooLong = msInTimeout * 2
+    val tooLong = msInTimeout * 3
     val tooFast = msInTimeout / 2
     val timeout = msInTimeout milliseconds
 
