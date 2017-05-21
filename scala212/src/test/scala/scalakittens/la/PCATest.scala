@@ -33,20 +33,28 @@ class PCATest extends Specification {
     }
     
     "produce two eigenvectors for a 3x3" in {
+      val n = 3
       val m = matrix(3, 3, 5, 1, 2, 1, 4, 1, 2, 1, 3)
-      val method = PCA.Iterations(0.001, 100)
+      val method = PCA.Iterations(0.0001, 100)
       val Some((value1: Double, vector1: Vector, nIter1)) = method.eigenValue(m)
 
-      value1 must_== 6.895482499314163
-      vector1 must_== Vector(0.7528109532832238, 0.431249716162522, 0.4972920177587291)
+      value1 must_== 6.8951514452581313
+      vector1 must_== Vector(0.752603939328221, 0.431649775140211, 0.4972582650183391)
       vector1.l2 must_== 1.0
-//      val v20 = vector1.findOrthogonal
-//      v20 * vector1 must_== 0.0
-//      val Some((value2: Double, vector2: Vector, nIter2)) = method.eigenValue(m, v20)
-//      value2 must_== 6.894606873951901
-//      vector2 must_== Vector(-0.7522630311855281, -0.4323086999940413, -0.49720168927812713)
-//      vector2.l2 must_== 1.0
-//      vector2 * vector1 must_== 0.0
+      val newBasis = UnitaryMatrix(vector1.buildOrthonormalBasis)
+      newBasis.column(0) must_== vector1
+      val newBasisT = newBasis.transpose
+      newBasisT.row(0) must_== vector1
+      val checkBasis = newBasis * newBasisT
+      (checkBasis - Matrix.Unit(n)).l2 < 0.0001 aka checkBasis.toString must beTrue
+      val m1 = newBasisT * m * newBasis
+
+      for {i <- 1 until n
+      } {
+        abs(m1(i, 0)) < 0.001 aka s"row $i: ${m1(i, 0)}" must beTrue
+        abs(m1(0, i)) < 0.001 aka s"col $i: ${m1(0, i)}" must beTrue
+      }
+      ok
     }
   }
 }
