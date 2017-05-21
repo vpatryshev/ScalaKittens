@@ -2,6 +2,7 @@ package scalakittens.la
 
 import language.postfixOps
 import scala.math._
+import scalakittens.la.Matrix.ColumnMatrix
 
 /**
   * Created by vpatryshev on 5/15/17.
@@ -18,6 +19,8 @@ trait Matrix {
     */
   def nCols: Int
 
+  def checkIndexes(i: Int, j: Int) = require(i >= 0 && i < nRows && j >= 0 && j < nCols, s"Bad indexes ($i, $j), matrix $nRows⨯$nCols")
+
   /**
     * the value at row i and column j
     *
@@ -27,7 +30,7 @@ trait Matrix {
     */
   def apply(i: Int, j: Int): Double
 
-  protected def requireCompatibility(other: Matrix): Matrix = {
+  protected def requireCompatibility[T <: Matrix](other: T): T = {
     require(nRows == other.nRows, s"need the same number of rows, have $nRows, and another has ${other.nRows}")
     require(nCols == other.nCols, s"need the same number of columns, have $nCols, and another has ${other.nCols}")
     other
@@ -57,12 +60,11 @@ trait Matrix {
     Vector(col)
   }
 
-  def foreach(op: Int => Int => Unit): Matrix = {
+  def foreach(op: Int => Int => Unit): this.type = {
     for {
       i <- 0 until nRows
       j <- 0 until nCols
     } op(i)(j)
-    
     this
   }
   
@@ -76,9 +78,9 @@ trait Matrix {
   /**
     * copy of this matrix
     *
-    * @return the new matrix
+    * @return the new matrix, mutable
     */
-  def copy: Matrix
+  def copy: MutableMatrix
 
   /**
     * A sum of two matrices
@@ -123,71 +125,23 @@ trait Matrix {
     */
   def row_l2(i: Int) = sqrt(
     (0 until nCols) map (j => { val x = this(i, j); x*x}) sum)
-
-  private def normalizeColumn(j: Int): Unit = {
-    val l2 = column_l2(j)
-    if (l2 > 0.0) 0 until nRows foreach (i => set(i, j, this(i, j) / l2))
-  }
-  
-  private[la] def normalizeVertically(): Unit = {
-    0 until nCols foreach normalizeColumn
-  }
-
-  /**
-    * generic value setter (we are probably mutable
-    *
-    * @param i row number
-    * @param j column umber
-    * @param value value to set
-    */
-  private[la] def set(i: Int, j: Int, value: Double)
-
-  /**
-    * copies values of another matrix into this one
-    *
-    * @param other another matrix
-    * @return
-    */
-  def :=(other: Matrix): Matrix = {
-    requireCompatibility(other)
-    foreach(i => j => set(i, j, other(i, j)))
-  }
-
-  /**
-    * Adds another matrix to this one
-    *
-    * @param other another matrix
-    * @return this one, modified
-    */
-  def +=(other: Matrix): Matrix = {
-    requireCompatibility(other)
-    foreach(i => j => set(i, j, this(i, j) + other(i, j)))
-  }
-
-  /**
-    * Subtracts another matrix from this one
-    *
-    * @param other another matrix
-    * @return this one, modified
-    */
-  def -=(other: Matrix): Matrix = {
-    requireCompatibility(other)
-    foreach(i => j => set(i, j, this(i, j) - other(i, j)))
-  }
   
   def *(that: Matrix): Matrix = {
     require(nCols == that.nRows, s"For a product we need that number of columns ($nCols) is equal to the other matrix' number of rows (${that.nRows}")
-    val product = Matrix(nRows, that.nCols)
+    val data = new Array[Double](nRows * that.nCols)
     for {
       i <- 0 until nRows
       j <- 0 until that.nCols
-    } product.set(i, j, (0 until nCols) map (k => this(i, k) * that(k, j)) sum)
+    } data(i*that.nCols + j) = (0 until nCols) map (k => this(i, k) * that(k, j)) sum
+
+    val product = Matrix(nRows, that.nCols, Vector(data))
     
     product
   }
 
   /**
     * Multiplies this matrix by a vector
+    *
     * @param v the vector
     * @return another vector, this * v
     */
@@ -197,11 +151,6 @@ trait Matrix {
     0 until nRows map {
       i => (0.0 /: (0 until v.length))((s, j) => s + this(i, j)*v(j))
     } toArray
-  }
-  
-  def *=(other: Matrix): Matrix = {
-    val product = this * other
-    this := product
   }
   
   override def equals(x: Any): Boolean = {
@@ -229,6 +178,70 @@ trait Matrix {
   }
 }
 
+trait MutableMatrix extends Matrix {
+
+  private def normalizeColumn(j: Int): Unit = {
+    val l2 = column_l2(j)
+    if (l2 > 0.0) 0 until nRows foreach (i => set(i, j, this(i, j) / l2))
+  }
+
+  private[la] def normalizeVertically(): Unit = {
+    0 until nCols foreach normalizeColumn
+  }
+
+  /**
+    * generic value setter (we are probably mutable
+    *
+    * @param i row number
+    * @param j column umber
+    * @param value value to set
+    */
+  private[la] def set(i: Int, j: Int, value: Double)
+
+  /**
+    * copies values of another matrix into this one
+    *
+    * @param other another matrix
+    * @return
+    */
+  def :=(other: Matrix): this.type = {
+    requireCompatibility(other)
+    foreach(i => j => set(i, j, other(i, j)))
+  }
+
+  /**
+    * Adds another matrix to this one
+    *
+    * @param other another matrix
+    * @return this one, modified
+    */
+  def +=(other: Matrix): this.type = {
+    requireCompatibility(other)
+    foreach(i => j => set(i, j, this(i, j) + other(i, j)))
+  }
+
+  /**
+    * Subtracts another matrix from this one
+    *
+    * @param other another matrix
+    * @return this one, modified
+    */
+  def -=(other: Matrix): Matrix = {
+    requireCompatibility(other)
+    foreach(i => j => set(i, j, this(i, j) - other(i, j)))
+  }
+
+  def *=(other: Matrix): Matrix = {
+    val product = this * other
+    this := product
+  }
+}
+
+case class UnitaryMatrix(basis: Array[Vector]) extends ColumnMatrix(basis.length, basis) {
+  require(basis.nonEmpty)
+  require(basis.forall(_.length == basis.length))
+}
+
 object Matrix {
 
   /**
@@ -238,14 +251,17 @@ object Matrix {
     * @param rows rows of the matrix
     * @return a matrix built from the rows
     */
-  def ofRows(width: Int, rows: Array[Vector]): Matrix = new Matrix {
+  def ofRows(width: Int, rows: Array[Vector]): MutableMatrix = new MutableMatrix {
     require(width >= 0, s"Bad width $width")
     val nRows = rows.length
     val nCols = width
 
     require (rows.forall(_.length == nCols), s"expected a rectangular matrix of width $nCols, got something wrong; nCols=$nCols")
 
-    def apply(i: Int, j: Int): Double = row(i)(j)
+    def apply(i: Int, j: Int): Double = {
+      checkIndexes(i, j)
+      row(i)(j)
+    }
 
     /**
       * overrides row(), returning the actual data row (mutable!)
@@ -257,7 +273,7 @@ object Matrix {
 
     def transpose: Matrix = Matrix.ofColumns(nCols, rows)
 
-    def copy: Matrix = {
+    def copy: MutableMatrix = {
       val newRows = rows map (_.copy)
       Matrix.ofRows(nCols, newRows)
     }
@@ -282,12 +298,12 @@ object Matrix {
 
     private[la] def set(i: Int, j: Int, value: Double) = rows(i).data(j) = value
 
-    override def +=(other: Matrix): Matrix = {
+    override def +=(other: Matrix): this.type = {
       requireCompatibility(other)
       foreach(i => j => rows(i).data(j) += other(i, j))
     }
 
-    override def -=(other: Matrix): Matrix = {
+    override def -=(other: Matrix): this.type = {
       requireCompatibility(other)
       foreach(i => j => rows(i).data(j) -= other(i, j))
     }
@@ -305,20 +321,37 @@ object Matrix {
     * @param cols colunnss of the matrix
     * @return a matrix built from the columns
     */
-  def ofColumns(height: Int, cols: Array[Vector]): Matrix = new Matrix {
+  def ofColumns(height: Int, cols: Array[Vector]): MutableMatrix = 
+    new ColumnMatrix(height, cols) with MutableMatrix {
+
+      override def +=(other: Matrix): this.type = {
+        requireCompatibility(other)
+        foreach(i => j => cols(j).data(i) += other(i, j))
+      }
+
+      override def -=(other: Matrix): this.type = {
+        requireCompatibility(other)
+        foreach(i => j => cols(j).data(i) -= other(i, j))
+      }
+    }
+  
+  private[la] class ColumnMatrix(val height: Int, val cols: Array[Vector]) extends Matrix {
     require(height >= 0, s"Bad height $height")
     val nRows = height
     val nCols = cols.length
 
     require (cols.forall(_.length == nRows), s"expected a rectangular matrix of height $nRows, got something wrong")
 
-    def apply(i: Int, j: Int): Double = column(j)(i)
+    def apply(i: Int, j: Int): Double = {
+      checkIndexes(i, j)
+      column(j)(i)
+    }
 
     override def column(j: Int): Vector = cols(j)
 
     def transpose: Matrix = Matrix.ofRows(nRows, cols)
 
-    def copy: Matrix = {
+    def copy: MutableMatrix = {
       val newCols = cols map (_.copy)
       Matrix.ofRows(nRows, newCols)
     }
@@ -342,16 +375,6 @@ object Matrix {
     }
 
     private[la] def set(i: Int, j: Int, value: Double) = cols(j).data(i) = value
-
-    override def +=(other: Matrix): Matrix = {
-      requireCompatibility(other)
-      foreach(i => j => cols(j).data(i) += other(i, j))
-    }
-
-    override def -=(other: Matrix): Matrix = {
-      requireCompatibility(other)
-      foreach(i => j => cols(j).data(i) -= other(i, j))
-    }
   }
 
   /**
@@ -361,43 +384,50 @@ object Matrix {
     * @param width the width 
     * @return a new matrix (mutable)
     */
-  def apply(height: Int, width: Int): Matrix = {
+  def apply(height: Int, width: Int): MutableMatrix = {
     require(width >= 0, s"Bad width $width")
     require(height >= 0, s"Bad height $height")
-    Matrix(height, width, Vector(width * height))
+    apply(height, width, new Array[Double](height * width))
   }
+
+  private[la] def apply(height: Int, width: Int, dataSource: Vector): MutableMatrix = 
+    new MatrixOnVector(height, width, dataSource)
     
-  private def apply(height: Int, width: Int, dataSource: Vector): Matrix = new Matrix {
+  class MatrixOnVector(val nRows: Int, val nCols: Int, protected val data: Vector) extends MutableMatrix {
 
-    private val data = dataSource
+    private def index(i: Int, j: Int) = {
+      checkIndexes(i, j)
+      i*nCols+j
+    }
 
-    private def index(i: Int, j: Int) = i*width+j
-
-    override def nRows: Int = height
-
-    override def nCols: Int = width
-    
-    private[la] def set(i: Int, j: Int, value: Double): Unit = 
+    private[la] def set(i: Int, j: Int, value: Double): Unit =
       data.data(index(i,j)) = value
 
+    override def apply(i: Int, j: Int): Double = data(index(i, j))
+
     override def transpose: Matrix = {
-      val mx = Matrix(width, height)
-      foreach(i => j => mx.set(j, i, this(i, j)))
-      mx
+      val transposedData = new Array[Double](nRows * nCols)
+      foreach(i => j => transposedData(i + j * nRows) = this(i, j))
+      Matrix(nCols, nRows, transposedData)
+    }
+    
+    def +(other: Matrix) = {
+      requireCompatibility(other)
+      val newData = data.copy
+      foreach(i => j => {
+          newData.data(index(i, j)) += other(i, j)
+        }
+      )
+        
+      Matrix(nRows, nCols, newData)
     }
 
-    def +(other: Matrix): Matrix = {
+    def -(other: Matrix) = {
       requireCompatibility(other)
-      val mx = Matrix(height, width)
-      foreach(i => j => mx.set(i, j, this(i, j) + other(i, j)))
-      mx
-    }
-
-    def -(other: Matrix): Matrix = {
-      requireCompatibility(other)
-      val mx = Matrix(height, width)
-      foreach(i => j => mx.set(i, j, this(i, j) - other(i, j)))
-      mx
+      val newData = data.copy
+      foreach(i => j => newData.data(index(i, j)) -= other(i, j))
+      
+      Matrix(nRows, nCols, newData)
     }
 
     /**
@@ -405,24 +435,95 @@ object Matrix {
       *
       * @return the new matrix
       */
-    override def copy: Matrix = {
-      requireCompatibility(Matrix(height, width, data.copy))
+    override def copy: MutableMatrix = {
+      requireCompatibility(Matrix(nRows, nCols, data.copy))
     }
 
-    override def apply(i: Int, j: Int): Double = data(index(i, j))
   }
   
   def Zero(height: Int, width: Int): Matrix = apply(height, width, Vector.Zero(height*width)())
+
+  def UnitMatrix(size: Int) = new Matrix {
+    /**
+      * @return number of rows
+      */
+    override def nRows: Int = size
+
+    /**
+      *
+      * @return number of columns
+      */
+    override def nCols: Int = size
+
+    /**
+      * Transposed matrix
+      *
+      * @return the new matrix
+      */
+    override def transpose: Matrix = copy
+
+    /**
+      * the value at row i and column j
+      *
+      * @param i row number
+      * @param j column number
+      * @return the value
+      */
+    override def apply(i: Int, j: Int): Double = {
+      checkIndexes(i, j)
+      if (i == j) 1.0 else 0.0
+    }
+
+    /**
+      * copy of this matrix
+      *
+      * @return the new matrix
+      */
+    override def copy: MutableMatrix = {
+      val data = Vector.Zero(nCols * nCols)()
+      for (i <- 0 until nCols) data.data(i * (nCols + 1)) = 1.0
+      Matrix(nCols, nCols, data)
+    }
+
+    /**
+      * A sum of two matrices
+      *
+      * @param other another matrix
+      * @return the sum
+      */
+    override def +(other: Matrix): Matrix = {
+      val m = other.copy
+
+      for (i <- 0 until nCols) m.set(i, i, m(i, i) + 1.0)
+
+      m
+    }
+
+    /**
+      * A difference of two matrices
+      *
+      * @param other another matrix
+      * @return the diference
+      */
+    override def -(other: Matrix): Matrix = {
+      val m = other.copy
+      for (i <- 0 until nRows; j <- 0 until nCols) m.set(i, j, this (i, j) - other(i, i))
+      
+      m
+    }
+  }
   
   def covariance(in: Iterable[Vector]): Matrix = {
     val (n, sum) = Vector.moments(in)
     val avg = sum / n
-    val m = Zero(avg.length, avg.length)
-    for (v <- in) {
-      for {i <- 0 until m.nRows
-           j <- 0 until m.nCols
-      } m.set(i, j, m(i,j) + (v(i)-avg(i))*(v(j)-avg(j)) / (n-1))
-    }
-    m
+    val size: Int = avg.length
+    val data = new Array[Double](size * size)
+    for {
+      v <- in
+      i <- 0 until size
+      j <- 0 until size
+    } data(i*size + j) += (v(i)-avg(i))*(v(j)-avg(j)) / (n-1)
+    
+    Matrix(size, size, data)
   }
 }

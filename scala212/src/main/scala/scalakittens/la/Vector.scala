@@ -6,7 +6,6 @@ import java.util
 
 import scala.math._
 import scala.util.Random
-import scalaz.Alpha.P
 
 /**
   * real-valued vector with usual operations

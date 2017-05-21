@@ -17,7 +17,7 @@ class MatrixTest extends Specification {
     } toArray
   }
 
-  case class TestMatrix(h: Int, w: Int, f: Int => Int => Double) extends Matrix {
+  case class TestMatrix(h: Int, w: Int, f: Int => Int => Double) extends MutableMatrix {
     override def nRows: Int = h
     override def nCols: Int = w
     val d = nxm(h, w, f)
@@ -31,8 +31,9 @@ class MatrixTest extends Specification {
     override def transpose: Matrix = notImplemented
     override def +(other: Matrix): Matrix = notImplemented
     override def -(other: Matrix): Matrix = notImplemented
-    override def copy: Matrix = notImplemented
+    override def copy: MutableMatrix = notImplemented
     override def apply(i: Int, j: Int): Double = {
+      checkIndexes(i, j)
       val row = d(i)
       row(j)
     }
@@ -103,11 +104,26 @@ class MatrixTest extends Specification {
     "multiply" in {
       val sut1 = TestMatrix(3, 4, i => j => i*10+j)
       val sut2 = TestMatrix(4, 5, i => j => (i-j + 1000)%2 * 1.0)
-      sut1 * sut2 aka s"$sut1\n*\n$sut2" must_== Matrix.ofRows(5, Array(
-        Vector(4.0,2.0,4.0,2.0,4.0),
-        Vector(24.0,22.0,24.0,22.0,24.0),
-        Vector(44.0,42.0,44.0,42.0,44.0)
+
+      val expected: MutableMatrix = Matrix.ofRows(5, Array(
+        Vector(4.0, 2.0, 4.0, 2.0, 4.0),
+        Vector(24.0, 22.0, 24.0, 22.0, 24.0),
+        Vector(44.0, 42.0, 44.0, 42.0, 44.0)
       ))
+
+      val data = new Array[Double](3 * 5)
+      for {
+        i <- 0 until 3
+        j <- 0 until 5
+      } data(i*5 + j) = (0 until 4) map (k => sut1(i, k) * sut2(k, j)) sum
+
+      data must_== Array(4.0,2.0,4.0,2.0,4.0, 24.0, 22.0, 24.0, 22.0, 24.0, 44.0, 42.0, 44.0, 42.0, 44.0)
+
+      val product = Matrix(3, 5, Vector(data))
+      
+      product must_== expected
+      
+      sut1 * sut2 aka s"$sut1\n*\n$sut2" must_== expected
     }
 
     "multiply in place" in {
@@ -135,7 +151,7 @@ class MatrixTest extends Specification {
   }
   
   "Matrix of rows" should {
-    def build(n: Int, m: Int, f: Int => Int => Double): Matrix = 
+    def build(n: Int, m: Int, f: Int => Int => Double): MutableMatrix = 
       Matrix.ofRows(m, nxm(n, m, f) map Vector.apply)
     
     "have correct number of rows" in {
@@ -218,7 +234,7 @@ class MatrixTest extends Specification {
   }
 
   "Matrix of columns" should {
-    def build(n: Int, m: Int, f: Int => Int => Double): Matrix =
+    def build(n: Int, m: Int, f: Int => Int => Double): MutableMatrix =
       Matrix.ofColumns(m, nxm(n, m, f) map Vector.apply)
 
     "have correct number of columns" in {
@@ -319,7 +335,7 @@ class MatrixTest extends Specification {
   }
 
   "Matrix with hidden structure" should {
-    def build(n: Int, m: Int, f: Int => Int => Double): Matrix = {
+    def build(n: Int, m: Int, f: Int => Int => Double): MutableMatrix = {
       val sut = Matrix(n, m)
       sut.nRows must_== n
       sut.nCols must_== m
@@ -327,6 +343,9 @@ class MatrixTest extends Specification {
       content.nRows must_== n
       content.nCols must_== m
       sut := content
+      sut must_== content
+
+      sut
     }
 
     "have correct number of rows" in {
@@ -383,11 +402,15 @@ class MatrixTest extends Specification {
       val sut0: Matrix = build(10, 5, i => j => i*10.0+j)
       sut0(1, 2) must_== 12.0
       sut0(2, 1) must_== 21.0
+      sut0.column(0) must_== Vector(0.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0)
+      sut0.column(1) must_== Vector(1.0, 11.0, 21.0, 31.0, 41.0, 51.0, 61.0, 71.0, 81.0, 91.0)
+
       val sut = sut0.transpose
       sut.nCols  must_== 10
       sut.nRows must_== 5
       sut.row(0) must_== Vector(0.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0)
       sut(1, 2) must_== 21.0
+      
       sut.row(1) must_== Vector(1.0, 11.0, 21.0, 31.0, 41.0, 51.0, 61.0, 71.0, 81.0, 91.0)
       sut.row(2) must_== Vector(2.0, 12.0, 22.0, 32.0, 42.0, 52.0, 62.0, 72.0, 82.0, 92.0)
       sut.row(4) must_== Vector(4.0, 14.0, 24.0, 34.0, 44.0, 54.0, 64.0, 74.0, 84.0, 94.0)
@@ -409,18 +432,32 @@ class MatrixTest extends Specification {
     }
 
     "+" in {
-      val mx1: Matrix = build(10, 5, i => j => 1.0 + i * j * 1.0)
-      val mx2: Matrix = build(10, 5, i => j => 1.0 - i * j * 1.0)
+      val f1: Int => Int => Double = i => j => 3.0 + 2.0 * j + 11.0*i
+      val mx1: Matrix = build(10, 5, f1)
+      mx1.nRows must_== 10
+      mx1(0, 1) aka mx1.toString must_== 5.0
+      f1(0)(5) must_== 13.0
+      val tm: TestMatrix = TestMatrix(10, 5, f1)
+
+      val mx2: Matrix = build(10, 5, i => j => 1.0 - j - i)
+      mx2.nRows must_== 10
       val sut = mx1 + mx2
-      sut.foreach(i => j => {sut(i,j) must_== 2.0; ()})
+      sut.nRows must_== 10
+      sut.nCols must_== 5
+      mx1(0, 1) aka mx1.toString must_== 5.0
+      mx2(0, 1) must_== 0.0
+      sut.foreach(i => j => {sut(i,j) aka s"@($i,$j)" must_== 4.0 + j + 10*i; ()})
       ok
     }
 
     "-" in {
-      val mx1: Matrix = build(10, 5, i => j => 1.0 + i * j * 1.0)
-      val mx2: Matrix = build(10, 5, i => j =>       i * j * 1.0)
+      val mx1: Matrix = build(10, 5, i => j => 1.0 + 2*i + 10*j)
+      val mx2: Matrix = build(10, 5, i => j =>       i + 3*j)
+      mx1(1, 2) must_== 23.0
+      mx2(1, 2) must_== 7.0
       val sut = mx1 - mx2
-      sut.foreach(i => j => {sut(i,j) must_== 1.0; ()})
+      sut(1, 2) must_== 16.0
+      sut.foreach(i => j => {sut(i,j) aka s"@($i,$j)" must_== 1.0 + i + 7*j; ()})
       ok
     }
 
