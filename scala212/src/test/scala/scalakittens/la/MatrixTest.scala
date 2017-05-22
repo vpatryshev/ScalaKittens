@@ -41,61 +41,61 @@ class MatrixTest extends Specification {
   
   "Matrix" should {
     "return row" in {
-      TestMatrix(10, 5, i => j => 1.0+i*j*1.0).row(2) must_==
-      Vector(1.0, 3.0, 5.0, 7.0, 9.0)
-      TestMatrix(10, 0, i => j => 1.0+i*j*1.0).row(4) must_==
+      TestMatrix(10, 5, i => j => 1.0 + i * j * 1.0).row(2) must_==
+        Vector(1.0, 3.0, 5.0, 7.0, 9.0)
+      TestMatrix(10, 0, i => j => 1.0 + i * j * 1.0).row(4) must_==
         Vector(0)
     }
 
     "return col" in {
-      TestMatrix(5, 25, i => j => 0.5+i*j*1.0).column(3) must_==
+      TestMatrix(5, 25, i => j => 0.5 + i * j * 1.0).column(3) must_==
         Vector(0.5, 3.5, 6.5, 9.5, 12.5)
-      TestMatrix(0, 10, i => j => 1.0+i*j*1.0).column(4) must_==
+      TestMatrix(0, 10, i => j => 1.0 + i * j * 1.0).column(4) must_==
         Vector(0)
     }
 
     "have foreach()" in {
-      val sut = TestMatrix(3, 4, i => j => 0.5+i*j*1.0)
+      val sut = TestMatrix(3, 4, i => j => 0.5 + i * j * 1.0)
       var log = ""
       sut.foreach(i => j => log = log + i + j)
       log must_== "000102031011121320212223"
     }
-    
+
     "calculate row_l2" in {
       val sut0 = TestMatrix(1, 2, i => j => 1.0)
       sut0.row(0) must_== Vector(1.0, 1.0)
       sut0.row_l2(0) must_== sqrt(2.0)
-      
-      val sut = TestMatrix(3, 4, i => j => 0.5+i*10.0 + j)
+
+      val sut = TestMatrix(3, 4, i => j => 0.5 + i * 10.0 + j)
       val vec = Vector(10.5, 11.5, 12.5, 13.5)
       sut.row(1) must_== vec
       sut.row_l2(1) must_== vec.l2
     }
 
     "calculate column_l2" in {
-      val sut = TestMatrix(3, 4, i => j => 0.5+i*10.0 + j)
+      val sut = TestMatrix(3, 4, i => j => 0.5 + i * 10.0 + j)
       val vec = Vector(1.5, 11.5, 21.5)
       sut.column(1) must_== vec
       sut.column_l2(1) must_== vec.l2
     }
-    
+
     "normalize vertically" in {
-      val sut = TestMatrix(3, 4, i => j => 0.5+i*10.0 + j)
+      val sut = TestMatrix(3, 4, i => j => 0.5 + i * 10.0 + j)
 
       sut.normalizeVertically()
 
       sut must_== Matrix.ofRows(4, Array(
-        Vector(0.021703261485649127,0.06140377126253595,0.09667364890456637,0.12807973746712817),
-        Vector(0.45576849119863166,0.4707622463461089,0.48336824452283184,0.49402184451606584),
-        Vector(0.8898337209116142,0.8801207214296819,0.8700628401410972,0.8599639515650035)
+        Vector(0.021703261485649127, 0.06140377126253595, 0.09667364890456637, 0.12807973746712817),
+        Vector(0.45576849119863166, 0.4707622463461089, 0.48336824452283184, 0.49402184451606584),
+        Vector(0.8898337209116142, 0.8801207214296819, 0.8700628401410972, 0.8599639515650035)
       ))
 
       ok
     }
-    
+
     "multiply" in {
-      val sut1 = TestMatrix(3, 4, i => j => i*10+j)
-      val sut2 = TestMatrix(4, 5, i => j => (i-j + 1000)%2 * 1.0)
+      val sut1 = TestMatrix(3, 4, i => j => i * 10 + j)
+      val sut2 = TestMatrix(4, 5, i => j => (i - j + 1000) % 2 * 1.0)
 
       val expected: MutableMatrix = Matrix.ofRows(5, Array(
         Vector(4.0, 2.0, 4.0, 2.0, 4.0),
@@ -107,66 +107,112 @@ class MatrixTest extends Specification {
       for {
         i <- 0 until 3
         j <- 0 until 5
-      } data(i*5 + j) = (0 until 4) map (k => sut1(i, k) * sut2(k, j)) sum
+      } data(i * 5 + j) = (0 until 4) map (k => sut1(i, k) * sut2(k, j)) sum
 
-      data must_== Array(4.0,2.0,4.0,2.0,4.0, 24.0, 22.0, 24.0, 22.0, 24.0, 44.0, 42.0, 44.0, 42.0, 44.0)
+      data must_== Array(4.0, 2.0, 4.0, 2.0, 4.0, 24.0, 22.0, 24.0, 22.0, 24.0, 44.0, 42.0, 44.0, 42.0, 44.0)
 
       val product = Matrix(3, 5, Vector(data))
-      
+
       product must_== expected
-      
+
       sut1 * sut2 aka s"$sut1\n*\n$sut2" must_== expected
     }
-    
+
     "multiply by a vector" in {
-      val sut = TestMatrix(3, 4, i => j => i*10+j)
+      val sut = TestMatrix(3, 4, i => j => i * 10 + j)
       sut * Vector(0, 1, 2, 3) must_== Vector(14, 74, 134)
     }
-    
+
     "check unitariness" in {
       val u0 = Matrix.Unitary(Array(Vector(0, 1), Vector(1, 0)))
-      u0.isUnitary(0) aka s"delta = ${(u0*u0.transpose - Unit(2)).l2}" must beTrue
+      u0.isUnitary(0) aka s"delta = ${(u0 * u0.transpose - Unit(2)).l2}" must beTrue
 
-      val alpha = Pi/4
-      val beta = Pi/3
+      val alpha = Pi / 4
+      val beta = Pi / 3
       val u1: UnitaryMatrix = Matrix.Unitary(
-        Array(Vector( cos(beta), sin(beta)),
-              Vector(-sin(beta), cos(beta))
+        Array(Vector(cos(beta), sin(beta)),
+          Vector(-sin(beta), cos(beta))
         ))
 
-      u1.isUnitary(0.001) aka s"delta = ${(u1*u1.transpose - Unit(3)).l2}" must beTrue
-      
+      u1.isUnitary(0.001) aka s"delta = ${(u1 * u1.transpose - Unit(3)).l2}" must beTrue
+
       val u2: UnitaryMatrix = Matrix.Unitary(
-        Array(Vector( cos(alpha)*cos(beta), cos(alpha)*sin(beta), sin(alpha)),
-              Vector(-sin(alpha)*cos(beta),-sin(alpha)*sin(beta), cos(alpha)),
-              Vector(            sin(beta),           -cos(beta), 0)
+        Array(Vector(cos(alpha) * cos(beta), cos(alpha) * sin(beta), sin(alpha)),
+          Vector(-sin(alpha) * cos(beta), -sin(alpha) * sin(beta), cos(alpha)),
+          Vector(sin(beta), -cos(beta), 0)
         ))
 
-      u2.isUnitary(0.001) aka s"delta = ${(u2*u2.transpose - Unit(3)).l2}" must beTrue
+      u2.isUnitary(0.001) aka s"delta = ${(u2 * u2.transpose - Unit(3)).l2}" must beTrue
 
     }
 
     "rotate" in {
-      val alpha = Pi/4
-      val beta = Pi/3
+      val alpha = Pi / 4
+      val beta = Pi / 3
       val u: UnitaryMatrix = Matrix.Unitary(
-        Array(Vector( cos(alpha)*cos(beta), cos(alpha)*sin(beta), sin(alpha)),
-              Vector(-sin(alpha)*cos(beta),-sin(alpha)*sin(beta), cos(alpha)),
-              Vector(            sin(beta),           -cos(beta), 0)
+        Array(Vector(cos(alpha) * cos(beta), cos(alpha) * sin(beta), sin(alpha)),
+          Vector(-sin(alpha) * cos(beta), -sin(alpha) * sin(beta), cos(alpha)),
+          Vector(sin(beta), -cos(beta), 0)
         ))
 
       val m0 = diagonal(Vector(10, 5, -1))
-      
+
       val m1 = m0 rotate u
-      
+
       val m2 = m1 rotate u.transpose
-      
+
       (m2 - m0).l2 < 0.00001 aka m2.toString must beTrue
-      
-      m1 must_== Matrix.ofRows(3, 
-        Array(Vector(1.1250000000000009,3.6806079660838646,1.2500000000000002), 
-              Vector(3.6806079660838655,5.375000000000001,2.165063509461097), 
-              Vector(1.2500000000000002,2.1650635094610973,7.5)))
+
+      m1 must_== Matrix.ofRows(3,
+        Array(Vector(1.1250000000000009, 3.6806079660838646, 1.2500000000000002),
+          Vector(3.6806079660838655, 5.375000000000001, 2.165063509461097),
+          Vector(1.2500000000000002, 2.1650635094610973, 7.5)))
+    }
+
+    "drop a row" in {
+      val sut = Matrix.ofRows(3, Array(
+        Vector(1, 0.5, 1.0 / 3),
+        Vector(-0.5, 1, -0.5),
+        Vector(-1.0 / 3, 0.5, 1.0)
+      ))
+
+      sut.dropRow(0) must_== Matrix.ofRows(3, Array(
+        Vector(-0.5, 1, -0.5),
+        Vector(-1.0 / 3, 0.5, 1.0)
+      ))
+
+      sut.dropRow(1) must_== Matrix.ofRows(3, Array(
+        Vector(1, 0.5, 1.0 / 3),
+        Vector(-1.0 / 3, 0.5, 1.0)
+      ))
+
+      sut.dropRow(2) must_== Matrix.ofRows(3, Array(
+        Vector(1, 0.5, 1.0 / 3),
+        Vector(-0.5, 1, -0.5)
+      ))
+    }
+
+    "drop a column" in {
+      val sut = Matrix.ofColumns(3, Array(
+        Vector(1, 0.5, 1.0 / 3),
+        Vector(-0.5, 1, -0.5),
+        Vector(-1.0 / 3, 0.5, 1.0)
+      ))
+
+      sut.dropColumn(0) must_== Matrix.ofColumns(3, Array(
+        Vector(-0.5, 1, -0.5),
+        Vector(-1.0 / 3, 0.5, 1.0)
+      ))
+
+      sut.dropColumn(1) must_== Matrix.ofColumns(3, Array(
+        Vector(1, 0.5, 1.0 / 3),
+        Vector(-1.0 / 3, 0.5, 1.0)
+      ))
+
+      sut.dropColumn(2) must_== Matrix.ofColumns(3, Array(
+        Vector(1, 0.5, 1.0 / 3),
+        Vector(-0.5, 1, -0.5)
+      ))
     }
   }
   

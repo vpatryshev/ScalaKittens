@@ -41,19 +41,25 @@ class PCATest extends Specification {
       value1 must_== 6.8951514452581313
       vector1 must_== Vector(0.752603939328221, 0.431649775140211, 0.4972582650183391)
       vector1.l2 must_== 1.0
-      val newBasis = UnitaryMatrix(vector1.buildOrthonormalBasis)
+      val newBasis = Matrix.Unitary(vector1.buildOrthonormalBasis)
       newBasis.column(0) must_== vector1
       val newBasisT = newBasis.transpose
       newBasisT.row(0) must_== vector1
-      val checkBasis = newBasis * newBasisT
+      val checkBasis = Matrix.Unit(n) rotate newBasis
       (checkBasis - Matrix.Unit(n)).l2 < 0.0001 aka checkBasis.toString must beTrue
-      val m1 = newBasisT * m * newBasis
+      val m1 = m rotate newBasis.transpose
 
       for {i <- 1 until n
       } {
-        abs(m1(i, 0)) < 0.001 aka s"row $i: ${m1(i, 0)}" must beTrue
-        abs(m1(0, i)) < 0.001 aka s"col $i: ${m1(0, i)}" must beTrue
+        abs(m1(i, 0)) < 0.0003 aka s"row $i: ${m1(i, 0)}" must beTrue
+        abs(m1(0, i)) < 0.0003 aka s"col $i: ${m1(0, i)}" must beTrue
       }
+      
+      val submatrix = m1.dropColumn(0).dropRow(0)
+      val Some((value2: Double, vector2: Vector, nIter2: Int)) = method.eigenValue(submatrix)
+      value2 must_== 3.397409072501745
+      vector2.l2 must_== 1.0
+      vector2 must_== Vector(0.9819718282130517, 0.18902732235292571)
       ok
     }
   }

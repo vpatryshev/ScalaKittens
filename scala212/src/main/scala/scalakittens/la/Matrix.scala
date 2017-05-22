@@ -80,6 +80,28 @@ trait Matrix {
   }
 
   /**
+    * Produces a new matrix where this row is deleted
+    * @param rowNo the number of the row to delete
+    * @return a new matrix (virtual)
+    */
+  def dropRow(rowNo: Int): Matrix = {
+    require(rowRange contains rowNo)
+
+    new Matrix.OnFunction(nRows - 1, nCols, (i, j) => if (i < rowNo) this(i, j) else this(i+1, j))
+  }
+
+  /**
+    * Produces a new matrix where this column is deleted
+    * @param columnNo the number of the column to delete
+    * @return a new matrix (virtual)
+    */
+  def dropColumn(columnNo: Int): Matrix = {
+    require(rowRange contains columnNo)
+
+    new Matrix.OnFunction(nRows, nCols - 1, (i, j) => if (j < columnNo) this(i, j) else this(i, j + 1))
+  }
+
+  /**
     * applies an operation to each pair of row index and column index
     * @param op the operation (result is ignored)
     * @return this matrix
