@@ -133,24 +133,6 @@ trait Matrix {
   }
 
   /**
-    * l2 norm of a column, that is, square root of sum of squares of its elements
-    *
-    * @return the l2 norm
-    */
-  def column_l2(j: Int) = sqrt(rowRange map (i => {
-    val x = this(i, j)
-    x*x
-  }) sum)
-
-  /**
-    * l2 norm of a row, that is, square root of sum of squares of its elements
-    *
-    * @return
-    */
-  def row_l2(i: Int) = sqrt(
-    (0 until nCols) map (j => { val x = this(i, j); x*x}) sum)
-
-  /**
     * l2 norm of this matrix
     * @return square root of sum of squares of all elements
     */
@@ -196,6 +178,8 @@ trait Matrix {
     } toArray
   }
   
+  def rotate(u: UnitaryMatrix): Matrix = u * this * u.transpose
+  
   override def equals(x: Any): Boolean = {
     x match {
       case other: Matrix =>
@@ -222,6 +206,24 @@ trait Matrix {
 }
 
 trait MutableMatrix extends Matrix {
+
+  /**
+    * l2 norm of a column, that is, square root of sum of squares of its elements
+    *
+    * @return the l2 norm of a column
+    */
+  private[la] def column_l2(j: Int) = sqrt(rowRange map (i => {
+    val x = this(i, j)
+    x*x
+  }) sum)
+
+  /**
+    * l2 norm of a row, that is, square root of sum of squares of its elements
+    *
+    * @return the l2 norm of a row
+    */
+  private[la] def row_l2(i: Int) = sqrt(
+    (0 until nCols) map (j => { val x = this(i, j); x*x}) sum)
 
   private def normalizeColumn(j: Int): Unit = {
     val l2 = column_l2(j)
@@ -253,14 +255,19 @@ trait MutableMatrix extends Matrix {
   }
 }
 
-case class UnitaryMatrix(basis: Array[Vector]) extends ColumnMatrix(basis.length, basis) {
-  require(basis.nonEmpty)
-  require(basis.forall(_.length == basis.length))
-  // TODO(vlad): figure out if we should check that it is unitary... up to a precision?
+trait UnitaryMatrix extends Matrix {
+  def isUnitary(precision: Double) = (this * transpose - Unit(nCols)).l2 <= precision
+  override def transpose: UnitaryMatrix = 
+    new Matrix.OnFunction(nCols, nRows, (i, j) => this(j, i)) with UnitaryMatrix
 }
 
 object Matrix {
 
+  def Unitary(basis: Array[Vector]) = new ColumnMatrix(basis.length, basis) with UnitaryMatrix {
+    require(basis.nonEmpty)
+    require(basis.forall(_.length == basis.length))
+  }
+  
   /**
     * Builds a matrix out of given rows
     *
@@ -381,10 +388,7 @@ object Matrix {
       *
       * @return the new matrix
       */
-    override def copy: MutableMatrix = {
-      requireCompatibility(Matrix(nRows, nCols, data.copy))
-    }
-
+    override def copy: MutableMatrix = Matrix(nRows, nCols, data.copy)
   }
 
   class OnFunction(val nRows: Int, val nCols: Int, f: (Int, Int) => Double) extends Matrix {
@@ -397,7 +401,10 @@ object Matrix {
 
   def Zero(height: Int, width: Int): Matrix = new OnFunction(height, width, (i, j) => 0.0)
 
-  def Unit(size: Int) = new OnFunction(size, size, (i, j) => if (i == j) 1.0 else 0.0)
+  def Unit(size: Int) = new Matrix.OnFunction(size, size, (i, j) => if (i == j) 1.0 else 0.0)
+  
+  def diagonal(source: Vector) = 
+    new Matrix.OnFunction(source.length, source.length, (i, j) => if (i == j) source(i) else 0.0)
   
   def covariance(in: Iterable[Vector]): Matrix = {
     val (n, sum) = Vector.moments(in)

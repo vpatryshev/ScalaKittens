@@ -122,6 +122,52 @@ class MatrixTest extends Specification {
       val sut = TestMatrix(3, 4, i => j => i*10+j)
       sut * Vector(0, 1, 2, 3) must_== Vector(14, 74, 134)
     }
+    
+    "check unitariness" in {
+      val u0 = Matrix.Unitary(Array(Vector(0, 1), Vector(1, 0)))
+      u0.isUnitary(0) aka s"delta = ${(u0*u0.transpose - Unit(2)).l2}" must beTrue
+
+      val alpha = Pi/4
+      val beta = Pi/3
+      val u1: UnitaryMatrix = Matrix.Unitary(
+        Array(Vector( cos(beta), sin(beta)),
+              Vector(-sin(beta), cos(beta))
+        ))
+
+      u1.isUnitary(0.001) aka s"delta = ${(u1*u1.transpose - Unit(3)).l2}" must beTrue
+      
+      val u2: UnitaryMatrix = Matrix.Unitary(
+        Array(Vector( cos(alpha)*cos(beta), cos(alpha)*sin(beta), sin(alpha)),
+              Vector(-sin(alpha)*cos(beta),-sin(alpha)*sin(beta), cos(alpha)),
+              Vector(            sin(beta),           -cos(beta), 0)
+        ))
+
+      u2.isUnitary(0.001) aka s"delta = ${(u2*u2.transpose - Unit(3)).l2}" must beTrue
+
+    }
+
+    "rotate" in {
+      val alpha = Pi/4
+      val beta = Pi/3
+      val u: UnitaryMatrix = Matrix.Unitary(
+        Array(Vector( cos(alpha)*cos(beta), cos(alpha)*sin(beta), sin(alpha)),
+              Vector(-sin(alpha)*cos(beta),-sin(alpha)*sin(beta), cos(alpha)),
+              Vector(            sin(beta),           -cos(beta), 0)
+        ))
+
+      val m0 = diagonal(Vector(10, 5, -1))
+      
+      val m1 = m0 rotate u
+      
+      val m2 = m1 rotate u.transpose
+      
+      (m2 - m0).l2 < 0.00001 aka m2.toString must beTrue
+      
+      m1 must_== Matrix.ofRows(3, 
+        Array(Vector(1.1250000000000009,3.6806079660838646,1.2500000000000002), 
+              Vector(3.6806079660838655,5.375000000000001,2.165063509461097), 
+              Vector(1.2500000000000002,2.1650635094610973,7.5)))
+    }
   }
   
   "Matrix of rows" should {
