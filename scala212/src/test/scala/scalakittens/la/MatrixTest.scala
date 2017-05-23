@@ -21,7 +21,7 @@ class MatrixTest extends Specification {
     override def nRows: Int = h
     override def nCols: Int = w
     val d = nxm(h, w, f)
-    override def set(i: Int, j: Int, value: Double): Unit = {
+    override def update(i: Int, j: Int, value: Double): Unit = {
       val row = d(i)
       row(j) = value
     }
@@ -155,7 +155,7 @@ class MatrixTest extends Specification {
           Vector(sin(beta), -cos(beta), 0)
         ))
 
-      val m0 = diagonal(Vector(10, 5, -1))
+      val m0 = diagonal(10, 5, -1)
 
       val m1 = m0 rotate u
 
@@ -165,8 +165,8 @@ class MatrixTest extends Specification {
 
       m1 must_== Matrix.ofRows(3,
         Array(Vector(1.1250000000000009, 3.6806079660838646, 1.2500000000000002),
-          Vector(3.6806079660838655, 5.375000000000001, 2.165063509461097),
-          Vector(1.2500000000000002, 2.1650635094610973, 7.5)))
+             Vector(3.6806079660838655, 5.375000000000001, 2.165063509461097),
+             Vector(1.2500000000000002, 2.1650635094610973, 7.5)))
     }
 
     "drop a row" in {
@@ -263,7 +263,7 @@ class MatrixTest extends Specification {
       val sut = build(10, 5, i => j => 1.0+i*j*1.0)
       val copy = sut.copy
       copy(3,4) must_== 13.0
-      sut.set(3,4,42.5)
+      sut(3,4) = 42.5
       copy(3,4) must_== 13.0
       sut(3,4) must_== 42.5
     }
@@ -341,7 +341,7 @@ class MatrixTest extends Specification {
       val sut = build(10, 5, i => j => 1.0+i*j*1.0)
       val copy = sut.copy
       copy(3,4) must_== 13.0
-      sut.set(3,4,42.5)
+      sut(3,4) = 42.5
       sut(3,4) must_== 42.5
       copy(3,4) must_== 13.0
       sut(3,4) must_== 42.5
@@ -454,7 +454,7 @@ class MatrixTest extends Specification {
       sut(3,4) must_== 13.0
       val copy = sut.copy
       copy(3,4) must_== 13.0
-      sut.set(3,4, 42.5)
+      sut(3,4) = 42.5
       sut(3,4) must_== 42.5
       copy(3,4) must_== 13.0
       sut.row(3).data(4) must_== 42.5
@@ -493,6 +493,19 @@ class MatrixTest extends Specification {
   }
   
   "Matrix object" should {
+    "build diagonal" in {
+      diagonal(5, _*5) must_== TestMatrix(5, 5, i => j => if (i == j) i*5.0 else 0.0)
+      diagonal(-1, -2, -3) must_== TestMatrix(3, 3, i => j => if (i == j) -i-1 else 0.0)
+    }
+    
+    "build a matrix from partial function" in {
+      val sut = new Matrix.OnPartialFunction(3, 10, {case (i:Int, j:Int) if j % (i+1) == 0 => i+j})
+      sut must_== Matrix.ofRows(10, Array(
+        Vector(0, 1, 2, 3, 4, 5, 6, 7, 8, 9), 
+        Vector(1, 0, 3, 0, 5, 0, 7, 0, 9, 0), 
+        Vector(2, 0, 0, 5, 0, 0, 8, 0, 0, 11)))
+    }
+    
     "calculate covariance" in {
       val vectors = Array(Vector(1.0, 3.0, -.5, 1.0), Vector(2.0, 6.0, -1.0, 0.0), Vector(3.0, 9.0, -1.5, 1.0))
       val sut = Matrix.covariance(vectors)

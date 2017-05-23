@@ -10,7 +10,7 @@ import scalakittens.la.Matrix._
 /**
   * Created by vpatryshev on 5/15/17.
   */
-trait Matrix {
+trait Matrix extends ((Int, Int) => Double) {
   /**
     * @return number of rows
     */
@@ -28,6 +28,7 @@ trait Matrix {
 
   /**
     * Checks row and column indexes
+ *
     * @param i row index
     * @param j column index
     */
@@ -45,6 +46,7 @@ trait Matrix {
 
   /**
     * Checks the compatibility of another matrix with this one
+ *
     * @param other matrix
     * @tparam T matrix type 
     * @return that other matrix
@@ -81,6 +83,7 @@ trait Matrix {
 
   /**
     * Produces a new matrix where this row is deleted
+    *
     * @param rowNo the number of the row to delete
     * @return a new matrix (virtual)
     */
@@ -92,6 +95,7 @@ trait Matrix {
 
   /**
     * Produces a new matrix where this column is deleted
+    *
     * @param columnNo the number of the column to delete
     * @return a new matrix (virtual)
     */
@@ -103,6 +107,7 @@ trait Matrix {
 
   /**
     * applies an operation to each pair of row index and column index
+    *
     * @param op the operation (result is ignored)
     * @return this matrix
     */
@@ -128,7 +133,7 @@ trait Matrix {
     */
  def copy: MutableMatrix = {
     val m = Matrix(nRows, nCols)
-    foreach(i => j => m.set(i, j, this(i, j)))
+    foreach(i => j => m(i, j) = this(i, j))
     m
   }
 
@@ -156,6 +161,7 @@ trait Matrix {
 
   /**
     * l2 norm of this matrix
+    *
     * @return square root of sum of squares of all elements
     */
   def l2 = sqrt(
@@ -170,6 +176,7 @@ trait Matrix {
 
   /**
     * Product of two matrices
+    *
     * @param that another matrix
     * @return this matrix multiplied by another one; matrix is materialized
     */
@@ -249,7 +256,7 @@ trait MutableMatrix extends Matrix {
 
   private def normalizeColumn(j: Int): Unit = {
     val l2 = column_l2(j)
-    if (l2 > 0.0) 0 until nRows foreach (i => set(i, j, this(i, j) / l2))
+    if (l2 > 0.0) 0 until nRows foreach (i => this(i, j) /= l2)
   }
 
   private[la] def normalizeVertically(): Unit = {
@@ -263,7 +270,7 @@ trait MutableMatrix extends Matrix {
     * @param j column umber
     * @param value value to set
     */
-  def set(i: Int, j: Int, value: Double)
+  def update(i: Int, j: Int, value: Double)
 
   /**
     * copies values of another matrix into this one
@@ -273,7 +280,7 @@ trait MutableMatrix extends Matrix {
     */
   def :=(other: Matrix): this.type = {
     requireCompatibility(other)
-    foreach(i => j => set(i, j, other(i, j)))
+    foreach(i => j => this(i, j) = other(i, j))
   }
 }
 
@@ -324,7 +331,7 @@ object Matrix {
       Matrix.ofRows(nCols, newRows)
     }
 
-    override def set(i: Int, j: Int, value: Double) = {
+    override def update(i: Int, j: Int, value: Double) = {
       checkIndexes(i, j)
       rows(i).data(j) = value
     }
@@ -366,7 +373,7 @@ object Matrix {
       Matrix.ofRows(nRows, newCols)
     }
 
-    override def set(i: Int, j: Int, value: Double) = {
+    override def update(i: Int, j: Int, value: Double) = {
       checkIndexes(i, j)
       cols(j).data(i) = value
     }
@@ -395,7 +402,7 @@ object Matrix {
       i*nCols+j
     }
 
-    override def set(i: Int, j: Int, value: Double): Unit = {
+    override def update(i: Int, j: Int, value: Double): Unit = {
       checkIndexes(i, j)
       data.data(index(i,j)) = value
     }
@@ -413,6 +420,13 @@ object Matrix {
     override def copy: MutableMatrix = Matrix(nRows, nCols, data.copy)
   }
 
+  /**
+    * A matrix which values are supplied by a function. That's lightweight if the function is.
+    *
+    * @param nRows matrix height
+    * @param nCols matrix width
+    * @param f the function that gives matrix values
+    */
   class OnFunction(val nRows: Int, val nCols: Int, f: (Int, Int) => Double) extends Matrix {
 
     override def apply(i: Int, j: Int): Double = {
@@ -421,13 +435,83 @@ object Matrix {
     }
   }
 
+  /**
+    * A matrix which values are supplied by a partial function. That's lightweight if the function is.
+    * If the function is not defined on a specific combination of row and column, the value is 0.
+    *
+    * @param nRows matrix height
+    * @param nCols matrix width
+    * @param pf the partial function that gives matrix values if defined, all other values are 0.
+    */
+  class OnPartialFunction(val nRows: Int, val nCols: Int, pf: PartialFunction[(Int, Int), Double]) extends Matrix {
+
+    override def apply(i: Int, j: Int): Double = {
+      checkIndexes(i, j)
+      if (pf.isDefinedAt((i, j))) pf((i, j)) else 0.0
+    }
+  }
+  
+  private def diagonalize(f: Int => Double): PartialFunction[(Int, Int), Double] =
+  { case (i, j) if i == j => f(i) }
+
+  /**
+    * Diagonal matrix of given size; source provides values. It's virtual.
+ *
+    * @param size matrix size (it's square)
+    * @param source whatever function that provides matrix values for the diagonal, the rest is 0
+    */
+  class DiagonalMatrix(size: Int, source: Int => Double) 
+    extends Matrix.OnPartialFunction(size, size, diagonalize(source))
+
+  /**
+    * Zero matrix
+ *
+    * @param height matrix height
+    * @param width matrix width
+    * @return a zero matrix of given dimensions
+    */
   def Zero(height: Int, width: Int): Matrix = new OnFunction(height, width, (i, j) => 0.0)
 
-  def Unit(size: Int) = new Matrix.OnFunction(size, size, (i, j) => if (i == j) 1.0 else 0.0)
-  
-  def diagonal(source: Vector) = 
-    new Matrix.OnFunction(source.length, source.length, (i, j) => if (i == j) source(i) else 0.0)
-  
+  /**
+    * Unit matrix
+ *
+    * @param size matrix size
+    * @return a unit matrix of a given size
+    */
+  def Unit(size: Int): UnitaryMatrix = new DiagonalMatrix(size, _ => 1.0) with UnitaryMatrix
+
+  /**
+    * builds a diagonal matrix of given size; source provides values. It's virtual.
+ *
+    * @param size matrix size (it's square)
+    * @param source whatever function that provides matrix values for the diagonal, the rest is 0
+    * @return the diagonal matrix
+    */
+  def diagonal(size: Int, source: Int => Double) = new DiagonalMatrix(size, source)
+
+  /**
+    * builds a diagonal matrix; source vector provides values. It's virtual.
+ *
+    * @param source the vector that specifies values on the diagonal; all others are 0
+    * @return the diagonal matrix
+    */
+  def diagonal(source: Vector): Matrix = diagonal(source.length, source)
+
+  /**
+    * builds a diagonal matrix from given values.
+ *
+    * @param values the values on the matrix diagonal (all others are 0)
+    * @return a diagonal matrix
+    */
+  def diagonal(values: Double*): Matrix = diagonal(Vector(values:_*))
+
+  /**
+    * Calculates covariance matrix for a given Iterable of vectors
+    * The iterable is scanned twice, first for the average, and then for the matrix
+    * 
+    * @param in stream of vectors (must be same size)
+    * @return covariance matrix
+    */
   def covariance(in: Iterable[Vector]): Matrix = {
     val (n, sum) = Vector.moments(in)
     val avg = sum / n

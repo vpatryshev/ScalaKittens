@@ -23,6 +23,16 @@ class VectorTest extends Specification {
       sut(1) must_== 2.25
     }
 
+    "have update()" in {
+      val sut = Vector(0, 0)
+      sut(0) = 1.5
+      sut(0) must_== 1.5
+      sut(1) must_== 0.0
+      sut(1) = 2.25
+      sut(0) must_== 1.5
+      sut(1) must_== 2.25
+    }
+
     "have foreach()" in {
       val sut = Vector(1.5, 2.25)
       var s = -3.75
@@ -169,6 +179,13 @@ class VectorTest extends Specification {
         val expected = if (i == j) 1.0 else 0.0
         abs(prod - expected) < 0.0001 aka s"@($i, $j): ${vecs(i)}*${vecs(j)} = $prod != $expected " must beTrue
       }
+      ok
+    }
+    
+    "have ::" in {
+      val v0 = Vector()
+      val sut = Pi::E::42::v0
+      sut must_== Vector(Pi, E, 42)
       ok
     }
   }

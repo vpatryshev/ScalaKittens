@@ -13,7 +13,7 @@ class PCATest extends Specification {
     for {
       i <- 0 until h
       j <- 0 until w
-    } m.set(i, j, values(i*w+j))
+    } m(i, j) = values(i*w+j)
     
     m
   }
@@ -60,6 +60,13 @@ class PCATest extends Specification {
       value2 must_== 3.397409072501745
       vector2.l2 must_== 1.0
       vector2 must_== Vector(0.9819718282130517, 0.18902732235292571)
+
+      val vector3 = 0.0 :: vector2
+      val vector3InOurBasis = newBasis * vector3
+      val vector3AfterM = m * vector3InOurBasis
+      val diff = vector3AfterM - vector3InOurBasis * value2
+      diff.l2 < 0.0003 aka diff.toString must beTrue
+      
       ok
     }
   }

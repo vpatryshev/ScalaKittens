@@ -12,8 +12,15 @@ import scala.util.Random
   * 
   * Created by vpatryshev on 5/14/17.
   */
-class Vector(private[la] val data: Array[Double]) {
-  
+class Vector(private[la] val data: Array[Double]) extends (Int => Double) {
+  def ::(d: Double) = new Vector({
+    val newData = new Array[Double](length+1)
+    newData(0) = d
+    System.arraycopy(data, 0, newData, 1, length)
+    newData
+  })
+
+
   /**
     * length of this vector
     */
@@ -26,6 +33,7 @@ class Vector(private[la] val data: Array[Double]) {
     * @return the value
     */
   def apply(i: Int) = data(i)
+  def update(i: Int, v: Double) = data(i) = v
   
   def foreach(f: Double => Unit) = data foreach f
   def forall(p: Double => Boolean) = data forall p
