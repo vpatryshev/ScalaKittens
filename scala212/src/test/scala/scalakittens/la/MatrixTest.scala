@@ -129,20 +129,23 @@ class MatrixTest extends Specification {
 
     }
 
-    "rotate" in {
+    val sampleUnitaryMatrix: UnitaryMatrix = {
       val alpha = Pi / 4
       val beta = Pi / 3
-      val u: UnitaryMatrix = Matrix.Unitary(
+      Matrix.Unitary(
         Array(Vector(cos(alpha) * cos(beta), cos(alpha) * sin(beta), sin(alpha)),
           Vector(-sin(alpha) * cos(beta), -sin(alpha) * sin(beta), cos(alpha)),
           Vector(sin(beta), -cos(beta), 0)
         ))
+    }
+
+    "rotate" in {
 
       val m0 = diagonal(10, 5, -1)
 
-      val m1 = m0 rotate u
+      val m1 = m0 rotate sampleUnitaryMatrix
 
-      val m2 = m1 rotate u.transpose
+      val m2 = m1 rotate sampleUnitaryMatrix.transpose
 
       l2(m2 - m0) < 0.00001 aka m2.toString must beTrue
 
@@ -196,6 +199,16 @@ class MatrixTest extends Specification {
         Vector(1, 0.5, 1.0 / 3),
         Vector(-0.5, 1, -0.5)
       ))
+    }
+    
+    "project to hyperplane" in {
+      val m = Matrix.ofRows(3,
+        Array(
+          Vector(1.1250000000000009, 3.6806079660838646, 1.2500000000000002),
+          Vector(3.6806079660838655, 5.375000000000001, 2.165063509461097),
+          Vector(1.2500000000000002, 2.1650635094610973, 7.5)))
+      val sut = m.projectToHyperplane(sampleUnitaryMatrix)
+      l2(sut - diagonal(5, -1)) < 0.0001 aka sut.toString must beTrue
     }
   }
   

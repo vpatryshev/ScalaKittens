@@ -78,27 +78,7 @@ class PCATest extends Specification {
       eigenValue1 must_== 6.8951514452581313
       basis.column(0) must_== Vector(0.752603939328221, 0.431649775140211, 0.4972582650183391)
 
-      def projectToHyperplane(m: Matrix, basis: UnitaryMatrix): Matrix = {
-        val rotatedMatrix = m rotate basis.transpose
-        val submatrix = rotatedMatrix.dropColumn(0).dropRow(0)
-        submatrix
-      }
-      
-      def produceEigenVectors(m: Matrix, numberRequested: Int): Option[List[(Double, Vector)]] = {
-        require (numberRequested <= m.nCols)
-        if (numberRequested == 0) Some(Nil) else {
-          for {
-            (eigenValue1: Double, basis: UnitaryMatrix, nIter1) <- method.oneEigenValueBasis(m)
-            submatrix = projectToHyperplane(m, basis)
-            tail <- produceEigenVectors(submatrix, numberRequested - 1)
-          } yield {
-            val newTail = tail map { case (value, vector) => (value, basis*(0::vector)) }
-            (eigenValue1, basis.column(0)) :: newTail
-          }
-        }
-      }
-
-      val Some(allThree) = produceEigenVectors(m, 3)
+      val Some(allThree) = method.buildEigenVectors(m, 3)
       
       allThree must_== 
         (6.8951514452581313, Vector(0.752603939328221, 0.431649775140211, 0.4972582650183391))::

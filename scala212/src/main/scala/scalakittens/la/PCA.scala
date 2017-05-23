@@ -36,6 +36,20 @@ object PCA {
       case (value: Double, vector: Vector, nIter) =>
         (value, Matrix.Unitary(vector.buildOrthonormalBasis), nIter)  
     }
-    
+
+    def buildEigenVectors(m: Matrix, numberRequested: Int): Option[List[(Double, Vector)]] = {
+      require (numberRequested <= m.nCols)
+      
+      if (numberRequested == 0) Some(Nil) else {
+        for {
+          (eigenValue, basis, _) <- oneEigenValueBasis(m)
+          submatrix              =  m.projectToHyperplane(basis)
+          tail                   <- buildEigenVectors(submatrix, numberRequested - 1)
+        } yield {
+          val newTail = tail map { case (value, vector) => (value, basis*(0::vector)) }
+          (eigenValue, basis.column(0)) :: newTail
+        }
+      }
+    }
   }
 }

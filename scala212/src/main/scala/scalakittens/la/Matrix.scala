@@ -204,6 +204,11 @@ trait Matrix extends ((Int, Int) => Double) with Iterable[Double] {
   }
   
   def rotate(u: UnitaryMatrix): Matrix = u * this * u.transpose
+
+  def projectToHyperplane(basis: UnitaryMatrix): Matrix = {
+    val rotatedMatrix = rotate(basis.transpose)
+    rotatedMatrix.dropColumn(0).dropRow(0)
+  }
   
   override def equals(x: Any): Boolean = {
     x match {
