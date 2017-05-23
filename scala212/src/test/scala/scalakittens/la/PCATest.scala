@@ -23,7 +23,7 @@ class PCATest extends Specification {
     "produce first eigenvector for a 3x3" in {
       val m = matrix(3, 3, 5, 1, 2, 1, 4, 1, 2, 1, 3)
       val method = PCA.Iterations(0.001, 100)
-      val Some((value: Double, vec: Vector, nIter)) = method.eigenValue(m)
+      val Some((value: Double, vec: Vector, nIter)) = method.maxEigenValue(m)
       
       value must_== 6.895482499314164
       
@@ -33,11 +33,11 @@ class PCATest extends Specification {
       delta < 0.0005 aka s"error=$delta" must beTrue
     }
     
-    "produce two eigenvectors for a 3x3" in {
+    "produce two eigenvectors for a 3x3 in many small steps" in {
       val n = 3
       val m = matrix(3, 3, 5, 1, 2, 1, 4, 1, 2, 1, 3)
       val method = PCA.Iterations(0.0001, 100)
-      val Some((value1: Double, vector1: Vector, nIter1)) = method.eigenValue(m)
+      val Some((value1: Double, vector1: Vector, nIter1)) = method.maxEigenValue(m)
 
       value1 must_== 6.8951514452581313
       vector1 must_== Vector(0.752603939328221, 0.431649775140211, 0.4972582650183391)
@@ -57,7 +57,7 @@ class PCATest extends Specification {
       }
       
       val submatrix = m1.dropColumn(0).dropRow(0)
-      val Some((value2: Double, vector2: Vector, nIter2: Int)) = method.eigenValue(submatrix)
+      val Some((value2: Double, vector2: Vector, nIter2: Int)) = method.maxEigenValue(submatrix)
       value2 must_== 3.397409072501745
       l2(vector2) must_== 1.0
       vector2 must_== Vector(0.9819718282130517, 0.18902732235292566)
@@ -67,8 +67,52 @@ class PCATest extends Specification {
       val vector3AfterM = m * vector3InOurBasis
       val diff = vector3AfterM - vector3InOurBasis * value2
       l2(diff) < 0.0003 aka diff.toString must beTrue
+    }
+
+    "produce two eigenvectors for a 3x3 in steps" in {
+      val n = 3
+      val m = matrix(3, 3, 5, 1, 2, 1, 4, 1, 2, 1, 3)
+      val method = PCA.Iterations(0.0001, 100)
+      val Some((eigenValue1: Double, basis: UnitaryMatrix, nIter1)) = method.oneEigenValueBasis(m)
+
+      eigenValue1 must_== 6.8951514452581313
+      basis.column(0) must_== Vector(0.752603939328221, 0.431649775140211, 0.4972582650183391)
+
+      def projectToHyperplane(m: Matrix, basis: UnitaryMatrix): Matrix = {
+        val rotatedMatrix = m rotate basis.transpose
+        val submatrix = rotatedMatrix.dropColumn(0).dropRow(0)
+        submatrix
+      }
       
-      ok
+      def produceEigenVectors(m: Matrix, numberRequested: Int): Option[List[(Double, Vector)]] = {
+        require (numberRequested <= m.nCols)
+        if (numberRequested == 0) Some(Nil) else {
+          for {
+            (eigenValue1: Double, basis: UnitaryMatrix, nIter1) <- method.oneEigenValueBasis(m)
+            submatrix = projectToHyperplane(m, basis)
+            tail <- produceEigenVectors(submatrix, numberRequested - 1)
+          } yield {
+            val newTail = tail map { case (value, vector) => (value, basis*(0::vector)) }
+            (eigenValue1, basis.column(0)) :: newTail
+          }
+        }
+      }
+
+      val Some(allThree) = produceEigenVectors(m, 3)
+      
+      allThree must_== 
+        (6.8951514452581313, Vector(0.752603939328221, 0.431649775140211, 0.4972582650183391))::
+        (3.397409072501745,  Vector(-0.4578505139226016, 0.8857791252792524, -0.07594898366885625))::
+        (1.7075984315510688, Vector(-0.4732443527486124, -0.1705104478937518, 0.8642719304423921))::Nil
+      
+      
+      for {
+        (value, vector) <- allThree
+      } l2(m * vector - vector * value) < 0.001 must beTrue
+      
+      val eigenValues = allThree map (_._1)
+      val eigenBasis = Matrix.Unitary(allThree map (_._2))
+      eigenBasis.isUnitary(0.001) must beTrue
     }
   }
 }

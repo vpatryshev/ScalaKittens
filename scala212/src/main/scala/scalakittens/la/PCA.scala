@@ -15,18 +15,27 @@ object PCA {
       (v1, d)
     }
     
-    def eigenValue(m: Matrix): Option[(Double, Vector, Int)] = {
-
+    def maxEigenValue(m: Matrix): Option[(Double, Vector, Int)] = {
       require(m.nCols == m.nRows, s"Expected a square matrix, have ${m.nRows}⨯${m.nCols}")
-      val iterator = Iterator.iterate((Vector.unit(m.nCols, 0), Double.MaxValue, 0)) {
-        case (v, d, i) => val (m1, d1) = oneStep(m, v); (m1, d1, i + 1)
-      }
+      if (m.nCols == 0) None else
+      if (m.nCols == 1) Some((m(0,0), Vector(1.0), 0)) else
+      {
+        val iterator = Iterator.iterate((Vector.unit(m.nCols, 0), Double.MaxValue, 0)) {
+          case (v, d, i) => val (m1, d1) = oneStep(m, v); (m1, d1, i + 1)
+        }
 
-      val goodData = iterator.dropWhile(p => p._2 > precision && p._3 < maxRepeats) take 1 toList
+        val goodData = iterator find (p => p._2 <= precision || p._3 > maxRepeats)
 
-      goodData.headOption map { case (v, d, i) =>
-        ((m * v).sum / v.sum, v, i)
+        goodData map { 
+          case (vector, delta, nSteps) => ((m * vector).sum / vector.sum, vector, nSteps)
+        }
       }
     }
+    
+    def oneEigenValueBasis(m: Matrix): Option[(Double, UnitaryMatrix, Int)] = maxEigenValue(m) map {
+      case (value: Double, vector: Vector, nIter) =>
+        (value, Matrix.Unitary(vector.buildOrthonormalBasis), nIter)  
+    }
+    
   }
 }

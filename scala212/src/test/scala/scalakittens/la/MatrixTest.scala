@@ -491,9 +491,10 @@ class MatrixTest extends Specification {
     
     "calculate covariance" in {
       val vectors = Array(Vector(1.0, 3.0, -.5, 1.0), Vector(2.0, 6.0, -1.0, 0.0), Vector(3.0, 9.0, -1.5, 1.0))
-      val sut = Matrix.covariance(vectors)
+      val (avg, cov) = Matrix.covariance(vectors)
 
-
+      avg must_== Vector(2.0, 6.0, -1.0, 2.0/3)
+      
       val expected: Matrix = Matrix.ofRows(4, Array(
         Vector(1.0, 3.0, -0.5, 0.0),
         Vector(3.0, 9.0, -1.5, 0.0),
@@ -503,9 +504,9 @@ class MatrixTest extends Specification {
       
       for {
         i <- 0 until 4
-      } sut.row(i) aka s"@$i" must_== expected.row(i)
+      } cov.row(i) aka s"@$i" must_== expected.row(i)
       
-      sut must_== expected
+      cov must_== expected
     }
   }
 }

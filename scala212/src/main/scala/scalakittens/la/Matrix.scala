@@ -196,7 +196,7 @@ trait Matrix extends ((Int, Int) => Double) with Iterable[Double] {
     * @return another vector, this * v
     */
   def *(v: Vector): Vector = {
-    require(nCols == v.length, s"For a product we need that number of columns ($nCols) is equal to the vector's length (${v.length}")
+    require(nCols == v.length, s"For a product we need that number of columns ($nCols) is equal to the vector's length (${v.length})")
 
     0 until nRows map {
       i => (0.0 /: (0 until v.length))((s, j) => s + this(i, j)*v(j))
@@ -266,6 +266,7 @@ trait MutableMatrix extends Matrix {
 
 trait UnitaryMatrix extends Matrix {
   def isUnitary(precision: Double) = l2(this * transpose - Unit(nCols)) <= precision
+  
   override def transpose: UnitaryMatrix = 
     new Matrix.OnFunction(nCols, nRows, (i, j) => this(j, i)) with UnitaryMatrix
 }
@@ -276,7 +277,12 @@ object Matrix {
     require(basis.nonEmpty)
     require(basis.forall(_.length == basis.length))
   }
-  
+
+  def Unitary(basis: List[Vector]) = new ColumnMatrix(basis.length, basis.toArray) with UnitaryMatrix {
+    require(basis.nonEmpty)
+    require(basis.forall(_.length == basis.length))
+  }
+
   /**
     * Builds a matrix out of given rows
     *
@@ -317,7 +323,7 @@ object Matrix {
     }
 
     override def *(v: Vector): Vector = {
-      require(nCols == v.length, s"For a product we need that number of columns ($nCols) is equal to the vector's length (${v.length}")
+      require(nCols == v.length, s"For a product we need that number of columns ($nCols) is equal to the vector's length (${v.length})")
       rows map (_ * v)
     }
   }
@@ -492,7 +498,7 @@ object Matrix {
     * @param in stream of vectors (must be same size)
     * @return covariance matrix
     */
-  def covariance(in: Iterable[Vector]): Matrix = {
+  def covariance(in: Iterable[Vector]): (Vector, Matrix) = {
     val (n, sum) = Vector.moments(in)
     val avg = sum / n
     val size: Int = avg.length
@@ -503,6 +509,6 @@ object Matrix {
       j <- 0 until size
     } data(i*size + j) += (v(i)-avg(i))*(v(j)-avg(j)) / (n-1)
     
-    Matrix(size, size, data)
+    (avg, Matrix(size, size, data))
   }
 }
