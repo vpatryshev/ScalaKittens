@@ -1,6 +1,7 @@
 package scalakittens.la
 
 import org.specs2.mutable.Specification
+import Norm._
 
 /**
   * Created by vpatryshev on 5/7/17.
@@ -55,7 +56,8 @@ class VectorTest extends Specification {
     
     "have map()" in {
       (Vector(0) map (_ => "oi-vei") toList) must_== Nil
-      (Vector(3.0, 2.0, 1.0) map (":) " + ) toList) must_== List(":) 3.0", ":) 2.0", ":) 1.0")
+      
+      (Vector(3.0, 2.0, 1.0) map (":) " + _) toList) must_== List(":) 3.0", ":) 2.0", ":) 1.0")
     }
 
     "have /:" in {
@@ -127,16 +129,6 @@ class VectorTest extends Specification {
       sut.nudge(Vector(6.0, 4.75), 2.0)
       sut must_== Vector(15.25, 2.0)
     }
-    
-    "have an l2 norm" in {
-      Vector().l2 must_== 0.0
-      Vector(-3.0, 4.0).l2 must_== 5.0
-    }
-
-    "have an l∞ norm" in {
-      Vector().linf must_== 0.0
-      Vector(-3.0, -4.0, 2.0).linf must_== 4.0
-    }
 
     "normalize" in {
       Vector().normalize must_== Vector()
@@ -158,7 +150,7 @@ class VectorTest extends Specification {
         abs(prod - expected) < 0.0001 aka s"@($i, $j): ${vecs(i)}*${vecs(j)} = $prod != $expected " must beTrue
       } 
       
-      vecs.toList must_== List(Vector(0.6000000000000001, 0.8), Vector(-0.8000000000000002, 0.5999999999999999))
+      vecs.toList must_== List(Vector(0.6, 0.8), Vector(-0.8000000000000001, 0.6))
       ok
     }
 

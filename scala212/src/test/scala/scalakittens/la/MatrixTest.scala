@@ -1,6 +1,7 @@
 package scalakittens.la
 
 import org.specs2.mutable.Specification
+import Norm._
 
 /**
   * Created by vpatryshev on 5/7/17.
@@ -57,26 +58,8 @@ class MatrixTest extends Specification {
     "have foreach()" in {
       val sut = TestMatrix(3, 4, i => j => 0.5 + i * j * 1.0)
       var log = ""
-      sut.foreach(i => j => log = log + i + j)
+      sut.foreach((i:Int) => (j:Int) => log = log + i + j)
       log must_== "000102031011121320212223"
-    }
-
-    "calculate row_l2" in {
-      val sut0 = TestMatrix(1, 2, i => j => 1.0)
-      sut0.row(0) must_== Vector(1.0, 1.0)
-      sut0.row_l2(0) must_== sqrt(2.0)
-
-      val sut = TestMatrix(3, 4, i => j => 0.5 + i * 10.0 + j)
-      val vec = Vector(10.5, 11.5, 12.5, 13.5)
-      sut.row(1) must_== vec
-      sut.row_l2(1) must_== vec.l2
-    }
-
-    "calculate column_l2" in {
-      val sut = TestMatrix(3, 4, i => j => 0.5 + i * 10.0 + j)
-      val vec = Vector(1.5, 11.5, 21.5)
-      sut.column(1) must_== vec
-      sut.column_l2(1) must_== vec.l2
     }
 
     "normalize vertically" in {
@@ -125,7 +108,7 @@ class MatrixTest extends Specification {
 
     "check unitariness" in {
       val u0 = Matrix.Unitary(Array(Vector(0, 1), Vector(1, 0)))
-      u0.isUnitary(0) aka s"delta = ${(u0 * u0.transpose - Unit(2)).l2}" must beTrue
+      u0.isUnitary(0) aka s"delta = ${l2(u0 * u0.transpose - Unit(2))}" must beTrue
 
       val alpha = Pi / 4
       val beta = Pi / 3
@@ -134,7 +117,7 @@ class MatrixTest extends Specification {
           Vector(-sin(beta), cos(beta))
         ))
 
-      u1.isUnitary(0.001) aka s"delta = ${(u1 * u1.transpose - Unit(3)).l2}" must beTrue
+      u1.isUnitary(0.001) aka s"delta = ${l2(u1 * u1.transpose - Unit(3))}" must beTrue
 
       val u2: UnitaryMatrix = Matrix.Unitary(
         Array(Vector(cos(alpha) * cos(beta), cos(alpha) * sin(beta), sin(alpha)),
@@ -142,7 +125,7 @@ class MatrixTest extends Specification {
           Vector(sin(beta), -cos(beta), 0)
         ))
 
-      u2.isUnitary(0.001) aka s"delta = ${(u2 * u2.transpose - Unit(3)).l2}" must beTrue
+      u2.isUnitary(0.001) aka s"delta = ${l2(u2 * u2.transpose - Unit(3))}" must beTrue
 
     }
 
@@ -161,7 +144,7 @@ class MatrixTest extends Specification {
 
       val m2 = m1 rotate u.transpose
 
-      (m2 - m0).l2 < 0.00001 aka m2.toString must beTrue
+      l2(m2 - m0) < 0.00001 aka m2.toString must beTrue
 
       m1 must_== Matrix.ofRows(3,
         Array(Vector(1.1250000000000009, 3.6806079660838646, 1.2500000000000002),
@@ -270,13 +253,13 @@ class MatrixTest extends Specification {
     
     "+" in {
       val sut = build(10, 5, i => j => 1.0+i*j*1.0) + build(10, 5, i => j => 1.0-i*j*1.0)
-      sut.foreach(i => j => {sut(i,j) must_== 2.0;()})
+      sut.foreach((i:Int) => (j:Int) => {sut(i,j) must_== 2.0;()})
       ok
     }
 
     "-" in {
       val sut = build(10, 5, i => j => 1.0+i*j*1.0) - build(10, 5, i => j => i*j*1.0)
-      sut.foreach(i => j => {sut(i,j) must_== 1.0;()})
+      sut.foreach((i:Int) => (j:Int) => {sut(i,j) must_== 1.0;()})
       ok
     }
   }
@@ -351,7 +334,7 @@ class MatrixTest extends Specification {
       val mx1: Matrix = build(10, 5, i => j => 1.0 + i * j * 1.0)
       val mx2: Matrix = build(10, 5, i => j => 1.0 - i * j * 1.0)
       val sut = mx1 + mx2
-      sut.foreach(i => j => {sut(i,j) must_== 2.0; ()})
+      sut.foreach((i:Int) => (j:Int) => {sut(i,j) must_== 2.0; ()})
       ok
     }
 
@@ -359,7 +342,7 @@ class MatrixTest extends Specification {
       val mx1: Matrix = build(10, 5, i => j => 1.0 + i * j * 1.0)
       val mx2: Matrix = build(10, 5, i => j =>       i * j * 1.0)
       val sut = mx1 - mx2
-      sut.foreach(i => j => {sut(i,j) must_== 1.0; ()})
+      sut.foreach((i:Int) => (j:Int) => {sut(i,j) must_== 1.0; ()})
       ok
     }
   }
@@ -476,7 +459,7 @@ class MatrixTest extends Specification {
       sut.nCols must_== 5
       mx1(0, 1) aka mx1.toString must_== 5.0
       mx2(0, 1) must_== 0.0
-      sut.foreach(i => j => {sut(i,j) aka s"@($i,$j)" must_== 4.0 + j + 10*i; ()})
+      sut.foreach((i:Int) => (j:Int) => {sut(i,j) aka s"@($i,$j)" must_== 4.0 + j + 10*i; ()})
       ok
     }
 
@@ -487,7 +470,7 @@ class MatrixTest extends Specification {
       mx2(1, 2) must_== 7.0
       val sut = mx1 - mx2
       sut(1, 2) must_== 16.0
-      sut.foreach(i => j => {sut(i,j) aka s"@($i,$j)" must_== 1.0 + i + 7*j; ()})
+      sut.foreach((i:Int) => (j:Int) => {sut(i,j) aka s"@($i,$j)" must_== 1.0 + i + 7*j; ()})
       ok
     }
   }

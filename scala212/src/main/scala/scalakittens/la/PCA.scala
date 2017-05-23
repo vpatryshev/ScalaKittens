@@ -11,7 +11,7 @@ object PCA {
     
     private def oneStep(m: Matrix, v: Vector): (Vector, Double) = {
       val v1 = m * v normalize
-      val d = (v1 - v).l2
+      val d = Norm.l2(v1 - v)
       (v1, d)
     }
     

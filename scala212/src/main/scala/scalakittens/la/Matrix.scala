@@ -3,14 +3,13 @@ package scalakittens.la
 import language.postfixOps
 import language.reflectiveCalls
 import math._
-import scalakittens.Ops
-import scalakittens.Ops._
 import scalakittens.la.Matrix._
+import scalakittens.la.Norm._
 
 /**
   * Created by vpatryshev on 5/15/17.
   */
-trait Matrix extends ((Int, Int) => Double) {
+trait Matrix extends ((Int, Int) => Double) with Iterable[Double] {
   /**
     * @return number of rows
     */
@@ -105,6 +104,18 @@ trait Matrix extends ((Int, Int) => Double) {
     new Matrix.OnFunction(nRows, nCols - 1, (i, j) => if (j < columnNo) this(i, j) else this(i, j + 1))
   }
 
+  def allElements: Seq[Double] = for {
+    i <- rowRange
+    j <- columnRange
+  } yield this(i, j)
+
+  def iterator = {
+    for {
+      i <- rowRange
+      j <- columnRange
+    } yield this(i, j)
+  } iterator
+  
   /**
     * applies an operation to each pair of row index and column index
     *
@@ -133,7 +144,7 @@ trait Matrix extends ((Int, Int) => Double) {
     */
  def copy: MutableMatrix = {
     val m = Matrix(nRows, nCols)
-    foreach(i => j => m(i, j) = this(i, j))
+    foreach((i:Int) => (j:Int) => m(i, j) = this(i, j))
     m
   }
 
@@ -158,21 +169,6 @@ trait Matrix extends ((Int, Int) => Double) {
     requireCompatibility(other)
     new Matrix.OnFunction(nRows, nCols, (i, j) => this(i, j) - other(i, j))
   }
-
-  /**
-    * l2 norm of this matrix
-    *
-    * @return square root of sum of squares of all elements
-    */
-  def l2 = sqrt(
-    (for {
-      i <- rowRange
-      j <- columnRange
-    } yield {
-      val x = this(i, j)
-      x*x
-    }) sum
-  )
 
   /**
     * Product of two matrices
@@ -214,7 +210,7 @@ trait Matrix extends ((Int, Int) => Double) {
       case other: Matrix =>
         nRows == other.nRows &&
         nCols == other.nCols && {
-          foreach(i => j => if (this(i, j) != other(i, j)) return false)
+          foreach((i:Int) => (j:Int) => if (this(i, j) != other(i, j)) return false)
           true
         }
       case _ => false
@@ -236,27 +232,11 @@ trait Matrix extends ((Int, Int) => Double) {
 
 trait MutableMatrix extends Matrix {
 
-  /**
-    * l2 norm of a column, that is, square root of sum of squares of its elements
-    *
-    * @return the l2 norm of a column
-    */
-  private[la] def column_l2(j: Int) = sqrt(rowRange map (i => {
-    val x = this(i, j)
-    x*x
-  }) sum)
-
-  /**
-    * l2 norm of a row, that is, square root of sum of squares of its elements
-    *
-    * @return the l2 norm of a row
-    */
-  private[la] def row_l2(i: Int) = sqrt(
-    (0 until nCols) map (j => { val x = this(i, j); x*x}) sum)
 
   private def normalizeColumn(j: Int): Unit = {
-    val l2 = column_l2(j)
-    if (l2 > 0.0) 0 until nRows foreach (i => this(i, j) /= l2)
+    val norm = l2(rowRange map (i => this(i, j)))
+    
+    if (norm > Double.MinPositiveValue) rowRange foreach (i => this(i, j) /= norm)
   }
 
   private[la] def normalizeVertically(): Unit = {
@@ -285,7 +265,7 @@ trait MutableMatrix extends Matrix {
 }
 
 trait UnitaryMatrix extends Matrix {
-  def isUnitary(precision: Double) = (this * transpose - Unit(nCols)).l2 <= precision
+  def isUnitary(precision: Double) = l2(this * transpose - Unit(nCols)) <= precision
   override def transpose: UnitaryMatrix = 
     new Matrix.OnFunction(nCols, nRows, (i, j) => this(j, i)) with UnitaryMatrix
 }

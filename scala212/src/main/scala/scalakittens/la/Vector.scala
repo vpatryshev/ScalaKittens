@@ -6,20 +6,14 @@ import java.util
 
 import scala.math._
 import scala.util.Random
+import Norm._
 
 /**
   * real-valued vector with usual operations
   * 
   * Created by vpatryshev on 5/14/17.
   */
-class Vector(private[la] val data: Array[Double]) extends (Int => Double) {
-  def ::(d: Double) = new Vector({
-    val newData = new Array[Double](length+1)
-    newData(0) = d
-    System.arraycopy(data, 0, newData, 1, length)
-    newData
-  })
-
+class Vector(private[la] val data: Array[Double]) extends Seq[Double] {
 
   /**
     * length of this vector
@@ -29,22 +23,38 @@ class Vector(private[la] val data: Array[Double]) extends (Int => Double) {
   /**
     * i-th component value of this vector
     *
-    * @param i the dimension
+    * @param i the index
     * @return the value
     */
   def apply(i: Int) = data(i)
+
+  /**
+    * sets the i-th component value of this vector
+    * used, according to scala magic, as vec(i) = newValue
+    *
+    * @param i the dimension
+    * @param v the value
+    */
   def update(i: Int, v: Double) = data(i) = v
   
-  def foreach(f: Double => Unit) = data foreach f
-  def forall(p: Double => Boolean) = data forall p
-  def exists(p: Double => Boolean) = data exists p
   def map[U](f: Double => U) = data map f
-  def /:[B](z: B)(op: (B, Double) => B): B = (z/:data)(op)
   
   def copy = Vector(util.Arrays.copyOf(data, length))
 
   /**
-    * scalar product of this vector with the other
+    * Appends a value to this vector, giving a new one
+    * @param d the value
+    * @return a new vector of bigger size
+    */
+  def ::(d: Double) = new Vector({
+    val newData = new Array[Double](length+1)
+    newData(0) = d
+    System.arraycopy(data, 0, newData, 1, length)
+    newData
+  })
+
+  /**
+    * scalar product of this vector with another
  *
     * @param other another vector of the same length
     * @return the product value
@@ -153,30 +163,16 @@ class Vector(private[la] val data: Array[Double]) extends (Int => Double) {
   }
 
   /**
-    * l<sup>2</sup> norm 
-    *
-    * @return square root of sum of squares of vector elements
-    */
-  def l2 = sqrt(this map (x => x*x) sum)
-
-  /**
-    * l<sup>∞</sup> norm
-    *
-    * @return max abs value of elements
-    */
-  def linf = if (data.isEmpty) 0.0 else this map (x => abs(x)) max
-
-  /**
     * converts this vector into a vector of l2=1 (if possible)
     *
     * @return this / this.l2
     */
   def normalize: Vector = {
-    val norm = l2
-    if (norm > 0.0) this * (1.0/norm) else this.copy
+    val norm = Norm.l2(this)
+    if (norm > Double.MinPositiveValue) this / norm else this.copy
   }
   
-  def project(other: Vector) = this * (this * other / l2)
+  def project(other: Vector) = this * ((this * other) / l2(this))
   
   def buildOrthonormalBasis: Array[Vector] = {
     val (maxValue, whereMax) = data.zipWithIndex map {case (x, i) => (abs(x), i)} max
@@ -203,7 +199,7 @@ class Vector(private[la] val data: Array[Double]) extends (Int => Double) {
     */
   def sum = data sum
   
-  def canEqual(other: Any): Boolean = other.isInstanceOf[Vector]
+//  def canEqual(other: Any): Boolean = other.isInstanceOf[Vector]
 
   override def equals(other: Any): Boolean = other match {
     case that: Vector => util.Arrays.equals(data, that.data)
@@ -215,6 +211,8 @@ class Vector(private[la] val data: Array[Double]) extends (Int => Double) {
   }
 
   override def toString = s"Vec(${util.Arrays.toString(data)})"
+
+  override def iterator: Iterator[Double] = data.toList.iterator
 }
 
 object Vector {
@@ -249,7 +247,7 @@ object Vector {
  *
       * @param v the vector to fill
       */
-    private[Vector] def fill(v: Array[Double])
+    private[Vector] def fill(v: Vector)
 
     /**
       * instantiates a new vector
@@ -257,9 +255,9 @@ object Vector {
       * @return a new vector
       */
     def apply(): Vector = {
-      val v = new Array[Double](dim)
+      val v = Vector(new Array[Double](dim))
       fill(v)
-      Vector(v)
+      v
     }
   }
 
@@ -271,7 +269,7 @@ object Vector {
     */
   def Zero(size: Int) = new Factory(size) {
 
-    override private[Vector] def fill(v: Array[Double]): Unit = {
+    override private[Vector] def fill(v: Vector): Unit = {
       for {i <- 0 until dim} v(i) = 0.0
     }
   }
@@ -286,7 +284,7 @@ object Vector {
   def RandomCube(size: Int, seed: Long) = new Factory(size) {
     private val rnd = new Random(seed)
 
-    override private[Vector] def fill(v: Array[Double]): Unit = {
+    override private[Vector] def fill(v: Vector): Unit = {
       for {i <- 0 until dim} v(i) = rnd.nextDouble() * 2 - 1
     }
   }
@@ -301,19 +299,19 @@ object Vector {
   def RandomSphere(size: Int, seed: Long) = new Factory(size) {
     private val cube = RandomCube(dim, seed)
 
-    override private[Vector] def fill(v: Array[Double]): Unit = {
+    override private[Vector] def fill(v: Vector): Unit = {
+      
       val s2 = Stream.continually {
         cube.fill(v)
-        sqrt((0.0 /: v.toStream)((s,x) => s + x*x))
-      } .dropWhile {1.0 <} head
+        Norm.l2(v)
+      } .find {1.0 <} head
       
       for {i <- 0 until dim} v(i) = v(i) / s2
-      ()
     }
   }
   
   def FromFunction(size: Int, f: Int => Double) = new Factory(size) {
-    override private[Vector] def fill(v: Array[Double]): Unit = {
+    override private[Vector] def fill(v: Vector): Unit = {
       for {i <- 0 until dim} v(i) = f(i)
     }
   }
