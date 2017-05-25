@@ -69,7 +69,7 @@ class PCATest extends Specification {
       l2(diff) < 0.0003 aka diff.toString must beTrue
     }
 
-    "produce two eigenvectors for a 3x3 in steps" in {
+    "produce three eigenvectors for a 3x3 in steps" in {
       val n = 3
       val m = matrix(3, 3, 5, 1, 2, 1, 4, 1, 2, 1, 3)
       val method = PCA.Iterations(0.0001, 100)

@@ -501,10 +501,12 @@ class MatrixTest extends Specification {
         Vector(1, 0, 3, 0, 5, 0, 7, 0, 9, 0), 
         Vector(2, 0, 0, 5, 0, 0, 8, 0, 0, 11)))
     }
-    
     "calculate covariance" in {
-      val vectors = Array(Vector(1.0, 3.0, -.5, 1.0), Vector(2.0, 6.0, -1.0, 0.0), Vector(3.0, 9.0, -1.5, 1.0))
-      val (avg, cov) = Matrix.covariance(vectors)
+      val vectors = Array(
+        Vector(1.0, 3.0, -.5, 1.0), // -1, -3, 0.5, 1/3
+        Vector(2.0, 6.0, -1.0, 0.0), // 0, 0, 0, -2/3
+        Vector(3.0, 9.0, -1.5, 1.0)) // 1, 3, -0.5, 1/3
+      val (avg, cov) = Matrix.covariance(4, vectors)
 
       avg must_== Vector(2.0, 6.0, -1.0, 2.0/3)
       

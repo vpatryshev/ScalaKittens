@@ -3,6 +3,7 @@ package scalakittens.experiments.word2vec
 import org.specs2.mutable.Specification
 
 import language.postfixOps
+import scalakittens.la.{Matrix, PCA}
 import scalakittens.{Good, IO, Strings}
 
 class SkipGramModelTest extends Specification {
@@ -26,6 +27,14 @@ class SkipGramModelTest extends Specification {
           println(vectors take 10 mkString "\n")
           println("Frequent words")
           println((vectors takeRight 10).reverse mkString "\n")
+          val size: Int = vectors.head._2.length
+          val (avg, cov) = Matrix.covariance(size, vectors map (_._2))
+          println(s"avg=$avg")
+          println(s"covariance=\n$cov\n\n")
+          val Some(eigens) = PCA.Iterations(0.001, 100).buildEigenVectors(cov, 10)
+          println("\nEIGENVALUES:\n")
+          println(eigens map (_._1))
+          
           ok
           
         case bad => 

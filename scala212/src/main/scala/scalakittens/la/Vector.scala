@@ -43,6 +43,7 @@ class Vector(private[la] val data: Array[Double]) extends Seq[Double] {
 
   /**
     * Appends a value to this vector, giving a new one
+    *
     * @param d the value
     * @return a new vector of bigger size
     */
@@ -315,44 +316,6 @@ object Vector {
       for {i <- 0 until dim} v(i) = f(i)
     }
   }
-
-  /**
-    * Calculates 0th and 1st moments of a sequence of vectors
-    *
-    * @param vectors those to use in calculation
-    * @return (number, sum)
-    */
-  def moments(vectors: Iterator[Vector]): (Int, Vector) = {
-    ((1, vectors.next()) /: vectors){(moments:(Int, Vector), v) => (moments._1+1, moments._2 + v)}
-  }
-
-
-  /**
-    * Calculates 0th and 1st moments of a sequence of vectors
-    *
-    * @param vectors those to use in calculation
-    * @return (number, sum)
-    */
-  def moments(vectors: Iterable[Vector]): (Int, Vector) = moments(vectors.iterator)
-
-  /**
-    * Calculates average of a sequence of vectors
-    *
-    * @param vectors those to use in calculation
-    * @return average
-    */
-  def average(vectors: Iterator[Vector]): Vector = {
-    val (n, sum) = moments(vectors)
-    sum / n
-  }
-
-  /**
-    * Calculates average of a sequence of vectors
-    *
-    * @param vectors those to use in calculation
-    * @return average
-    */
-  def average(vectors: Iterable[Vector]): Vector = average(vectors.iterator)
   
   def unit(size: Int, at: Int): Vector = {
     require(size > 0)

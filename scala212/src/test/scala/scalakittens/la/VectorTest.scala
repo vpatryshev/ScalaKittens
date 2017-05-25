@@ -55,7 +55,7 @@ class VectorTest extends Specification {
     }
     
     "have map()" in {
-      (Vector(0) map (_ => "oi-vei") toList) must_== Nil
+      (Vector(0) map ((x: Double) => "oi-vei") toList) must_== Nil
       
       (Vector(3.0, 2.0, 1.0) map (":) " + _) toList) must_== List(":) 3.0", ":) 2.0", ":) 1.0")
     }
@@ -198,9 +198,21 @@ class VectorTest extends Specification {
   }
   
   "Vector object" should {
-    "calculate average" in {
-      Vector.average(Array(Vector(1.0, 2.0, 3.0), Vector(-1.0, -1.0, -1.0))) must_==
-        Vector(0.0, 0.5, 1.0)
+    "produce a vector from function" in {
+      val sut1 = Vector.FromFunction(0, i => 42)()
+      sut1 must_== Vector()
+      Vector.FromFunction(6, i => (i*sqrt(i)).toInt)() must_== Vector(0, 1, 2, 5, 8, 11)
+    }
+    
+    "produce a unit vector" in {
+      Vector.unit(1, 0) must_== Vector(1.0)
+      for (i <- 0 until 10) {
+        val sut = Vector.unit(10, i)
+        for (j <- 0 until 10) {
+          sut(j) must_== (if (i == j) 1.0 else 0.0)
+        }
+      }
+      ok
     }
   }
 }

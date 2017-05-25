@@ -105,7 +105,7 @@ trait Strings {
     s6
   }
 
-  val isStop = Set("", "a", "an", "if", "of", "the", "he", "she", "on", "him", "her", "this", "that", "it", "we", "us", "our", "their", "there", "here", "i", "my", "mine", "theirs", "whom", "who", "what", "which", "but", "is", "are", "were", "was", "nous", "je", "you", "now", "do", "does", "did", "these", "those", "here", "to", "and", "in", "his", "had", "with", "not", "at", "as", "for", "from", "all", "be", "by", "they", "one", "have", "so", "up", "them", "or", "when", "been", "no", "would", "without", "only", "me", "don't", "s'en", "t", "en", "said", "out", "could", "will", "more", "him", "why", "himself", "about", "how", "into", "then", "some", "after", "before", "went", "go", "won't", "together", "more", "less", "do", "did", "done", "doing", "your", "very", "has", "up", "down", "again", "das")
+  val isStop = Set("", "a", "an", "if", "of", "the", "he", "she", "on", "him", "her", "this", "that", "it", "we", "us", "our", "their", "there", "here", "i", "my", "mine", "theirs", "whom", "who", "what", "which", "but", "is", "are", "were", "was", "nous", "je", "you", "now", "do", "does", "did", "these", "those", "here", "to", "and", "in", "his", "had", "with", "not", "at", "as", "for", "from", "all", "be", "by", "they", "one", "have", "so", "up", "them", "or", "when", "been", "no", "would", "without", "only", "me", "don't", "s'en", "t", "en", "said", "out", "could", "will", "more", "him", "why", "himself", "about", "how", "into", "then", "some", "after", "before", "went", "go", "won't", "together", "more", "less", "done", "doing", "your", "very", "has", "up", "down", "again", "das")
 }
 
 object Strings extends Strings

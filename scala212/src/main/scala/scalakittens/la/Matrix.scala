@@ -5,6 +5,7 @@ import language.reflectiveCalls
 import math._
 import scalakittens.la.Matrix._
 import scalakittens.la.Norm._
+import scalakittens.stats.AccumulatingMoments
 
 /**
   * Created by vpatryshev on 5/15/17.
@@ -503,17 +504,12 @@ object Matrix {
     * @param in stream of vectors (must be same size)
     * @return covariance matrix
     */
-  def covariance(in: Iterable[Vector]): (Vector, Matrix) = {
-    val (n, sum) = Vector.moments(in)
-    val avg = sum / n
-    val size: Int = avg.length
+  def covariance(size: Int, in: Iterable[Vector]): (Vector, Matrix) = {
+    val acc = new AccumulatingMoments(size)
     val data = new Array[Double](size * size)
     for {
       v <- in
-      i <- 0 until size
-      j <- 0 until size
-    } data(i*size + j) += (v(i)-avg(i))*(v(j)-avg(j)) / (n-1)
-    
-    (avg, Matrix(size, size, data))
+    } acc += v
+    (acc.avg, acc.covariance)
   }
 }

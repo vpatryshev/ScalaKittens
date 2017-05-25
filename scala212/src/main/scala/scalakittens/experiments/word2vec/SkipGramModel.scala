@@ -52,7 +52,7 @@ case class SkipGramModel(text: ScannedText, dim: Int, α: Double, window: Int, n
   
   def run(): Unit = {
     (0 until numEpochs).foreach(i => {
-      print(s"--$i--")
+      print(s"--sg$$i--")
       doOneEpoch()
     })
   }
