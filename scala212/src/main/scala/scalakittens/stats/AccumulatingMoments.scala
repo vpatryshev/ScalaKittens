@@ -44,7 +44,7 @@ case class AccumulatingMoments(private val size: Int) {
     
   }
 
-  def update(vectors: Iterable[Vector]): AccumulatingMoments = {
+  def collect(vectors: Iterable[Vector]): AccumulatingMoments = {
     vectors foreach += 
     this
   }

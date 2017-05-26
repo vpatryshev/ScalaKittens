@@ -322,4 +322,13 @@ object Vector {
     require (at < size && at >= 0)
     FromFunction(size, i => if (i == at) 1.0 else 0.0)()
   }
+  
+  private val Regex = "Vec\\(\\[([\\d\\.,\\-E ]+)\\]\\)".r
+  
+  def read(s: String) = s match {
+    case Regex(xs) =>
+      val numbers = xs split ", ?" map (_.toDouble)
+      Some(Vector(numbers))
+    case garbage => None
+  }
 }
