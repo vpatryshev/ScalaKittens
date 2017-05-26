@@ -496,20 +496,4 @@ object Matrix {
     * @return a diagonal matrix
     */
   def diagonal(values: Double*): Matrix = diagonal(Vector(values:_*))
-
-  /**
-    * Calculates covariance matrix for a given Iterable of vectors
-    * The iterable is scanned twice, first for the average, and then for the matrix
-    * 
-    * @param in stream of vectors (must be same size)
-    * @return covariance matrix
-    */
-  def covariance(size: Int, in: Iterable[Vector]): (Vector, Matrix) = {
-    val acc = new AccumulatingMoments(size)
-    val data = new Array[Double](size * size)
-    for {
-      v <- in
-    } acc += v
-    (acc.avg, acc.covariance)
-  }
 }

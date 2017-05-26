@@ -13,7 +13,7 @@ case class AccumulatingMoments(private val size: Int) {
   
   def +=(row: Vector): Unit = {
 
-    require(row.length == size)
+    require(row.length == size, s"All vectors should have the length $size, got ${row.length}")
     _n += 1
     sum += row
 

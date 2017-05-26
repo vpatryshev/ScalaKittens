@@ -106,32 +106,10 @@ class MatrixTest extends Specification {
       sut * Vector(0, 1, 2, 3) must_== Vector(14, 74, 134)
     }
 
-    "check unitariness" in {
-      val u0 = Matrix.Unitary(Array(Vector(0, 1), Vector(1, 0)))
-      u0.isUnitary(0) aka s"delta = ${l2(u0 * u0.transpose - Unit(2))}" must beTrue
+    val alpha = Pi / 4
+    val beta = Pi / 3
 
-      val alpha = Pi / 4
-      val beta = Pi / 3
-      val u1: UnitaryMatrix = Matrix.Unitary(
-        Array(Vector(cos(beta), sin(beta)),
-          Vector(-sin(beta), cos(beta))
-        ))
-
-      u1.isUnitary(0.001) aka s"delta = ${l2(u1 * u1.transpose - Unit(3))}" must beTrue
-
-      val u2: UnitaryMatrix = Matrix.Unitary(
-        Array(Vector(cos(alpha) * cos(beta), cos(alpha) * sin(beta), sin(alpha)),
-          Vector(-sin(alpha) * cos(beta), -sin(alpha) * sin(beta), cos(alpha)),
-          Vector(sin(beta), -cos(beta), 0)
-        ))
-
-      u2.isUnitary(0.001) aka s"delta = ${l2(u2 * u2.transpose - Unit(3))}" must beTrue
-
-    }
-
-    val sampleUnitaryMatrix: UnitaryMatrix = {
-      val alpha = Pi / 4
-      val beta = Pi / 3
+    val sampleUnitaryMatrix_3x3: UnitaryMatrix = {
       Matrix.Unitary(
         Array(Vector(cos(alpha) * cos(beta), cos(alpha) * sin(beta), sin(alpha)),
           Vector(-sin(alpha) * cos(beta), -sin(alpha) * sin(beta), cos(alpha)),
@@ -139,13 +117,28 @@ class MatrixTest extends Specification {
         ))
     }
 
+    val sampleUnitaryMatrix_2x2: UnitaryMatrix = Matrix.Unitary(
+      Array(Vector(cos(beta), sin(beta)),
+        Vector(-sin(beta), cos(beta))
+      ))
+
+    "check unitariness" in {
+      val u0 = Matrix.Unitary(Array(Vector(0, 1), Vector(1, 0)))
+      u0.isUnitary(0) aka s"delta = ${l2(u0 * u0.transpose - Unit(2))}" must beTrue
+
+      sampleUnitaryMatrix_2x2.isUnitary(0.001) aka s"delta = ${l2(sampleUnitaryMatrix_2x2 * sampleUnitaryMatrix_2x2.transpose - Unit(3))}" must beTrue
+
+      sampleUnitaryMatrix_3x3.isUnitary(0.001) aka s"delta = ${l2(sampleUnitaryMatrix_3x3 * sampleUnitaryMatrix_3x3.transpose - Unit(3))}" must beTrue
+
+    }
+
     "rotate" in {
 
       val m0 = diagonal(10, 5, -1)
 
-      val m1 = m0 rotate sampleUnitaryMatrix
+      val m1 = m0 rotate sampleUnitaryMatrix_3x3
 
-      val m2 = m1 rotate sampleUnitaryMatrix.transpose
+      val m2 = m1 rotate sampleUnitaryMatrix_3x3.transpose
 
       l2(m2 - m0) < 0.00001 aka m2.toString must beTrue
 
@@ -207,7 +200,7 @@ class MatrixTest extends Specification {
           Vector(1.1250000000000009, 3.6806079660838646, 1.2500000000000002),
           Vector(3.6806079660838655, 5.375000000000001, 2.165063509461097),
           Vector(1.2500000000000002, 2.1650635094610973, 7.5)))
-      val sut = m.projectToHyperplane(sampleUnitaryMatrix)
+      val sut = m.projectToHyperplane(sampleUnitaryMatrix_3x3)
       l2(sut - diagonal(5, -1)) < 0.0001 aka sut.toString must beTrue
     }
   }
@@ -500,28 +493,6 @@ class MatrixTest extends Specification {
         Vector(0, 1, 2, 3, 4, 5, 6, 7, 8, 9), 
         Vector(1, 0, 3, 0, 5, 0, 7, 0, 9, 0), 
         Vector(2, 0, 0, 5, 0, 0, 8, 0, 0, 11)))
-    }
-    "calculate covariance" in {
-      val vectors = Array(
-        Vector(1.0, 3.0, -.5, 1.0), // -1, -3, 0.5, 1/3
-        Vector(2.0, 6.0, -1.0, 0.0), // 0, 0, 0, -2/3
-        Vector(3.0, 9.0, -1.5, 1.0)) // 1, 3, -0.5, 1/3
-      val (avg, cov) = Matrix.covariance(4, vectors)
-
-      avg must_== Vector(2.0, 6.0, -1.0, 2.0/3)
-      
-      val expected: Matrix = Matrix.ofRows(4, Array(
-        Vector(1.0, 3.0, -0.5, 0.0),
-        Vector(3.0, 9.0, -1.5, 0.0),
-        Vector(-0.5, -1.5, 0.25, 0.0),
-        Vector(0.0, 0.0, 0.0, 0.33333333333333337)
-      ))
-      
-      for {
-        i <- 0 until 4
-      } cov.row(i) aka s"@$i" must_== expected.row(i)
-      
-      cov must_== expected
     }
   }
 }
