@@ -105,7 +105,19 @@ trait Strings {
     s6
   }
 
-  val isStop = Set("", "a", "an", "if", "of", "the", "he", "she", "on", "him", "her", "this", "that", "it", "we", "us", "our", "their", "there", "here", "i", "my", "mine", "theirs", "whom", "who", "what", "which", "but", "is", "are", "were", "was", "nous", "je", "you", "now", "do", "does", "did", "these", "those", "here", "to", "and", "in", "his", "had", "with", "not", "at", "as", "for", "from", "all", "be", "by", "they", "one", "have", "so", "up", "them", "or", "when", "been", "no", "would", "without", "only", "me", "don't", "s'en", "t", "en", "said", "out", "could", "will", "more", "him", "why", "himself", "about", "how", "into", "then", "some", "after", "before", "went", "go", "won't", "together", "more", "less", "done", "doing", "your", "very", "has", "up", "down", "again", "das")
+  val isStop = Set(
+    "","a","about","after","again","all","an","and","another","are","as","at",
+    "be","been","before","but","by","could",
+    "das","did","do","does","doing","don't","done","down","en",
+    "for","from","go",
+    "had","has","have","he","her","here","here","him","him","himself","his","how",
+    "i","if","in","into","is","it","its","je","less","me","mine","more","more","my",
+    "no","not","nous","now","of","on","one","only","or","other","our","out",
+    "s'en","said","she","so","some",
+    "t","that","the","their","theirs","them","then","there","these","they","this","those","to","together",
+    "up","up","us","very",
+    "was","we","went","were","what","when","which","who","whom","why","will","with","without","won't","would",
+    "you","your")
 }
 
 object Strings extends Strings
