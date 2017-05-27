@@ -10,6 +10,8 @@ import scalakittens.la.{Vector, Basis, Matrix, PCA}
 import scalakittens.stats.AccumulatingMoments
 import scalakittens.{Good, IO, Strings}
 
+// TODO: use https://github.com/sameersingh/scalaplot
+
 class SkipGramModelTest extends Specification {
 
   def serialize(vectors: List[(String, Vector)]): Unit = {
@@ -37,30 +39,30 @@ class SkipGramModelTest extends Specification {
       source map scanner.scan match {
         case Good(st) =>
  
-          val model = SkipGramModel(st, 10, 0.25, 3, 100, 123456789L)
-          
+          val model = SkipGramModel(st, dim=10, α=0.09, window=3, numEpochs=200, seed=123456789L)
           model.run()
+          model.in.foreach {v => v.isValid must beTrue; ()}
           val vectors0 = st.dictionary zip model.in
           val size: Int = vectors0.head._2.length
-          val acc = AccumulatingMoments(size).collect(vectors0 map (_._2))
+          val acc = AccumulatingMoments(size).collect(model.in)
           val avg = acc.avg
           val cov = acc.covariance
           println(s"avg=$avg")
           println(s"covariance=\n$cov\n\n")
-          val Some(eigens) = PCA.Iterations(0.001, 10).buildEigenVectors(cov, 5)
+          val Some(eigens) = PCA.Iterations(0.001, 10).buildEigenVectors(cov, 10)
           println("\nEIGENVALUES:\n")
           println(eigens map (_._1))
-          val newBasis = Basis(avg, Matrix.ofColumns(avg.length, eigens.map (_._2).toArray))
+          val newBasis = Basis(avg, Matrix.Unitary(eigens.map (_._2).toArray).transpose)
           
           val vectors = vectors0 map { case (w, v) => (w, newBasis(v)) }
-
-//          serialize(vectors)
+          serialize(vectors)
           println("Rare words")
           println(vectors take 10 mkString "\n")
           println("Frequent words")
           println((vectors takeRight 10).reverse mkString "\n")
 
           println("\nSEE ALL RESULTS IN warandpeace.vecs.txt\n")
+          vectors.length must_== 17692
 
           ok
           
@@ -84,47 +86,70 @@ class SkipGramModelTest extends Specification {
         case (word, vec) => (word, vec(0), vec(1))
       } .toList
 
-      allProjections.size must_== 17713
+      allProjections.size must_== 17692
 
-      val projections = allProjections takeRight 70
-      
-      val xs = projections.map(_._2)
-      val ys = projections.map(_._3)
-      
-      val (xmin, xmax) = (xs.min, xs.max)
-      val (ymin, ymax) = (ys.min, ys.max)
-      
-      val N = 120
-      val M = 60
-      val xScale = (xmax - xmin) / N
-      val yScale = (ymax - ymin) / M
-      
-      val sample = projections map {
-        case (w, x, y) => (w, ((x - xmin) / xScale).toInt + 1, ((y - ymin) / yScale).toInt)
-      }
-
-      val sortedSample = sample.sortBy {case (w, x, y) => (M - y) * N + x}
-
-      val samplesByLine = sample.groupBy(_._3)// mapValues {case (w, x, y) => (w, x)}
-      
-      0 to M foreach {
-        j => 
-          val valueMap = samplesByLine.getOrElse(j, Nil) map {case (w, x, y) => (" " + w + " ", x-1)} groupBy(_._2) mapValues { _.head._1 }
-
-          val values = valueMap.toList.sorted
-
-          val split:Map[Int, Char] = values .map {
-            case (i, w) => w.zipWithIndex map { case (c, i1) => (i+i1) -> c } toList 
-          } .flatten .toMap
-          
-          print(f"$j%2d  ")
-          if (values.nonEmpty) for (i <- 0 to split.keySet.max) {
-            print(split.getOrElse(i, ' '))
-          }
-          println
-      }
+      val projections = allProjections.takeRight(150).reverse
+      visualize("150 MOST FREQUENT WORDS", projections)
+      visualize("150 MOST RARE WORDS", allProjections take 150)
       
       ok
+    }
+  }
+
+  def visualize(title: String, projections: List[(String, Double, Double)]): Unit = {
+    println; println
+    println("="*150)
+    println(s"                                    $title\n")
+    println("-"*150)
+    val xs = projections.map(_._2)
+    val ys = projections.map(_._3)
+
+    val (xmin, xmax) = (xs.min, xs.max)
+    val (ymin, ymax) = (ys.min, ys.max)
+
+    val N = 120
+    val M = 60
+    val xScale = (xmax - xmin) / N
+    val yScale = (ymax - ymin) / M
+
+    val sample = projections map {
+      case (w, x, y) => (w, ((x - xmin) / xScale).toInt + 1, ((y - ymin) / yScale).toInt)
+    }
+
+    val sortedSample = sample.sortBy { case (w, x, y) => (M - y) * N + x }
+
+    val samplesByLine = sample.groupBy(_._3) // mapValues {case (w, x, y) => (w, x)}
+
+    0 to M foreach {
+      j =>
+        val oneLineOfTexts: Map[Int, List[String]] = samplesByLine.getOrElse(j, Nil) map { case (w, x, y) => (w, x) } groupBy (_._2) mapValues (_.map(_._1))
+
+        val valueMap = oneLineOfTexts mapValues {
+          _.head
+        }
+
+        val values = valueMap.toList.sorted
+
+        val merged: List[(Int, String)] = (List[(Int, String)]() /: values) {
+          case (doneList, wi@(i, w)) =>
+            if (doneList.exists {
+              case (i1, w1) =>
+                i + w.length - 1 > i1 && i - 1 < i1 + w1.length
+            }) doneList
+            else {
+              wi :: doneList
+            }
+        } sortBy (_._1)
+
+        val chars: Map[Int, Char] = merged.map {
+          case (i, w) => w.zipWithIndex map { case (c, i1) => (i + i1) -> c } toList
+        }.flatten.toMap
+
+        print(f"$j%2d  ")
+        if (merged.nonEmpty) for (i <- 0 to chars.keySet.max) {
+          print(chars.getOrElse(i, ' '))
+        }
+        println
     }
   }
 }

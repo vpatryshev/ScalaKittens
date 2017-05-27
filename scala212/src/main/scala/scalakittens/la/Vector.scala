@@ -14,6 +14,7 @@ import Norm._
   * Created by vpatryshev on 5/14/17.
   */
 class Vector(private[la] val data: Array[Double]) extends Seq[Double] {
+  def isValid: Boolean = data forall  (x => !x.isNaN && !x.isInfinite)
 
   /**
     * length of this vector
@@ -133,7 +134,12 @@ class Vector(private[la] val data: Array[Double]) extends Seq[Double] {
     */
   def +=(other: Vector): Vector = {
     require(length == other.length)
+    val cp = copy
+    require(isValid, s"+= fucked up:1. ${other}")
     for (i <- data.indices) data(i) += other.data(i)
+
+    require(isValid, s"+= fucked up:2. ${this} - \nfrom $other \nand  $cp")
+
     this
   }
 

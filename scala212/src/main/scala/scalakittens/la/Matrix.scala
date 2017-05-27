@@ -197,7 +197,7 @@ trait Matrix extends ((Int, Int) => Double) with Iterable[Double] {
     * @return another vector, this * v
     */
   def *(v: Vector): Vector = {
-    require(nCols == v.length, s"For a product we need that number of columns ($nCols) is equal to the vector's length (${v.length})")
+    require(nCols == v.length, s"To apply a matrix to a vector we need that number of columns ($nCols) is equal to the vector's length (${v.length})")
 
     0 until nRows map {
       i => (0.0 /: (0 until v.length))((s, j) => s + this(i, j)*v(j))
@@ -271,8 +271,9 @@ trait MutableMatrix extends Matrix {
 }
 
 trait UnitaryMatrix extends Matrix {
+  require(nCols == nRows)
   def isUnitary(precision: Double) = l2(this * transpose - Unit(nCols)) <= precision
-  
+
   override def transpose: UnitaryMatrix = 
     new Matrix.OnFunction(nCols, nRows, (i, j) => this(j, i)) with UnitaryMatrix
 }

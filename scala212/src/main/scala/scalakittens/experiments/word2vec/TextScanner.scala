@@ -5,7 +5,7 @@ import scala.collection.mutable
 import scalakittens.{Result, Good, Strings}
 
 /**
-  * Formailized representation of source of words
+  * Formalized representation of source of words
   * We need to provide some kind of reader (line iterator is ok)
   * We need a predicate that detects the beginning of the content
   * We need a predicate that detects the end of the context
@@ -13,6 +13,8 @@ import scalakittens.{Result, Good, Strings}
   * We need a predicate that checks whether we a word (and not a stop word)
   * 
   * Created by vpatryshev on 5/11/17.
+  * 
+  * TODO: use Lucene for tokenization
   */
 trait TextScanner {
   
