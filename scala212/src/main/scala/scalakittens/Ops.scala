@@ -55,6 +55,10 @@ trait Ops {
     }
   }
 
+  implicit class Rep(n: Int) { // http://stackoverflow.com/questions/5764049/most-elegant-repeat-loop-in-scala
+    def times[A](f: => A) { 1 to n foreach(_ => f) }
+  }
+  
   def toSource(x: Any): String = {
     x match {
       case null ⇒ "null"

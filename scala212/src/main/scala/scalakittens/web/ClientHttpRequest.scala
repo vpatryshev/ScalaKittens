@@ -30,7 +30,7 @@ class ClientHttpRequest(val connection: HttpURLConnection) extends Observable {
   connection.setDoOutput(true)
   connection.setDoInput(true)
   connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundaryString)
-  lazy val os: OutputStream = connection.getOutputStream
+  lazy val os: OutputStream = connection.getOutputStream()
   private val cookies = new ListBuffer[(String, String)]
   private var rawCookies = ""
   private var _bytesSent = 0
@@ -292,6 +292,7 @@ class ClientHttpRequest(val connection: HttpURLConnection) extends Observable {
   }
 }
 
+@deprecated("use newman library instead; this one is just ancient", "06/26/2016")
 object ClientHttpRequest {
 
   val BLOCK_SIZE = {
