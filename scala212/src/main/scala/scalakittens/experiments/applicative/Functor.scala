@@ -1,6 +1,6 @@
 package scalakittens.experiments.applicative
 
-import language.{higherKinds, implicitConversions, existentials, reflectiveCalls}
+import language.{higherKinds, implicitConversions}
 
 trait Functor[T[_]] { self ⇒
   // mapping on objects of a category

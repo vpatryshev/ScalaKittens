@@ -2,7 +2,6 @@ package scalakittens
 
 import language.{implicitConversions, postfixOps}
 import java.io._
-import Ops._
 import scala.io.{Codec, Source}
 import java.net.URL
 import java.nio.channels.Channels
@@ -130,21 +129,6 @@ trait IO { self ⇒
 
   def grabResource(path:String, codec:Codec = Codec.UTF8) =
     readResource(path, codec).getOrElse(throw new FileNotFoundException(s"Resource not found: $path"))
-
-  private lazy val PropertyFormat = "([\\w\\.]+)\\b*=\\b*(.*)".r
-
-  def propsFromSource(source: ⇒ Source) = {
-    var lines = tryOr(source.getLines().toList, List(""))
-
-    lines.
-      filter(line ⇒ !line.startsWith("#") && !line.isEmpty).
-      collect { case PropertyFormat(key, value) ⇒ key→value}.
-      toMap
-  }
-
-  def propsFromFile(filename: String) = propsFromSource(Source.fromFile(filename))
-
-  def propsFromResource(path: String) = readResource(path) map (s ⇒ propsFromSource(Source.fromString(s))) getOrElse Map.empty
 
   implicit class BetterFile(val f:File) { self ⇒
     def extensionOpt:Option[String] = f.getName.split("\\.").toList match {

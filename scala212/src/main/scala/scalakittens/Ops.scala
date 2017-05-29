@@ -1,7 +1,5 @@
 package scalakittens
 
-import language.implicitConversions
-
 import Result._
 
 import scala.concurrent.duration._

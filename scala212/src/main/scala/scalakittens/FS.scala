@@ -16,8 +16,8 @@ trait FS { fs ⇒
   implicit def existingFile(path: String): ExistingFile = existingFile(file(path))
   implicit def textFile(file: File):       TextFile     = new TextFile(file)
   implicit def textFile(path: String):     TextFile     = new TextFile(file(path))
-  implicit def folder(file: File):         Folder       = new Folder(file)
-  implicit def folder(path: String):       Folder       = new Folder(file(path))
+  implicit def folder(file: File):         Folder       = Folder(file)
+  implicit def folder(path: String):       Folder       = Folder(file(path))
   implicit def file(path: String): File                 = new File(path)
   def tempFile(prefix: String)                          = new TextFile(File.createTempFile(prefix, "tmp"))
 
@@ -35,7 +35,7 @@ trait FS { fs ⇒
 
     lazy val canonicalFile = file.getCanonicalFile.getAbsoluteFile
     lazy val absolutePath = canonicalFile.getAbsolutePath
-    def parent = new Folder(canonicalFile.getParentFile)
+    def parent = Folder(canonicalFile.getParentFile)
     def delete = file.delete
     def exists = fs.exists(file)
     override def toString = canonicalFile.toString
@@ -47,7 +47,7 @@ trait FS { fs ⇒
   }
 
   def isAbsolute(name: String) = {
-    var sepAt = name indexOf File.separatorChar
+    val sepAt = name indexOf File.separatorChar
     sepAt == 0 ||
       sepAt > 0 && name(sepAt - 1) == ':'
   }
@@ -68,7 +68,7 @@ trait FS { fs ⇒
 
     // TODO(vlad): stop returning and throwing; it's ancient
     def subfolder(name: String): Folder = {
-      val tentative = new Folder(file(name).file)
+      val tentative = Folder(file(name).file)
       if (tentative isSubfolderOf this) return tentative
       throw new IllegalArgumentException("Could not create subfolder '" + name + "' in '" + this + "'")
     }

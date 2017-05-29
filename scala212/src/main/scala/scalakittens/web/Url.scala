@@ -1,6 +1,6 @@
 package scalakittens.web
 
-import language.{implicitConversions, postfixOps, reflectiveCalls}
+import language.{implicitConversions, postfixOps}
 
 import scalakittens.{Good, Result, Strings}
 import Strings._

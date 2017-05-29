@@ -26,7 +26,6 @@ object UntypedSKI {
   }
 }
 
-
 // https://gist.github.com/othiym23/1034029 - typed SKI
 object TypedSKI {
   def I[A]:(A⇒A) = (x:A) ⇒ x
@@ -45,5 +44,6 @@ object TypedSKI {
     def SKK[A,B] = S[A,B⇒A,A](K[A,B⇒A])(K[A,B])
     println(SKK(1))
     println(SKK("Hello Lambda"))
+    print(sk[Double, String])
   }
 }

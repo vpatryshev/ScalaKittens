@@ -1,8 +1,7 @@
 package scalakittens.experiments.word2vec
 
-import language.postfixOps
 import scala.collection.mutable
-import scalakittens.{Result, Good, Strings}
+import scalakittens.Strings
 
 /**
   * Formalized representation of source of words

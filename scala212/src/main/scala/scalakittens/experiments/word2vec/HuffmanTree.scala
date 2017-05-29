@@ -95,7 +95,6 @@ class HuffmanTree(source: List[Int]) {
 
         val b1 = if (branch1Length > 2) "_"*(branch1Length-1) + "/" else "/"
         val b2 = if (branch2Length > 2) "\\" + "_"*(branch2Length-1) else "\\"
-        val rbStart = first.handle+1 + b1.length + rightBranchPos + 2
         val b1b2 = spaces(first.handle+1) + b1 + spacesBetweenBranches + "  " + b2
         
         val branches = b1b2 :: (if (branch1Length > 2 || branch2Length > 2) {

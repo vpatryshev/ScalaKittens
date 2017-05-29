@@ -1,11 +1,8 @@
 package scalakittens.la
 
 import language.postfixOps
-import language.reflectiveCalls
-import math._
 import scalakittens.la.Matrix._
 import scalakittens.la.Norm._
-import scalakittens.stats.AccumulatingMoments
 
 /**
   * Created by vpatryshev on 5/15/17.

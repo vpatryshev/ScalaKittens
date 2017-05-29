@@ -1,7 +1,6 @@
 package scalakittens.la
 
 import language.postfixOps
-import scala.math._
 
 /**
   * Created by vpatryshev on 5/17/17.

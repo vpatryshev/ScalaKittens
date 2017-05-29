@@ -8,30 +8,31 @@ package scalakittens.experiments.applicative
 
 import scala.collection._
 import scala.collection.immutable.List
-import scala.language.{higherKinds, implicitConversions, reflectiveCalls}
+import scala.language.{higherKinds, implicitConversions}
 import scalakittens.experiments.algebra.{Monoid, Semigroup}
 
 object All {
-
+  type F1[F[_],X,Y] = F[X]=>F[Y]
+  
   /**
     * Functorial features of List type
     */
   trait ListFunctor extends Functor[List] {
-    override def f1[A, B](f: A ⇒ B) = (aa: List[A]) ⇒  aa map f
+    override def f1[A, B](f: A ⇒ B): F1[List,A,B] = (aa: List[A]) ⇒  aa map f
   }
 
   /**
     * Functorial features of Seq type
     */
   trait SeqFunctor extends Functor[Seq] {
-    override def f1[A, B](f: A ⇒ B) = (aa: Seq[A]) ⇒ aa map f
+    override def f1[A, B](f: A ⇒ B): F1[Seq,A,B] = (aa: Seq[A]) ⇒ aa map f
   }
 
   /**
     * Functorial features of Set type (covariant version)
     */
   trait SetFunctor extends Functor[Set] {
-    override def f1[A, B](f: A ⇒ B) = (sa: Set[A]) ⇒ sa map f
+    override def f1[A, B](f: A ⇒ B): F1[Set,A,B] = (sa: Set[A]) ⇒ sa map f
   }
 
   /**

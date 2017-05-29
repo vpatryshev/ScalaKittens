@@ -1,12 +1,10 @@
 package scalakittens
 
-import java.util.Date
-
 import Props._
 import Result.Outcome
 
 import scala.io.Source
-import scala.language.{implicitConversions, postfixOps, reflectiveCalls}
+import scala.language.{implicitConversions, postfixOps}
 import scala.util.parsing.combinator.RegexParsers
 import Props._
 
@@ -232,7 +230,7 @@ case class Props(private val innerMap: PropMap) extends PartialFunction[String, 
       k ⇒ k.split("\\.").dropWhile(_ != key).toList.drop(1).headOption
     } collect {
       case Some(v) ⇒ v
-    } toSet
+    }
 
     found.toList match {
       case Nil ⇒ Result.error("Not found")
@@ -243,7 +241,7 @@ case class Props(private val innerMap: PropMap) extends PartialFunction[String, 
   }
 
   private def value(key: String) = {
-    val iterable: Iterable[String] = innerMap map (_._2)
+    val iterable: Iterable[String] = innerMap values
     val values:Set[String] = iterable.toSet
     values.size match {
       case 0 ⇒ Result.error("No value found")
@@ -447,7 +445,7 @@ trait PropsOps {
   private lazy val PropertyFormat = "([\\w\\.]+) *= *(.*)".r
 
   def fromSource(source: ⇒Source): Props = {
-    var lines = Result.forValue(source.getLines().toList).getOrElse(List(""))
+    val lines = Result.forValue(source.getLines().toList).getOrElse(List(""))
 
     fromPropLines(lines)
   }
@@ -508,8 +506,6 @@ trait PropsOps {
 
 object Props extends PropsOps {
 
-  var DEPTH_COUNTER = 0
-
   val sNumberKey = "\\[\\[(\\d+)\\]\\]"
   val NumberKeyPattern = sNumberKey.r
   lazy val empty = Props(Map.empty)
@@ -550,18 +546,6 @@ object Props extends PropsOps {
       Good(props)
 
     case x ⇒ Result.error(s"Failed to retrieve props from table: $x in $source")
-  }
-
-  private def sameKeyBundle(theKeyWeHave: String, suggestedAnyCase: String) = {
-    val suggested = suggestedAnyCase.toLowerCase
-    val ourKey = theKeyWeHave.toLowerCase
-
-    ourKey == suggested || {
-      val keys = ourKey.split("\\.").toSet
-      val suggestedKeys = suggested.split("\\.") .map (_.replaceAll("\\?", ".")) .toSet
-
-      keys == suggestedKeys
-    }
   }
 
   private def containsKeyBundle(theKeyWeHave: String, suggestedAnyCase: String) = {

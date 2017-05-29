@@ -30,18 +30,18 @@ class ClientHttpRequest(val connection: HttpURLConnection) extends Observable {
   connection.setDoOutput(true)
   connection.setDoInput(true)
   connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundaryString)
-  lazy val os: OutputStream = connection.getOutputStream()
+  lazy val os: OutputStream = connection.getOutputStream
   private val cookies = new ListBuffer[(String, String)]
   private var rawCookies = ""
   private var _bytesSent = 0
 
-  def bytesSent = _bytesSent
+  def bytesSent: Int = _bytesSent
 
-  private var _filesSent = 0
+  private var _filesSent: Int = 0
 
-  def filesSent = _filesSent
+  def filesSent: Int = _filesSent
 
-  var _isOpen = true
+  private var _isOpen = true
 
   protected def write(ss: String*) = {
     if (!_isOpen) throw new IOException("This request was already sent, too late to append.")
@@ -68,8 +68,6 @@ class ClientHttpRequest(val connection: HttpURLConnection) extends Observable {
   protected def randomString: String = {
     java.lang.Long.toString(random.nextLong, 36)
   }
-
-  private def boundaryNumBytes: Long = boundaryString.length + 2
 
   private lazy val boundaryString: String = "---------------------------" + randomString + randomString + randomString
 
@@ -145,23 +143,14 @@ class ClientHttpRequest(val connection: HttpURLConnection) extends Observable {
     this.cookies ++= cookies; ()
   }
 
-  private def writeNameNumBytes(name: String): Long = {
-    newlineNumBytes + "Content-Disposition: form-data; name=\"".length + name.getBytes.length + 1
-  }
-
-  private def writeName(name: String) = write(CRLF, "Content-Disposition: form-data; name=\"", name, "\"")
+  private def writeName(name: String): ClientHttpRequest = 
+    write(CRLF, "Content-Disposition: form-data; name=\"", name, "\"")
 
   private var isCanceled: Boolean = false
 
   def cancel(): Unit = {
     isCanceled = true
   }
-
-  //  def pipe(in: FileInputStream, out: OutputStream) {
-  //    val oc = Channels.newChannel(out)
-  //    val ic: FileChannel = in.getChannel
-  //    ic.transferTo(0, in.available, oc) // that's it? or should I
-  //  }
 
   private def pipe(in: InputStream, out: OutputStream) {
     val buf: Array[Byte] = new Array[Byte](ClientHttpRequest.BLOCK_SIZE)
@@ -188,7 +177,7 @@ class ClientHttpRequest(val connection: HttpURLConnection) extends Observable {
     * @param value parameter value
     * @throws IOException when something broke
     */
-  def addParameter(name: String, value: String) = {
+  def addParameter(name: String, value: String): ClientHttpRequest = {
     writeBoundary
     writeName(name)
     newline
@@ -295,7 +284,7 @@ class ClientHttpRequest(val connection: HttpURLConnection) extends Observable {
 @deprecated("use newman library instead; this one is just ancient", "06/26/2016")
 object ClientHttpRequest {
 
-  val BLOCK_SIZE = {
+  val BLOCK_SIZE: Int = {
     val inceptionTime = 42
     val now = System.currentTimeMillis / 365.24 / 24 / 3600 / 1000
     val dt = now - inceptionTime

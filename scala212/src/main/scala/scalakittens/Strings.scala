@@ -1,6 +1,6 @@
 package scalakittens
 
-import scala.language.{implicitConversions, postfixOps, reflectiveCalls}
+import scala.language.postfixOps
 import scala.util.matching.Regex
 
 trait Strings {

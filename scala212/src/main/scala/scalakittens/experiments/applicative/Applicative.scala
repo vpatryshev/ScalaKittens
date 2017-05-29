@@ -40,7 +40,7 @@ trait Applicative[T[_]] extends Functor[T] { self ⇒
     implicit def applicable[A, B](utf: U[T[A ⇒ B]]): Applicable[A, B, UT] = {
       val uta2tb: U[(T[A]) ⇒ T[B]] = u.f1(self.ap[A, B])(utf)
       new Applicable[A, B, UT] {
-        def <*>(uta: UT[A]) = u.applicable(uta2tb) <*> uta
+        def <*>(uta: UT[A]): U[T[B]] = u.applicable(uta2tb) <*> uta
       }
     }
   }

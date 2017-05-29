@@ -11,9 +11,10 @@ import scalakittens.stats.AccumulatingMoments
 import scalakittens.{Good, IO, Strings}
 
 // TODO: use https://github.com/sameersingh/scalaplot
+// TODO: implement https://en.wikipedia.org/wiki/Nonlinear_dimensionality_reduction#Methods_based_on_proximity_matrices
 
 class SkipGramModelTest extends Specification {
-
+  
   def serialize(vectors: List[(String, Vector)]): Unit = {
     val out = new FileWriter("warandpeace.vecs.txt")
     for {
@@ -39,7 +40,7 @@ class SkipGramModelTest extends Specification {
       source map scanner.scan match {
         case Good(st) =>
  
-          val model = SkipGramModel(st, dim=10, α=0.09, window=3, numEpochs=200, seed=123456789L)
+          val model = SkipGramModel(st, dim=10, α=0.09, window=3, numEpochs=10, seed=123456789L)
           model.run()
           model.in.foreach {v => v.isValid must beTrue; ()}
           val vectors0 = st.dictionary zip model.in
@@ -96,6 +97,20 @@ class SkipGramModelTest extends Specification {
     }
   }
 
+  "visualize graphically" in {
+//    import org.sameersingh.scalaplot.Implicits._
+//
+//    val x = 0.0 until 2.0 * math.Pi by 0.1
+//    val png = PNG("docs/img/", "test")
+//
+//    val tuple1: (Double=>Double, Double=>Double) = 
+//      (t => math.sin(t), t => math.cos(t))
+//    val tuple = x -> tuple1
+//    val xyChart1 = xyChart(tuple)
+//    output(png, xyChart1)
+    ok
+  }
+  
   def visualize(title: String, projections: List[(String, Double, Double)]): Unit = {
     println; println
     println("="*150)

@@ -1,6 +1,6 @@
 package scalakittens.experiments.logic
 
-import language.{higherKinds, implicitConversions, existentials, reflectiveCalls}
+import language.implicitConversions
 
 /**
   * My experimental stuff.
@@ -16,8 +16,8 @@ object LinearLogic {
   }
 
   implicit def lowLevel[T](t:T): ConjunctionDisjunction[T] = new ConjunctionDisjunction[T] {
-    def & [U](u:U) = (t,u)
-    def | [U](u:U) = ??? // I just don't know how to implement it
+    def & [U](u:U): &[T,U] = (t,u)
+    def | [U](u:U): |[T,U] = ??? // I just don't know how to implement it
   }
 
   object ⊤
