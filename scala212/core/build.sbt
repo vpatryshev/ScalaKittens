@@ -1,17 +1,13 @@
 
-organization := "org.scalakittens"
+organization := "Scalakittens Inc."
 
 val WhichScala = "2.12.2"
 
-name := s"Scala Kittens Library, Scala $WhichScala"
+name := s"Scala Kittens Library Core, Scala $WhichScala"
 
-version := "1.0.0"
+version := "2.0.0"
 
 scalaVersion := WhichScala
-lazy val core = RootProject(file("./core"))
-lazy val experiments = RootProject(file("./experiments"))
-
-val main = Project(id = "all", base = file(".")).dependsOn(core, experiments)
 
 scalacOptions ++= Seq("-feature", "-deprecation", "-encoding", "UTF-8", "-feature", "-target:jvm-1.8", "-unchecked",
     "-Ywarn-adapted-args", "-Ywarn-value-discard", "-Xlint")
@@ -41,20 +37,13 @@ libraryDependencies ++= Seq(
   "org.apache.httpcomponents" % "httpclient" % "4.3.6",
   "org.apache.httpcomponents" % "httpmime"   % "4.3.6",
   "org.specs2" %% "specs2-core" % "3.8.8" % "test",
-  "org.scalacheck" %% "scalacheck" % "1.13.4" % "test",
-  "org.sameersingh.scalaplot" % "scalaplot" % "0.0.4"
+  "org.scalacheck" %% "scalacheck" % "1.13.4" % "test"
   //  "org.openjdk.jmh" % "jmh-scala-benchmark-archetype" % "0.5.5" from "http://repo1.maven.org/maven2/org/openjdk/jmh/jmh-scala-benchmark-archetype/0.5.5/jmh-scala-benchmark-archetype-0.5.5.jar"
 )
 
 resolvers ++= Seq("snapshots" at "http://oss.sonatype.org/content/repositories/snapshots",
   "releases"  at "http://oss.sonatype.org/content/repositories/releases",
   "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases")
-
-unmanagedJars in Compile := {
-  val base = file("lib/12")
-  val jars = Seq(base / "scalaplot.jar")
-  jars.classpath
-}
 
 logLevel := Level.Warn
 

@@ -1,9 +1,14 @@
 package scalakittens
 
-import language.implicitConversions
-import org.specs2.matcher._
-import Functions._
+import java.util.regex.MatchResult
 
+import org.specs2.matcher._
+
+/**
+  * Useful specs2 tools... useful for ScalaKittens.
+  * 
+  * See also https://etorreborre.github.io/specs2/guide/SPECS2-2.4.17/org.specs2.guide.Matchers.html
+  */
 trait MoreExpectations extends UsefulMocks { actual: Expectations ⇒
 
   type Checked = MatchResult[Any]
@@ -14,9 +19,9 @@ trait MoreExpectations extends UsefulMocks { actual: Expectations ⇒
   implicit def wrapIt[T](x: T): MustExpectable[T] = MustExpectable(x)
 
   class StringChecker(s: String) {
-    def mustContain   (what: String) = s contains what aka ("\"" + s + "\" should contain \""     + what + "\"") must_== true
+    def mustContain (what: String) = s contains what aka s""""$s" should contain "$what"""" must_== true
 
-    def mustNotContain(what: String) = s contains what aka ("\"" + s + "\" should not contain \"" + what + "\"") must_== false
+    def mustNotContain(what: String) = s contains what aka s""""$s" should not contain "$what"""" must_== false
 
     override def toString = s
   }
@@ -27,12 +32,6 @@ trait MoreExpectations extends UsefulMocks { actual: Expectations ⇒
 
   private implicit def akaMust2[T](tm: Expectable[T]): MustExpectable[T] = MustThrownExpectations.akaMust[T](tm) // jumping through implicit loops
 
-  // private implicit def wrapIt[T](x: T): MustExpectable[T] = MustExpectable(x)
-  /*
-    implicit def expectingGood(r: Result[_]) = new {
-      def mustBeGood = if (!r.isGood) throw new FailureException(new Failure("Expected a good result"))
-    }
-  */
   private implicit def desc[T](t:T) = describe(t)
 
   implicit def checkMe(s: String): StringChecker = new StringChecker(s)
