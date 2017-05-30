@@ -1,14 +1,15 @@
 package scalakittens
 
-import java.io.{PrintStream, ByteArrayOutputStream, OutputStream}
+//import java.io.{PrintStream, ByteArrayOutputStream, OutputStream}
 
 trait UsefulMocks {
   def whatever[T] = throw new UnsupportedOperationException
   val MUTEX = "I am mutex, and what have you accomplished?"
   def sync(op: ⇒Unit): Unit = MUTEX synchronized op
 
-  private val theirOut = System.out
 /*
+  private val theirOut = System.out
+
   def interceptOutput(op: ⇒ Unit) = sync {
     try {
       logPatience = Int.MaxValue

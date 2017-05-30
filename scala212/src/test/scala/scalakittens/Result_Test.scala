@@ -8,7 +8,7 @@ class Result_Test extends Specification {
   implicit class checker(r: Result[_]) {
     def mustBeBad(msgs: String*) = {
       r.isBad aka r.toString must beTrue
-      r.errorDetails must_== Some(msgs mkString "; ")
+      r.errorDetails must beSome(msgs mkString "; ")
     }
   }
 
@@ -41,7 +41,7 @@ class Result_Test extends Specification {
       Good("hello") collect ({ case "Hello" ⇒ 1}, _ ⇒ ":(") mustBeBad err
     }
     "convert to Some" in {
-      Good(":)").toOption must_== Some(":)")
+      Good(":)").toOption must beSome(":)")
     }
      "stay put in orElse" in {
        Good(":)").orElse(Empty) must_== Good(":)")
@@ -65,7 +65,7 @@ class Result_Test extends Specification {
        Good("huilo") filter ((s:String) ⇒ s.startsWith("he")) must_== Empty
      }
      "Show nothing in errorDetails" in {
-       Good("sh").errorDetails must_== None
+       Good("sh").errorDetails must beNone
      }
 
      "combine with other goods in sugared loop" in {
@@ -123,7 +123,7 @@ class Result_Test extends Specification {
       wasThere aka "visited what you were not supposed to visit" must beFalse
     }
     "convert to None" in {
-      Result.error("oops") .toOption must_== None
+      Result.error("oops") .toOption must beNone
     }
     "get ignored in orElse" in {
       Result.error("oops") .orElse(Result.error(":(")) must_== Result.error(":(")
@@ -154,7 +154,7 @@ class Result_Test extends Specification {
       val desc = detailsOpt.get
       val expectedDesc = "beer too expensive; are we there?"
       desc must_== expectedDesc
-      detailsOpt must_== Some(expectedDesc)
+      detailsOpt must beSome(expectedDesc)
     }
 
     "combine with goods in sugared loop" in {
@@ -211,7 +211,7 @@ class Result_Test extends Specification {
       wasThere aka "visited what you were not supposed to visit" must beFalse
     }
     "convert to None" in {
-      Empty .toOption must_== None
+      Empty .toOption must beNone
     }
     "get ignored in orElse" in {
       Empty .orElse(Result.error(":(")) must_== Result.error(":(")
@@ -237,7 +237,7 @@ class Result_Test extends Specification {
       Empty filter ((x:Any) ⇒ x == null, "oi vei") must_== Empty
     }
     "Show 'missing' in errorDetails" in {
-      Empty.errorDetails must_== Some("No results")
+      Empty.errorDetails must beSome("No results")
     }
 
     "combine with goods in sugared loop" in {
@@ -291,12 +291,11 @@ class Result_Test extends Specification {
 
   "applicative functionality" should {
     "impress the public" in {
+      
       implicit def app[X,Y](p: (X ⇒ Y, X)): Y = p._1(p._2)
  //     implicit def t21_to_t3[X,Y,Z](t:((X, Y), Z)):(X,Y,Z) = (t._1._1, t._1._2, t._2)
       implicit def app20[X1,X2,Z](t: ((X1 ⇒ X2 ⇒ Z, X1), X2)): Z = t._1._1(t._1._2)(t._2)
       implicit def app2[X1,X2,Z](t: (X1 ⇒ X2 ⇒ Z, X1, X2)): Z = t._1(t._2)(t._3)
-      implicit def app3[X1,X2,X3,Z](t: (X1 ⇒ X2 ⇒ X3 ⇒ Z, X1, X2, X3)): Z = t._1(t._2)(t._3)(t._4)
-      // etc; use ProductIterator for folding, instead of copy and paste
       val forty_two:String = ((n: Int) ⇒ n*7 + "!", 6)
       forty_two must_== "42!"
       val itWorks: String = ((n:Int) ⇒ (m:Int) ⇒ n*m+":)", 6, 7)
@@ -308,6 +307,16 @@ class Result_Test extends Specification {
       val r = r0 <*> r1 <*> r2
       val result:Result[String] = r map app20[Int, Int, String]
       result must_== Good("42 :)")
+
+      implicit def app3[X1,X2,X3,Z](t: (((X1 ⇒ X2 ⇒ X3 ⇒ Z, X1), X2), X3)): Z = t._1._1._1(t._1._1._2)(t._1._2)(t._2)
+      val s0 = Result.forValue((n:Int) ⇒ (m:Int) ⇒ (k:Int) ⇒ n*m + k + ".")
+      val s1 = Result.forValue(6)
+      val s2 = Result.forValue(7)
+      val s3 = Result.forValue(8)
+      val s = s0 <*> s1 <*> s2 <*> s3
+      val sResult :Result[String] = s map app3[Int, Int, Int, String]
+      sResult must_== Good("50.")
+      // etc; use ProductIterator for folding, instead of copy and paste
     }
   }
 
@@ -403,6 +412,7 @@ class Result_Test extends Specification {
 
       mm(sut) (3) must_== Good(Into(6))
       val assigned: Result[Unit] = assign(17)
+      assigned.isGood must beTrue
       mm(sut) (3) must_== Good(Into(51))
       mm(sut) (error("oi-vei")) must_== error("oi-vei")
       mmO(error("no way")) (42) must_== error("no way")

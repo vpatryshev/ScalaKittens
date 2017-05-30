@@ -57,7 +57,7 @@ class PCATest extends Specification {
       }
       
       val submatrix = m1.dropColumn(0).dropRow(0)
-      val Some((value2: Double, vector2: Vector, nIter2: Int)) = method.maxEigenValue(submatrix)
+      val Some((value2: Double, vector2: Vector, _: Int)) = method.maxEigenValue(submatrix)
       value2 must_== 3.397409072501745
       l2(vector2) must_== 1.0
       vector2 must_== Vector(0.9819718282130517, 0.18902732235292566)
@@ -70,7 +70,6 @@ class PCATest extends Specification {
     }
 
     "produce three eigenvectors for a 3x3 in steps" in {
-      val n = 3
       val m = matrix(3, 3, 5, 1, 2, 1, 4, 1, 2, 1, 3)
       val method = PCA.Iterations(0.0001, 100)
       val Some((eigenValue1: Double, basis: UnitaryMatrix, nIter1)) = method.oneEigenValueBasis(m)
@@ -90,7 +89,6 @@ class PCATest extends Specification {
         (value, vector) <- allThree
       } l2(m * vector - vector * value) < 0.001 must beTrue
       
-      val eigenValues = allThree map (_._1)
       val eigenBasis = Matrix.Unitary(allThree map (_._2))
       eigenBasis.isUnitary(0.001) must beTrue
     }

@@ -1,16 +1,14 @@
 package scalakittens.experiments.word2vec
 
-import java.io.{FileWriter, FileOutputStream}
+import java.io.FileWriter
 
 import org.specs2.mutable.Specification
 
-import language.postfixOps
 import scala.io.Source
-import scalakittens.la.{Vector, Basis, Matrix, PCA}
+import scalakittens.la.{Basis, Matrix, PCA, Vector}
 import scalakittens.stats.AccumulatingMoments
-import scalakittens.{Good, IO, Strings}
+import scalakittens.{Good, IO}
 
-// TODO: use https://github.com/sameersingh/scalaplot
 // TODO: implement https://en.wikipedia.org/wiki/Nonlinear_dimensionality_reduction#Methods_based_on_proximity_matrices
 
 class SkipGramModelTest extends Specification {
@@ -98,8 +96,11 @@ class SkipGramModelTest extends Specification {
   }
 
   "visualize graphically" in {
+    import scalakittens.FS._
+    Folder("docs/img").mkdirs
+    // this one will go to a different module
+    // https://github.com/sameersingh/scalaplot
 //    import org.sameersingh.scalaplot.Implicits._
-//
 //    val x = 0.0 until 2.0 * math.Pi by 0.1
 //    val png = PNG("docs/img/", "test")
 //
@@ -131,10 +132,8 @@ class SkipGramModelTest extends Specification {
       case (w, x, y) => (w, ((x - xmin) / xScale).toInt + 1, ((y - ymin) / yScale).toInt)
     }
 
-    val sortedSample = sample.sortBy { case (w, x, y) => (M - y) * N + x }
-
-    val samplesByLine = sample.groupBy(_._3) // mapValues {case (w, x, y) => (w, x)}
-
+    val samplesByLine = sample.groupBy(_._3) 
+    
     0 to M foreach {
       j =>
         val oneLineOfTexts: Map[Int, List[String]] = samplesByLine.getOrElse(j, Nil) map { case (w, x, y) => (w, x) } groupBy (_._2) mapValues (_.map(_._1))
@@ -160,7 +159,7 @@ class SkipGramModelTest extends Specification {
           case (i, w) => w.zipWithIndex map { case (c, i1) => (i + i1) -> c } toList
         }.flatten.toMap
 
-        print(f"$j%2d  ")
+// line number        print(f"$j%2d  ")
         if (merged.nonEmpty) for (i <- 0 to chars.keySet.max) {
           print(chars.getOrElse(i, ' '))
         }

@@ -46,6 +46,12 @@ resolvers ++= Seq("snapshots" at "http://oss.sonatype.org/content/repositories/s
   "releases"  at "http://oss.sonatype.org/content/repositories/releases",
   "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases")
 
+unmanagedJars in Compile := {
+  val base = file("lib/12")
+  val jars = Seq(base / "scalaplot.jar")
+  jars.classpath
+}
+
 logLevel := Level.Warn
 
 // Only show warnings and errors on the screen for compilations.

@@ -8,9 +8,9 @@ class Props_Test extends Specification {
 
   "this test" should {
     "fail on failure" in {
-      val x = List(1,2,3)
+//      val x = List(1,2,3)
 //      x.isEmpty must beTrue
-      val f = false
+//      val f = false
 //      false must beTrue
       ok
     }
@@ -29,6 +29,7 @@ class Props_Test extends Specification {
     "not crash on four parameters" in {
       val pf = props("a.b.c.d" → "<<A B C D>>")
       val res = pf.valueOf("x", "b", "c", "d")
+      res.isBad must beTrue
       ok
     }
 
@@ -49,7 +50,7 @@ class Props_Test extends Specification {
       val mks: Iterable[String] = sut.matchingKeys(key)
       mks.toList.length must_== 0
       val key1: Option[String] = sut.findKey(key)
-      key1 must_== None
+      key1 must beNone
       val bad = sut valueOf key
       bad.isBad aka bad.toString must beTrue
       bad.toString contains "Missing 'Private.InTheHouse.Bribe.sofar'" must beTrue
@@ -251,13 +252,13 @@ class Props_Test extends Specification {
       val none = map.subtree("Nessuno")
       none.isEmpty must beTrue
       val ind = map.subtree("Private")
-      ind.get("In-The-House.Alcohol.Used") must_== Some("$1734.48")
-      ind.get("Abroad.Alcohol.Used") must_== None
+      ind.get("In-The-House.Alcohol.Used") must beSome("$1734.48")
+      ind.get("Abroad.Alcohol.Used") must beNone
       val fam = map.subtree("House")
-      fam.get("Abroad.Alcohol.Used") must_== Some("$0.01")
-      fam.get("In-The-House.Alcohol.Used") must_== None
+      fam.get("Abroad.Alcohol.Used") must beSome("$0.01")
+      fam.get("In-The-House.Alcohol.Used") must beNone
       val deeper = map.subtree("Abroad")
-      deeper.get("Bribe.Yearly") must_== Some("$15.00")
+      deeper.get("Bribe.Yearly") must beSome("$15.00")
     }
 
     "return a set of keys" in {
@@ -508,6 +509,7 @@ class Props_Test extends Specification {
             sut(i)(s"[[1]].key$i$j") must_== s"val$i$j"
           }
           val serviceTypes = sut map (_.getOrElse("[[1]].key", "oops..."))
+          serviceTypes.toList must_== List("oops...", "oops...", "oops...")
         case basura ⇒ failure(s"Oops, not good: $basura")
       }
       ok

@@ -2,7 +2,7 @@ package scalakittens.stats
 
 import org.specs2.mutable.Specification
 
-import scalakittens.la.{Matrix, Vector}
+import scalakittens.la.Vector
 
 /**
   * Tests for statistics

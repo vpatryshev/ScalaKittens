@@ -3,7 +3,6 @@ package scalakittens
 import language.implicitConversions
 import org.specs2.matcher._
 import Functions._
-import StandardMatchResults._
 
 trait MoreExpectations extends UsefulMocks { actual: Expectations ⇒
 

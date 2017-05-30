@@ -16,6 +16,7 @@ class IO_Test extends Specification {
 
   def writeTmpFile(contents:String): File = {
     val tmp = tmpDir
+    tmp.isDirectory must beTrue
     val file: File = tempFile("format", "exe")
     writeFile(file, contents)
     file
@@ -46,17 +47,17 @@ class IO_Test extends Specification {
 
     "return good extensionOpt when extension exists" in {
       val sut = new File("/tmp/test" + System.currentTimeMillis() + "etc.iotest")
-      sut.extensionOpt must_== Some("iotest")
+      sut.extensionOpt must beSome("iotest")
     }
 
     "return good extensionOpt when more than one extension exists" in {
       val sut = new File("/tmp/test" + System.currentTimeMillis() + "etc.com.iotest")
-      sut.extensionOpt must_== Some("iotest")
+      sut.extensionOpt must beSome("iotest")
     }
 
     "return None as extensionOpt when more than one extension exists" in {
       val sut = new File("/tmp/test" + System.currentTimeMillis() + "")
-      sut.extensionOpt must_== None
+      sut.extensionOpt must beNone
     }
 
     "provide file extension handling" in {

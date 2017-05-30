@@ -5,7 +5,7 @@ import java.util
 import org.specs2.mutable.Specification
 
 import scala.collection.mutable.ListBuffer
-import scala.language.{implicitConversions, reflectiveCalls}
+import scala.language.reflectiveCalls
 import scalakittens.Ops._
 import scalakittens.Result._
 
@@ -14,14 +14,14 @@ class Ops_Test extends Specification {
    "tryOr()" should {
     "call the function once on success" in {
       var nCalls = 0
-      var result = tryOr({nCalls += 1; "heureux"}, "malheureux")
+      val result = tryOr({nCalls += 1; "heureux"}, "malheureux")
       result must_== "heureux"
       nCalls must_== 1
     }
 
     "call the function once on failure" in {
       var nCalls = 0
-      var result = tryOr({nCalls += 1; throw new IllegalArgumentException("wtf?!")}, "malheureux")
+      val result = tryOr({nCalls += 1; throw new IllegalArgumentException("wtf?!")}, "malheureux")
       result must_== "malheureux"
       nCalls must_== 1
     }
@@ -96,7 +96,6 @@ class Ops_Test extends Specification {
     }
 
     "Delimit execution of stuff using timer, graciously" in {
-      val startTime = System.currentTimeMillis()
       val result = spendNotMoreThan(timeout) on {
         Thread sleep tooLong
         OK
@@ -106,7 +105,6 @@ class Ops_Test extends Specification {
     }
 
     "Report status when asked, timeout" in {
-      val startTime = System.currentTimeMillis()
       val report = new ListBuffer[Job.Status]
 
       val result = spendNotMoreThan(timeout) reporting ((s:Job.Status) ⇒ {report += s; ()}) on {
@@ -119,8 +117,6 @@ class Ops_Test extends Specification {
     }
 
     "Return the right stuff if calculated in due time" in {
-      val startTime = System.currentTimeMillis()
-
       val result = spendNotMoreThan(timeout) on {
         Thread sleep tooFast
         Good(":)")
@@ -129,7 +125,6 @@ class Ops_Test extends Specification {
     }
 
     "Report status when asked, positive outcome" in {
-      val startTime = System.currentTimeMillis()
       val report = new ListBuffer[Job.Status]
 
       val result = spendNotMoreThan(msInTimeout milliseconds).

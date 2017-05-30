@@ -456,7 +456,6 @@ class MatrixTest extends Specification {
       mx1.nRows must_== 10
       mx1(0, 1) aka mx1.toString must_== 5.0
       f1(0)(5) must_== 13.0
-      val tm: TestMatrix = TestMatrix(10, 5, f1)
 
       val mx2: Matrix = build(10, 5, i => j => 1.0 - j - i)
       mx2.nRows must_== 10
