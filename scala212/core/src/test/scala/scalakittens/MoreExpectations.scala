@@ -1,8 +1,10 @@
 package scalakittens
 
-import java.util.regex.MatchResult
-
+import language.implicitConversions
 import org.specs2.matcher._
+import Functions._
+
+import scalakittens.Functions.predicate2
 
 /**
   * Useful specs2 tools... useful for ScalaKittens.
@@ -61,11 +63,11 @@ trait MoreExpectations extends UsefulMocks { actual: Expectations ⇒
     }
 
     private def expectPositive(op: predicate[X]): Checker[X] = x ⇒ {
-      op(x) aka ("False negative on \"" + x + "\"") must_== true
+      op(x) aka s"""False negative on "$x"""" must_== true
     }
 
     private def expectNegative(op: predicate[X]): Checker[X] = x ⇒ {
-      op(x) aka ("False positive on \"" + x + "\"") must_== false
+      op(x) aka s"""False positive on "$x"""" must_== false
     }
 
     def maps(samples:X*) {
@@ -85,11 +87,11 @@ trait MoreExpectations extends UsefulMocks { actual: Expectations ⇒
     }
 
     private def expectPositive(op: predicate2[X, Y]): (X,Y) ⇒ Checked = (x, y) ⇒ {
-      op(x, y) aka ("False negative on (\"" + x + "\", \"" + y + "\")") must_== true
+      op(x, y) aka s"""False negative on ("$x","$y")""" must_== true
     }
 
     private def expectNegative(op: predicate2[X, Y]): (X,Y) ⇒ Checked = (x, y) ⇒ {
-      op(x, y) aka ("False positive on (\"" + x + "\", \"" + y + "\")") must_== false
+      op(x, y) aka s"""False positive on ("$x","$y")""" must_== false
     }
 
     def maps(samples:(X, Y)*) = {
@@ -106,7 +108,7 @@ trait MoreExpectations extends UsefulMocks { actual: Expectations ⇒
     def expectMatch(f: X ⇒ Y) = (x: X, y: Y) ⇒ {
       try {
         val y1 = f(x)
-        y1 aka (name + "(" + x + ")=" + y) must_== y
+        y1 aka s"$name($x)=$y" must_== y
       } catch {
         case mfe: MatchFailureException[_] ⇒ throw mfe
         case t: Throwable ⇒ throw new IllegalArgumentException(s"wtf, $t")
