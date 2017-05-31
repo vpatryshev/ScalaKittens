@@ -4,6 +4,13 @@ import language.implicitConversions
 import org.specs2.matcher._
 import Functions._
 
+import scalakittens.Functions.predicate2
+
+/**
+  * Useful specs2 tools... useful for ScalaKittens.
+  * 
+  * See also https://etorreborre.github.io/specs2/guide/SPECS2-2.4.17/org.specs2.guide.Matchers.html
+  */
 trait MoreExpectations extends UsefulMocks { actual: Expectations ⇒
 
   type Checked = MatchResult[Any]
@@ -14,9 +21,9 @@ trait MoreExpectations extends UsefulMocks { actual: Expectations ⇒
   implicit def wrapIt[T](x: T): MustExpectable[T] = MustExpectable(x)
 
   class StringChecker(s: String) {
-    def mustContain   (what: String) = s contains what aka ("\"" + s + "\" should contain \""     + what + "\"") must_== true
+    def mustContain (what: String) = s contains what aka s""""$s" should contain "$what"""" must_== true
 
-    def mustNotContain(what: String) = s contains what aka ("\"" + s + "\" should not contain \"" + what + "\"") must_== false
+    def mustNotContain(what: String) = s contains what aka s""""$s" should not contain "$what"""" must_== false
 
     override def toString = s
   }
@@ -27,12 +34,6 @@ trait MoreExpectations extends UsefulMocks { actual: Expectations ⇒
 
   private implicit def akaMust2[T](tm: Expectable[T]): MustExpectable[T] = MustThrownExpectations.akaMust[T](tm) // jumping through implicit loops
 
-  // private implicit def wrapIt[T](x: T): MustExpectable[T] = MustExpectable(x)
-  /*
-    implicit def expectingGood(r: Result[_]) = new {
-      def mustBeGood = if (!r.isGood) throw new FailureException(new Failure("Expected a good result"))
-    }
-  */
   private implicit def desc[T](t:T) = describe(t)
 
   implicit def checkMe(s: String): StringChecker = new StringChecker(s)
@@ -62,11 +63,11 @@ trait MoreExpectations extends UsefulMocks { actual: Expectations ⇒
     }
 
     private def expectPositive(op: predicate[X]): Checker[X] = x ⇒ {
-      op(x) aka ("False negative on \"" + x + "\"") must_== true
+      op(x) aka s"""False negative on "$x"""" must_== true
     }
 
     private def expectNegative(op: predicate[X]): Checker[X] = x ⇒ {
-      op(x) aka ("False positive on \"" + x + "\"") must_== false
+      op(x) aka s"""False positive on "$x"""" must_== false
     }
 
     def maps(samples:X*) {
@@ -86,11 +87,11 @@ trait MoreExpectations extends UsefulMocks { actual: Expectations ⇒
     }
 
     private def expectPositive(op: predicate2[X, Y]): (X,Y) ⇒ Checked = (x, y) ⇒ {
-      op(x, y) aka ("False negative on (\"" + x + "\", \"" + y + "\")") must_== true
+      op(x, y) aka s"""False negative on ("$x","$y")""" must_== true
     }
 
     private def expectNegative(op: predicate2[X, Y]): (X,Y) ⇒ Checked = (x, y) ⇒ {
-      op(x, y) aka ("False positive on (\"" + x + "\", \"" + y + "\")") must_== false
+      op(x, y) aka s"""False positive on ("$x","$y")""" must_== false
     }
 
     def maps(samples:(X, Y)*) = {
@@ -107,7 +108,7 @@ trait MoreExpectations extends UsefulMocks { actual: Expectations ⇒
     def expectMatch(f: X ⇒ Y) = (x: X, y: Y) ⇒ {
       try {
         val y1 = f(x)
-        y1 aka (name + "(" + x + ")=" + y) must_== y
+        y1 aka s"$name($x)=$y" must_== y
       } catch {
         case mfe: MatchFailureException[_] ⇒ throw mfe
         case t: Throwable ⇒ throw new IllegalArgumentException(s"wtf, $t")

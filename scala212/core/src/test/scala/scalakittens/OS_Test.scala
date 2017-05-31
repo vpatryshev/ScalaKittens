@@ -1,4 +1,4 @@
-package scalakittens
+package scalakittens;
 
 import java.io.{File, FileOutputStream, OutputStreamWriter}
 
@@ -7,7 +7,7 @@ import org.specs2.mutable.Specification
 import scala.io.Source
 import scalakittens.OS._
 
-object OS_Test extends Specification {
+class OS_Test extends Specification {
   val DIGITS = "(\\d+)".r
 
   "OS" should {

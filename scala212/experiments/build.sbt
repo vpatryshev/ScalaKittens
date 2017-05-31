@@ -3,15 +3,15 @@ organization := "org.scalakittens"
 
 val WhichScala = "2.12.2"
 
-name := s"Scala Kittens Library, Scala $WhichScala"
+name := s"Scala Kittens Library Experiments, Scala $WhichScala"
 
-version := "1.0.0"
+version := "2.0.0"
 
 scalaVersion := WhichScala
-lazy val core = RootProject(file("./core"))
-lazy val experiments = RootProject(file("./experiments"))
 
-val main = Project(id = "all", base = file(".")).dependsOn(core, experiments)
+lazy val core = RootProject(file("../core"))
+
+val main = Project(id = "experiments", base = file(".")).dependsOn(core)
 
 scalacOptions ++= Seq("-feature", "-deprecation", "-encoding", "UTF-8", "-feature", "-target:jvm-1.8", "-unchecked",
     "-Ywarn-adapted-args", "-Ywarn-value-discard", "-Xlint")
@@ -29,8 +29,6 @@ resolvers ++= Seq(
   "Lightbend Releases" at "http://repo.typesafe.com/typesafe/releases"
 )
 
-enablePlugins(JmhPlugin)
-
 libraryDependencies ++= Seq(
   "org.scalatest"  %% "scalatest"     % "3.0.1" % "test" withSources(),
   "org.scala-lang" % "scala-compiler" % WhichScala,
@@ -43,7 +41,6 @@ libraryDependencies ++= Seq(
   "org.specs2" %% "specs2-core" % "3.8.8" % "test",
   "org.scalacheck" %% "scalacheck" % "1.13.4" % "test",
   "org.sameersingh.scalaplot" % "scalaplot" % "0.0.4"
-  //  "org.openjdk.jmh" % "jmh-scala-benchmark-archetype" % "0.5.5" from "http://repo1.maven.org/maven2/org/openjdk/jmh/jmh-scala-benchmark-archetype/0.5.5/jmh-scala-benchmark-archetype-0.5.5.jar"
 )
 
 resolvers ++= Seq("snapshots" at "http://oss.sonatype.org/content/repositories/snapshots",
