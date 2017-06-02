@@ -225,7 +225,7 @@ trait Matrix extends ((Int, Int) => Double) with Iterable[Double] {
     out append "["
     for (i <- 0 until nRows) {
       out append "["
-      out.append(row(i).data mkString ",")
+      out.append(row(i) mkString ",")
       out append "]\n"
     }
     out append "]"
@@ -294,7 +294,7 @@ object Matrix {
     * @param rows rows of the matrix
     * @return a matrix built from the rows
     */
-  def ofRows(width: Int, rows: Array[Vector]): MutableMatrix = new MutableMatrix {
+  def ofRows[V <: Vector](width: Int, rows: Array[V]): Matrix = new Matrix {
     require(width >= 0, s"Bad width $width")
     val nRows = rows.length
     val nCols = width
@@ -316,16 +316,6 @@ object Matrix {
 
     override def transpose: Matrix = Matrix.ofColumns(nCols, rows)
 
-    override def copy: MutableMatrix = {
-      val newRows = rows map (_.copy)
-      Matrix.ofRows(nCols, newRows)
-    }
-
-    override def update(i: Int, j: Int, value: Double) = {
-      checkIndexes(i, j)
-      rows(i).data(j) = value
-    }
-
     override def *(v: Vector): Vector = {
       require(nCols == v.length, s"For a product we need that number of columns ($nCols) is equal to the vector's length (${v.length})")
       rows map (_ * v)
@@ -339,10 +329,10 @@ object Matrix {
     * @param columns colunnss of the matrix
     * @return a matrix built from the columns
     */
-  def ofColumns(height: Int, columns: Array[Vector]): MutableMatrix = 
-    new ColumnMatrix(height, columns) with MutableMatrix
+  def ofColumns[V <: Vector](height: Int, columns: Array[V]): Matrix = 
+    new ColumnMatrix(height, columns)
   
-  private[la] class ColumnMatrix(val height: Int, val cols: Array[Vector]) extends MutableMatrix {
+  private[la] class ColumnMatrix[V <: Vector](val height: Int, val cols: Array[V]) extends Matrix {
     require(height >= 0, s"Bad height $height")
     val nRows = height
     val nCols = cols.length
@@ -357,16 +347,6 @@ object Matrix {
     override def column(j: Int): Vector = cols(j)
 
     override def transpose: Matrix = Matrix.ofRows(nRows, cols)
-
-    override def copy: MutableMatrix = {
-      val newCols = cols map (_.copy)
-      Matrix.ofRows(nRows, newCols)
-    }
-
-    override def update(i: Int, j: Int, value: Double) = {
-      checkIndexes(i, j)
-      cols(j).data(i) = value
-    }
   }
 
   /**
@@ -382,10 +362,10 @@ object Matrix {
     apply(height, width, new Array[Double](height * width))
   }
 
-  private[la] def apply(height: Int, width: Int, dataSource: Vector): MutableMatrix = 
-    new OnVector(height, width, dataSource)
+  private[la] def apply(height: Int, width: Int, storage: MutableVector): MutableMatrix = 
+    new OnVector(height, width, storage)
     
-  class OnVector(val nRows: Int, val nCols: Int, protected val data: Vector) extends MutableMatrix {
+  class OnVector(val nRows: Int, val nCols: Int, protected val data: MutableVector) extends MutableMatrix {
 
     private def index(i: Int, j: Int) = {
       checkIndexes(i, j)
@@ -394,7 +374,7 @@ object Matrix {
 
     override def update(i: Int, j: Int, value: Double): Unit = {
       checkIndexes(i, j)
-      data.data(index(i,j)) = value
+      data(index(i,j)) = value
     }
 
     override def apply(i: Int, j: Int): Double = {

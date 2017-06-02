@@ -80,7 +80,7 @@ class MatrixTest extends Specification {
       val sut1 = TestMatrix(3, 4, i => j => i * 10 + j)
       val sut2 = TestMatrix(4, 5, i => j => (i - j + 1000) % 2 * 1.0)
 
-      val expected: MutableMatrix = Matrix.ofRows(5, Array(
+      val expected: Matrix = Matrix.ofRows(5, Array(
         Vector(4.0, 2.0, 4.0, 2.0, 4.0),
         Vector(24.0, 22.0, 24.0, 22.0, 24.0),
         Vector(44.0, 42.0, 44.0, 42.0, 44.0)
@@ -206,13 +206,13 @@ class MatrixTest extends Specification {
   }
   
   "Matrix of rows" should {
-    def build(n: Int, m: Int, f: Int => Int => Double): MutableMatrix = 
+    def build(n: Int, m: Int, f: Int => Int => Double): Matrix = 
       Matrix.ofRows(m, nxm(n, m, f) map Vector.apply)
     
     "have correct number of rows" in {
       val sut = build(7, 10, i => j => 1.0+i+j)
       sut.nRows must_== 7
-      Matrix.ofRows(10, Array()).nRows must_== 0
+      Matrix.ofRows(10, new Array[Vector](0)).nRows must_== 0
       build(7, 0, i => j => 1.0).nRows must_== 7
     }
     
@@ -249,7 +249,8 @@ class MatrixTest extends Specification {
     }
     
     "copy" in {
-      val sut = build(10, 5, i => j => 1.0+i*j*1.0)
+      val sut0 = build(10, 5, i => j => 1.0+i*j*1.0)
+      val sut = sut0.copy
       val copy = sut.copy
       copy(3,4) must_== 13.0
       sut(3,4) = 42.5
@@ -271,20 +272,20 @@ class MatrixTest extends Specification {
   }
 
   "Matrix of columns" should {
-    def build(n: Int, m: Int, f: Int => Int => Double): MutableMatrix =
+    def build(n: Int, m: Int, f: Int => Int => Double): Matrix =
       Matrix.ofColumns(m, nxm(n, m, f) map Vector.apply)
 
     "have correct number of columns" in {
       val sut = build(7, 10, i => j => 1.0+i+j)
       sut.nRows must_== 10
-      Matrix.ofColumns(10, Array()).nCols must_== 0
+      Matrix.ofColumns(10, Array[Vector]()).nCols must_== 0
       build(7, 0, i => j => 1.0).nCols must_== 7
     }
 
     "have correct number of rows" in {
       val sut = build(7, 10, i => j => 1.0+i+j)
       sut.nRows must_== 10
-      Matrix.ofColumns(10, Array()).nRows must_== 10
+      Matrix.ofColumns(10, Array[Vector]()).nRows must_== 10
       build(7, 0, i => j => 1.0).nRows must_== 0
     }
 
@@ -327,7 +328,8 @@ class MatrixTest extends Specification {
     }
 
     "copy" in {
-      val sut = build(10, 5, i => j => 1.0+i*j*1.0)
+      val sut0 = build(10, 5, i => j => 1.0+i*j*1.0)
+      val sut = sut0.copy
       val copy = sut.copy
       copy(3,4) must_== 13.0
       sut(3,4) = 42.5
@@ -446,7 +448,7 @@ class MatrixTest extends Specification {
       sut(3,4) = 42.5
       sut(3,4) must_== 42.5
       copy(3,4) must_== 13.0
-      sut.row(3).data(4) must_== 42.5
+      sut.row(3)(4) must_== 42.5
       sut(3,4) must_== 42.5
     }
 

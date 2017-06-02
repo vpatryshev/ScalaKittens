@@ -9,7 +9,7 @@ object PCA {
   case class Iterations(precision: Double, maxRepeats: Int) {
     
     private def oneStep(m: Matrix, v: Vector): (Vector, Double) = {
-      val v1 = m * v normalize
+      val v1 = Norm.l2.normalize(m * v)
       val d = Norm.l2(v1 - v)
       (v1, d)
     }
@@ -33,7 +33,7 @@ object PCA {
     
     def oneEigenValueBasis(m: Matrix): Option[(Double, UnitaryMatrix, Int)] = maxEigenValue(m) map {
       case (value: Double, vector: Vector, nIter) =>
-        (value, Matrix.Unitary(vector.buildOrthonormalBasis), nIter)  
+        (value, Matrix.Unitary(Norm.l2.buildOrthonormalBasis(vector)), nIter)  
     }
 
     def buildEigenVectors(m: Matrix, numberRequested: Int): Option[List[(Double, Vector)]] = {

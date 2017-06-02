@@ -1,6 +1,6 @@
 package scalakittens.stats
 
-import scalakittens.la.{MutableMatrix, Matrix, Vector}
+import scalakittens.la.{Matrix, MutableMatrix, MutableVector, Vector}
 
 /**
   * Created by vpatryshev on 5/24/17.
@@ -8,7 +8,7 @@ import scalakittens.la.{MutableMatrix, Matrix, Vector}
 case class AccumulatingMoments(private val size: Int) {
   private var _n: Int = 0
   def n = _n
-  val sum: Vector = Vector.Zero(size)()
+  val sum: MutableVector = Vector.Zero(size).copy
   private val matrix: MutableMatrix = Matrix(size, size)
   
   def +=(row: Vector): Unit = {
