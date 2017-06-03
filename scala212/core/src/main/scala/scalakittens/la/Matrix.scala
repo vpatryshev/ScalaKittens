@@ -60,7 +60,7 @@ trait Matrix extends ((Int, Int) => Double) with Iterable[Double] {
     * @param i row number
     * @return the row
     */
-  def row(i: Int): Vector = {
+  def row(i: Int): MutableVector = {
     val row = new Array[Double](nCols)
     columnRange foreach (j => row(j) = this(i, j))
     Vector(row)
@@ -72,7 +72,7 @@ trait Matrix extends ((Int, Int) => Double) with Iterable[Double] {
     * @param j column number
     * @return the column
     */
-  def column(j: Int): Vector = {
+  def column(j: Int): MutableVector = {
     val col = new Array[Double](nRows)
     rowRange foreach (i => col(i) = this(i, j))
     Vector(col)
@@ -182,7 +182,8 @@ trait Matrix extends ((Int, Int) => Double) with Iterable[Double] {
       j <- 0 until that.nCols
     } data(i*that.nCols + j) = (0 until nCols) map (k => this(i, k) * that(k, j)) sum
 
-    val product = Matrix(nRows, that.nCols, Vector(data))
+    val vector: MutableVector = Vector(data)
+    val product = Matrix(nRows, that.nCols, vector)
     
     product
   }
@@ -191,9 +192,9 @@ trait Matrix extends ((Int, Int) => Double) with Iterable[Double] {
     * Multiplies this matrix by a vector
     *
     * @param v the vector
-    * @return another vector, this * v
+    * @return another vector, this * v; it so happens that it is mutable
     */
-  def *(v: Vector): Vector = {
+  def *(v: Vector): MutableVector = {
     require(nCols == v.length, s"To apply a matrix to a vector we need that number of columns ($nCols) is equal to the vector's length (${v.length})")
 
     0 until nRows map {
@@ -235,17 +236,6 @@ trait Matrix extends ((Int, Int) => Double) with Iterable[Double] {
 
 trait MutableMatrix extends Matrix {
 
-
-  private def normalizeColumn(j: Int): Unit = {
-    val norm = l2(rowRange map (i => this(i, j)))
-    
-    if (norm > Double.MinPositiveValue) rowRange foreach (i => this(i, j) /= norm)
-  }
-
-  private[la] def normalizeVertically(): Unit = {
-    0 until nCols foreach normalizeColumn
-  }
-
   /**
     * generic value setter
     *
@@ -277,12 +267,15 @@ trait UnitaryMatrix extends Matrix {
 
 object Matrix {
 
-  def Unitary(basis: Array[Vector]) = new ColumnMatrix(basis.length, basis) with UnitaryMatrix {
+  def Unitary[T <: Vector](basis: Array[T]) = {
     require(basis.nonEmpty)
     require(basis.forall(_.length == basis.length))
+    val columns: Array[MutableVector] = basis map (_.copy)
+    new ColumnMatrix(basis.length, columns) with UnitaryMatrix {
+    }
   }
 
-  def Unitary(basis: List[Vector]) = new ColumnMatrix(basis.length, basis.toArray) with UnitaryMatrix {
+  def Unitary(basis: List[Vector]) = new ColumnMatrix(basis.length, basis.toArray map (_.copy)) with UnitaryMatrix {
     require(basis.nonEmpty)
     require(basis.forall(_.length == basis.length))
   }
@@ -294,7 +287,7 @@ object Matrix {
     * @param rows rows of the matrix
     * @return a matrix built from the rows
     */
-  def ofRows[V <: Vector](width: Int, rows: Array[V]): Matrix = new Matrix {
+  def ofRows[V <: MutableVector](width: Int, rows: Array[V]): Matrix = new Matrix {
     require(width >= 0, s"Bad width $width")
     val nRows = rows.length
     val nCols = width
@@ -312,11 +305,11 @@ object Matrix {
       * @param i row number
       * @return the row
       */
-    override def row(i: Int): Vector = rows(i)
+    override def row(i: Int): MutableVector = rows(i)
 
     override def transpose: Matrix = Matrix.ofColumns(nCols, rows)
 
-    override def *(v: Vector): Vector = {
+    override def *(v: Vector): MutableVector = {
       require(nCols == v.length, s"For a product we need that number of columns ($nCols) is equal to the vector's length (${v.length})")
       rows map (_ * v)
     }
@@ -329,10 +322,10 @@ object Matrix {
     * @param columns colunnss of the matrix
     * @return a matrix built from the columns
     */
-  def ofColumns[V <: Vector](height: Int, columns: Array[V]): Matrix = 
+  def ofColumns[V <: MutableVector](height: Int, columns: Array[V]): Matrix = 
     new ColumnMatrix(height, columns)
   
-  private[la] class ColumnMatrix[V <: Vector](val height: Int, val cols: Array[V]) extends Matrix {
+  private[la] class ColumnMatrix[V <: MutableVector](val height: Int, val cols: Array[V]) extends Matrix {
     require(height >= 0, s"Bad height $height")
     val nRows = height
     val nCols = cols.length
@@ -344,14 +337,17 @@ object Matrix {
       column(j)(i)
     }
 
-    override def column(j: Int): Vector = cols(j)
+    override def column(j: Int): MutableVector = cols(j)
 
     override def transpose: Matrix = Matrix.ofRows(nRows, cols)
   }
 
+  private[la] def apply(height: Int, width: Int, storage: MutableVector): MutableMatrix = 
+    new OnVector(height, width, storage)
+
   /**
     * Builds a mutable matrix of given width and height
- *
+    *
     * @param height the height
     * @param width the width 
     * @return a new matrix (mutable)
@@ -359,11 +355,8 @@ object Matrix {
   def apply(height: Int, width: Int): MutableMatrix = {
     require(width >= 0, s"Bad width $width")
     require(height >= 0, s"Bad height $height")
-    apply(height, width, new Array[Double](height * width))
+    apply(height, width, storage = Vector(height * width))
   }
-
-  private[la] def apply(height: Int, width: Int, storage: MutableVector): MutableMatrix = 
-    new OnVector(height, width, storage)
     
   class OnVector(val nRows: Int, val nCols: Int, protected val data: MutableVector) extends MutableMatrix {
 

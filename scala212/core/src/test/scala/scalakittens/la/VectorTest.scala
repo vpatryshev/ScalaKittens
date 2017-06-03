@@ -27,7 +27,7 @@ class VectorTest extends Specification {
       sut(0) must_== 1.5
       sut(1) must_== 2.25
     }
-
+    
     "have update()" in {
       val sut = Vector(0, 0).copy
       sut(0) = 1.5

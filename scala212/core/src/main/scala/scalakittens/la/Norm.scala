@@ -9,6 +9,7 @@ import scala.math._
   * Created by vpatryshev on 5/22/17.
   */
 trait Norm {
+
   def apply(xs: Iterable[Double]): Double
   
   def apply(m: Matrix): Double = apply(m.allElements)
@@ -36,7 +37,7 @@ trait Norm {
 
     val vs = new Array[Vector](v.length)
 
-    vs(0) = normalize(v.copy)
+    vs(0) = normalize(v.copy).copy
 
     for {
       i <- 1 until v.length
@@ -45,7 +46,7 @@ trait Norm {
       for (j <- 0 until i) {
         v1 -= project(vs(j), v1)
       }
-      vs(i) = normalize(v1)
+      vs(i) = normalize(v1).copy
     }
 
     vs

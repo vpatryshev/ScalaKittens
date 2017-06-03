@@ -1,6 +1,7 @@
 package scalakittens.la
 
 import org.specs2.mutable.Specification
+
 import Norm._
 
 /**

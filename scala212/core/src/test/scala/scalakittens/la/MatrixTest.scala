@@ -62,20 +62,6 @@ class MatrixTest extends Specification {
       log must_== "000102031011121320212223"
     }
 
-    "normalize vertically" in {
-      val sut = TestMatrix(3, 4, i => j => 0.5 + i * 10.0 + j)
-
-      sut.normalizeVertically()
-
-      sut must_== Matrix.ofRows(4, Array(
-        Vector(0.021703261485649127, 0.06140377126253595, 0.09667364890456637, 0.12807973746712817),
-        Vector(0.45576849119863166, 0.4707622463461089, 0.48336824452283184, 0.49402184451606584),
-        Vector(0.8898337209116142, 0.8801207214296819, 0.8700628401410972, 0.8599639515650035)
-      ))
-
-      ok
-    }
-
     "multiply" in {
       val sut1 = TestMatrix(3, 4, i => j => i * 10 + j)
       val sut2 = TestMatrix(4, 5, i => j => (i - j + 1000) % 2 * 1.0)
@@ -212,7 +198,7 @@ class MatrixTest extends Specification {
     "have correct number of rows" in {
       val sut = build(7, 10, i => j => 1.0+i+j)
       sut.nRows must_== 7
-      Matrix.ofRows(10, new Array[Vector](0)).nRows must_== 0
+      Matrix.ofRows(10, new Array[MutableVector](0)).nRows must_== 0
       build(7, 0, i => j => 1.0).nRows must_== 7
     }
     
@@ -278,14 +264,14 @@ class MatrixTest extends Specification {
     "have correct number of columns" in {
       val sut = build(7, 10, i => j => 1.0+i+j)
       sut.nRows must_== 10
-      Matrix.ofColumns(10, Array[Vector]()).nCols must_== 0
+      Matrix.ofColumns(10, Array[MutableVector]()).nCols must_== 0
       build(7, 0, i => j => 1.0).nCols must_== 7
     }
 
     "have correct number of rows" in {
       val sut = build(7, 10, i => j => 1.0+i+j)
       sut.nRows must_== 10
-      Matrix.ofColumns(10, Array[Vector]()).nRows must_== 10
+      Matrix.ofColumns(10, Array[MutableVector]()).nRows must_== 10
       build(7, 0, i => j => 1.0).nRows must_== 0
     }
 
