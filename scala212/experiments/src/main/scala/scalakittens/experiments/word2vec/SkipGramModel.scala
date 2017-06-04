@@ -7,14 +7,15 @@ import scalakittens.la._
   * Created by vpatryshev on 5/11/17.
   */
 case class SkipGramModel(text: ScannedText, dim: Int, α: Double, window: Int, numEpochs: Int, seed: Long = System.nanoTime()) {
+
   require (0 < α && α < 1.0/dim, s"α=$α should be between 0 and ${1.0/dim}")
   
   lazy val vecFactory = Vector.RandomSphere(dim, seed)
 
-  lazy val in: Array[Vector] = {
-    val in = new Array[Vector](text.dictionarySize)
+  lazy val in: Array[MutableVector] = {
+    val in = new Array[MutableVector](text.dictionarySize)
 
-    for {i <- in.indices} in(i) = vecFactory()
+    for {i <- in.indices} in(i) = vecFactory().copy
     
     in
   }
@@ -35,9 +36,9 @@ case class SkipGramModel(text: ScannedText, dim: Int, α: Double, window: Int, n
   
   val huffman = new HuffmanTree(text.frequencies)
   
-  val out: Array[Vector] = new Array[Vector](huffman.size)
+  val out: Array[MutableVector] = new Array[MutableVector](huffman.size)
 
-  for {i <- out.indices} out(i) = vecFactory()
+  for {i <- out.indices} out(i) = vecFactory().copy
 
   def product(i: Int, j: Int) = in(i) * out(j)
   
@@ -47,7 +48,7 @@ case class SkipGramModel(text: ScannedText, dim: Int, α: Double, window: Int, n
 
   def update(i: Int, o: Int): Unit = {
     val v = in(i)
-    val neu = Vector.Zero(dim)()
+    val neu: MutableVector = Vector.Zero(dim).copy
   
     for {j <- huffman.path(o)} {
       val w = out(abs(j))
@@ -56,39 +57,46 @@ case class SkipGramModel(text: ScannedText, dim: Int, α: Double, window: Int, n
       if (g != 0) {
         neu.nudge(w, g)
         w.nudge(v, g)
-        require(w.isValid, s"w is bad:\nw=$w,\nv=$v,\ng=$g")
       }
       
     }
  
     v += neu
-    require(v.isValid, s"3. vector at $i is bad: $v")
     ()
   }
   
   def updateWindow(i: Int): Unit = {
     val idx = text.index(i)
-    val v: Vector = in(text.index(i))
-
-    require(v.isValid, s"in vector at $i -> $idx is bad: $v")
 
     val limit = text.length
     for {j <- max(0, i - window) until min(limit, i+window) if j != i} {
-      require(v.isValid, s"in vector at $i -> $idx is bad: $v")
       update(idx, text.index(j))
     }
   }
   
-  def doOneEpoch(): Unit = {
-    0 until text.length foreach { i => 
-      updateWindow(i)
-    } 
+  def doOneEpoch(numEpoch: Int): Unit = {
+    val numCores = 4//Runtime.getRuntime.availableProcessors
+//    val t0 = System.currentTimeMillis
+//    println(s"Epoch $numEpoch on $numCores cores")
+    val oneRange = text.length / numCores
+    val threads = (0 until numCores).par
+    threads.foreach((t:Int) => {
+      val range = (t * oneRange) until min(text.length, (t+1)*oneRange)
+//      print(s"(t${Thread.currentThread().getId}: b$t) ")
+      range foreach updateWindow
+    })
+//    println(s"\nDone epoch $numEpoch, ${System.currentTimeMillis - t0}")
   }
   
   def run(): Unit = {
-    (0 until numEpochs).foreach(i => {
-      print(s"-sg$i-")
-      doOneEpoch()
+    doOneEpoch(0)
+    val t0 = System.currentTimeMillis
+    (1 until numEpochs).foreach(i => {
+      val t1 = System.currentTimeMillis
+      doOneEpoch(i)
+      println(s"$i: ${System.currentTimeMillis - t1}")
     })
+    println(s"Average: ${(System.currentTimeMillis - t0)*1.0/(numEpochs - 1)}")
+    
   }
 }

@@ -38,9 +38,10 @@ class SkipGramModelTest extends Specification {
       source map scanner.scan match {
         case Good(st) =>
  
-          val model = SkipGramModel(st, dim=10, α=0.09, window=3, numEpochs=10, seed=123456789L)
+          val model = SkipGramModel(st, dim=10, α=0.09, window=3, numEpochs=50, seed=123456789L)
           model.run()
           model.in.foreach {v => v.isValid must beTrue; ()}
+//System.exit(42)
           val vectors0 = st.dictionary zip model.in
           val size: Int = vectors0.head._2.length
           val acc = AccumulatingMoments(size).collect(model.in)
@@ -51,7 +52,7 @@ class SkipGramModelTest extends Specification {
           val Some(eigens) = PCA.Iterations(0.001, 10).buildEigenVectors(cov, 10)
           println("\nEIGENVALUES:\n")
           println(eigens map (_._1))
-          val newBasis = Basis(avg, Matrix.Unitary(eigens.map (_._2).toArray).transpose)
+          val newBasis = Basis(avg.copy, Matrix.Unitary(eigens.map (_._2).toArray).transpose)
           
           val vectors = vectors0 map { case (w, v) => (w, newBasis(v)) }
           serialize(vectors)
@@ -159,7 +160,6 @@ class SkipGramModelTest extends Specification {
           case (i, w) => w.zipWithIndex map { case (c, i1) => (i + i1) -> c } toList
         }.flatten.toMap
 
-// line number        print(f"$j%2d  ")
         if (merged.nonEmpty) for (i <- 0 to chars.keySet.max) {
           print(chars.getOrElse(i, ' '))
         }

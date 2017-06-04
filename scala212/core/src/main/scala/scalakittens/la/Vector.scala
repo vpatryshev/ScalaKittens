@@ -181,7 +181,7 @@ trait MutableVectorT extends Vector {
   }
 }
 
-class MutableVector(private val data: Array[Double]) extends Vector {
+class MutableVector(private val data: Array[Double]) extends MutableVectorT {
   
   /**
     * length of this vector
@@ -208,7 +208,7 @@ class MutableVector(private val data: Array[Double]) extends Vector {
     * @param scalar the value by which to multiply 
     * @return this, now all its values are multiplied by scalar
     */
-  def *=(scalar: Double): Unit = {
+  override def *=(scalar: Double): Unit = {
     for (i <- range) data(i) *= scalar
   }
 
@@ -218,7 +218,7 @@ class MutableVector(private val data: Array[Double]) extends Vector {
     * @param scalar the value by which to divide 
     * @return this, now all its values are divided by scalar
     */
-  def /=(scalar: Double): Unit = {
+  override def /=(scalar: Double): Unit = {
     for (i <- range) data(i) /= scalar
   }
 
@@ -228,7 +228,7 @@ class MutableVector(private val data: Array[Double]) extends Vector {
     * @param other another vector
     * @return this vector, its value is now the sum of this and another
     */
-  def +=(other: Vector): Unit = {
+  override def +=(other: Vector): Unit = {
     requireCompatibility(other)
     for (i <- range) data(i) += other(i)
   }
@@ -239,7 +239,7 @@ class MutableVector(private val data: Array[Double]) extends Vector {
     * @param other another vector
     * @return this vector, its value is now the difference of this and another
     */
-  def -=(other: Vector): Unit = {
+  override def -=(other: Vector): Unit = {
     requireCompatibility(other)
     for (i <- range) data(i) -= other(i)
   }
@@ -256,10 +256,9 @@ class MutableVector(private val data: Array[Double]) extends Vector {
     * @param coeff coefficient
     * @return this + coeff * other
     */
-  def nudge(other: Vector, coeff: Double): Vector = {
-    require(length == other.length)
-    for (i <- range) this(i) += coeff * other(i)
-    this
+  override def nudge(other: Vector, coeff: Double): Unit = {
+    requireCompatibility(other)
+    for (i <- range) this(i) += other(i)*coeff
   }
   
   override def toString = s"Vec(${util.Arrays.toString(data)})"
@@ -355,8 +354,7 @@ object Vector {
   }
 
   def unit(size: Int, at: Int): Vector = {
-    require(size > 0)
-    require (at < size && at >= 0)
+    require ((size == 0 || at < size) && at >= 0)
     new OnFunction(size, i => if (i == at) 1.0 else 0.0)
   }
 
@@ -369,7 +367,7 @@ object Vector {
     case garbage => None
   }
 
-  class OnFunction(val length: Int, f: Int => Double) extends Vector {
+  class OnFunction(val length: Int, val f: Int => Double) extends Vector {
     override def apply(i: Int) = f(i)
 
     override def iterator = (0 until length iterator) map f
