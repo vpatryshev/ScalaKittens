@@ -75,17 +75,13 @@ case class SkipGramModel(text: ScannedText, dim: Int, α: Double, window: Int, n
   }
   
   def doOneEpoch(numEpoch: Int): Unit = {
-    val numCores = 4//Runtime.getRuntime.availableProcessors
-//    val t0 = System.currentTimeMillis
-//    println(s"Epoch $numEpoch on $numCores cores")
+    val numCores = Runtime.getRuntime.availableProcessors
     val oneRange = text.length / numCores
     val threads = (0 until numCores).par
     threads.foreach((t:Int) => {
-      val range = (t * oneRange) until min(text.length, (t+1)*oneRange)
-//      print(s"(t${Thread.currentThread().getId}: b$t) ")
+      val range = (t*oneRange) until min(text.length, (t+1)*oneRange)
       range foreach updateWindow
     })
-//    println(s"\nDone epoch $numEpoch, ${System.currentTimeMillis - t0}")
   }
   
   def run(): Unit = {

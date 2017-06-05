@@ -95,7 +95,7 @@ class SkipGramModelTest extends Specification {
         case (word, vec) => (word, vec(0), vec(1))
       } .toList
 
-      allProjections.size must_== 17692
+      allProjections.size must_== 17355
 
       val projections = allProjections.takeRight(150).reverse
       visualize("150 MOST FREQUENT WORDS", projections)
