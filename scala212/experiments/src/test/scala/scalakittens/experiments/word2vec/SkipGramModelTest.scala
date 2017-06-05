@@ -16,7 +16,8 @@ class SkipGramModelTest extends Specification {
   
   def serialize(vectors: List[(String, Vector)]): Unit = {
     val file = new File(s"$modelFileName.tmp")
-    file.canWrite aka s"Cannot write to $file!" must beTrue
+    file.delete()
+//    file.canWrite aka s"Cannot write to $file!" must beTrue
     val out = new FileWriter(file)
     for {
       (w, v) <- vectors
@@ -81,7 +82,7 @@ class SkipGramModelTest extends Specification {
     }
     
     "visualize War and Piece" in {
-      val lines: Iterator[String] = Source.fromResource("warandpeace.vecs.txt").getLines
+      val lines: Iterator[String] = Source.fromResource(modelFileName).getLines
 
       val found = for {
         line <- lines
