@@ -1,5 +1,7 @@
 package scalakittens.experiments.word2vec
 
+import java.lang.IllegalStateException
+
 import scala.collection.mutable
 import scalakittens.Strings
 
@@ -39,7 +41,13 @@ trait TextScanner {
     val inverseIndex = new mutable.HashMap[String, List[Int]] withDefaultValue Nil
     
     var i: Int = -1
-    wordStream(source) foreach { w => { i+= 1; inverseIndex(w) = i::inverseIndex(w)}}
+    wordStream(source) foreach { 
+      w => { 
+        if ((w contains "dayssail") || (w contains "nicholaslast")) throw new IllegalStateException(s"Word is $w")
+        i+= 1
+        inverseIndex(w) = i::inverseIndex(w)
+      }
+    }
     
     val frequencies = inverseIndex.toList.map{case (w,l) => (w, l.size)}.sortBy(_._2).zipWithIndex
 

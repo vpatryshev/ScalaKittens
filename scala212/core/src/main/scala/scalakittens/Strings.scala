@@ -102,11 +102,12 @@ trait Strings {
   def normalize(s: String) = {
     val s1: String = s.toLowerCase
     val s2: String = s1 map eliminateAccent
-    val s3 = s2.replaceAll("[\\'’][ s]", "")
+    val s3 = s2.replaceAll("[\\'’]s", "")
     val s4 = s3.replaceAll("[^'a-z]+", " ")
     val s5 = s4.replaceFirst("[’']\\s*$", "")
-    val s6 = s5.replaceAll("[\\'’][ s]", "")
-    s6
+    val s6 = s5.replaceAll("[\\'’]s", "")
+    val s7 = s6.replaceAll("[\\'’] ", " ")
+    s7
   }
 
   val isStop = Set(

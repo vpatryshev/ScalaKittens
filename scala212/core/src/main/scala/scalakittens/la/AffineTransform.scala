@@ -7,7 +7,7 @@ import scalakittens.la.Vector.{inf, sup}
   * 
   * Created by vpatryshev on 6/4/17.
   */
-class AffineTransform(shift: Vector, matrix: Matrix) extends (Vector => Vector) {
+class AffineTransform(val shift: Vector, val matrix: Matrix) extends (Vector => Vector) {
   require(matrix.nCols == shift.length, s"Wrong dimensionality, shift is ${shift.length}, matrix is  ${matrix.nRows}x${matrix.nCols}")
 
   /**
@@ -20,6 +20,7 @@ class AffineTransform(shift: Vector, matrix: Matrix) extends (Vector => Vector) 
     require(v.length == shift.length, s"Wrong dimensionality, need ${shift.length}, got ${v.length}")
     matrix * (v - shift)
   }
+  override def toString = s"AffineTransform($shift,\n$matrix)"
 }
 
 object AffineTransform {
@@ -40,7 +41,12 @@ object AffineTransform {
   def unitCube(dim: Int, vectors: Iterable[Vector]): AffineTransform = {
     val lowerLeft = inf(dim, vectors)
     val upperRight = sup(dim, vectors)
-    AffineTransform(lowerLeft, Matrix.diagonal(upperRight - lowerLeft))
+    val diagonal = (for (i <- 0 until dim) yield {
+      val d = upperRight(i) - lowerLeft(i)
+      if (d > Double.MinPositiveValue) 1/d else 0
+    }) .toArray
+    
+    AffineTransform(lowerLeft, Matrix.diagonal(diagonal))
   }
 
   /**

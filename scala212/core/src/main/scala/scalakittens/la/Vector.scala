@@ -439,7 +439,7 @@ object Vector {
     * @return the vector whose components are maximum of all given vectors
     */
   def sup(dim: Int, vectors: TraversableOnce[Vector]): Vector = {
-    val acc: MutableVector = const(dim, Double.MaxValue).copy
+    val acc: MutableVector = const(dim, Double.MinValue).copy
     vectors foreach acc.increaseBy
     acc
   }

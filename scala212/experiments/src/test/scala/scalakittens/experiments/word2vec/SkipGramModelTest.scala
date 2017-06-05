@@ -1,6 +1,6 @@
 package scalakittens.experiments.word2vec
 
-import java.io.FileWriter
+import java.io.{File, FileWriter}
 
 import org.specs2.mutable.Specification
 
@@ -12,19 +12,26 @@ import scalakittens.{Good, IO}
 // TODO: implement https://en.wikipedia.org/wiki/Nonlinear_dimensionality_reduction#Methods_based_on_proximity_matrices
 
 class SkipGramModelTest extends Specification {
+  val modelFileName = "warandpeace.vecs.txt"
   
   def serialize(vectors: List[(String, Vector)]): Unit = {
-    val out = new FileWriter("warandpeace.vecs.txt")
+    val file = new File(s"$modelFileName.tmp")
+    file.canWrite aka s"Cannot write to $file!" must beTrue
+    val out = new FileWriter(file)
     for {
       (w, v) <- vectors
     } {
       out.write(w)
       out.write(",")
-      out.write(v.toString)
+      val s = v.map(x => (x * 10000).toInt).mkString(",")
+      out.write(s)
       out.write("\n")
     }
-    
     out.close()
+    file.canRead aka s"output file $file somehow disappeared" must beTrue
+    file.length > 100000  aka s"output file $file too small: ${file.length}" must beTrue
+    file.renameTo(new File(modelFileName))
+    ()
   }
 
   "SkipGramModel" should {
@@ -37,11 +44,9 @@ class SkipGramModelTest extends Specification {
       
       source map scanner.scan match {
         case Good(st) =>
- 
-          val model = SkipGramModel(st, dim=10, α=0.09, window=3, numEpochs=50, seed=123456789L)
+          val model = SkipGramModel(st, dim=10, α=0.09, window=3, numEpochs=10, seed=123456789L)
           model.run()
           model.in.foreach {v => v.isValid must beTrue; ()}
-//System.exit(42)
           val size: Int = model.in.head.length
           val acc = AccumulatingMoments(size).collect(model.in)
           val avg = acc.avg
@@ -63,8 +68,8 @@ class SkipGramModelTest extends Specification {
           println("Frequent words")
           println((vectors takeRight 10).reverse mkString "\n") 
 
-          println("\nSEE ALL RESULTS IN warandpeace.vecs.txt\n")
-          vectors.length must_== 17692
+          println(s"\nSEE ALL RESULTS IN $modelFileName\n")
+          vectors.length must_== 17355
 
           ok
           
@@ -80,9 +85,10 @@ class SkipGramModelTest extends Specification {
 
       val found = for {
         line <- lines
-        parts = line.split(",", 2)
-        vec <- Vector.read(parts(1))
-      } yield (parts(0), vec) 
+        parts = line split ","
+        numbers:Array[Double] = parts.tail map (_.toDouble)
+        vec = Vector(numbers)
+      } yield (parts.head, vec) 
       
       val allProjections = found .map { 
         case (word, vec) => (word, vec(0), vec(1))
@@ -134,37 +140,26 @@ class SkipGramModelTest extends Specification {
     val sample = projections map {
       case (w, x, y) => (w, ((x - xmin) / xScale).toInt + 1, ((y - ymin) / yScale).toInt)
     }
-
+    
     val samplesByLine = sample.groupBy(_._3) 
     
     0 to M foreach {
       j =>
-        val oneLineOfTexts: Map[Int, List[String]] = samplesByLine.getOrElse(j, Nil) map { case (w, x, y) => (w, x) } groupBy (_._2) mapValues (_.map(_._1))
+        val row = samplesByLine.getOrElse(j, Nil) map (t => t._1 -> t._2)
 
-        val valueMap = oneLineOfTexts mapValues {
-          _.head
-        }
-
-        val values = valueMap.toList.sorted
-
-        val merged: List[(Int, String)] = (List[(Int, String)]() /: values) {
-          case (doneList, wi@(i, w)) =>
-            if (doneList.exists {
-              case (i1, w1) =>
-                i + w.length - 1 > i1 && i - 1 < i1 + w1.length
-            }) doneList
-            else {
-              wi :: doneList
+        val layout = (Map[Int, Char]() /: row) {
+          case (charMap, (w, pos)) =>
+            val wordRange = math.max(pos-1,0) until math.min(N, pos + w.length + 1)
+            if (wordRange exists charMap.contains) charMap else {
+              val m1 = 0 until w.length map (i => i+pos -> w.charAt(i)) toMap
+              
+              charMap ++ m1
             }
-        } sortBy (_._1)
-
-        val chars: Map[Int, Char] = merged.map {
-          case (i, w) => w.zipWithIndex map { case (c, i1) => (i + i1) -> c } toList
-        }.flatten.toMap
-
-        if (merged.nonEmpty) for (i <- 0 to chars.keySet.max) {
-          print(chars.getOrElse(i, ' '))
         }
+        
+        val chars = 0 until N map (layout.getOrElse(_, ' '))
+
+        print(chars mkString)
         println
     }
   }
