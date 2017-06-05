@@ -42,8 +42,7 @@ class SkipGramModelTest extends Specification {
           model.run()
           model.in.foreach {v => v.isValid must beTrue; ()}
 //System.exit(42)
-          val vectors0 = st.dictionary zip model.in
-          val size: Int = vectors0.head._2.length
+          val size: Int = model.in.head.length
           val acc = AccumulatingMoments(size).collect(model.in)
           val avg = acc.avg
           val cov = acc.covariance
@@ -54,12 +53,15 @@ class SkipGramModelTest extends Specification {
           println(eigens map (_._1))
           val newBasis = Basis(avg.copy, Matrix.Unitary(eigens.map (_._2).toArray).transpose)
           
-          val vectors = vectors0 map { case (w, v) => (w, newBasis(v)) }
+          val vs = model.in map (newBasis(_))
+          
+          val uvs = AffineTransform.toUnitCube(size, vs)
+          val vectors = st.dictionary zip uvs
           serialize(vectors)
           println("Rare words")
           println(vectors take 10 mkString "\n")
           println("Frequent words")
-          println((vectors takeRight 10).reverse mkString "\n")
+          println((vectors takeRight 10).reverse mkString "\n") 
 
           println("\nSEE ALL RESULTS IN warandpeace.vecs.txt\n")
           vectors.length must_== 17692
@@ -76,21 +78,16 @@ class SkipGramModelTest extends Specification {
     "visualize War and Piece" in {
       val lines: Iterator[String] = Source.fromResource("warandpeace.vecs.txt").getLines
 
-      val found:List[(String, Vector)] = (for {
+      val found = for {
         line <- lines
         parts = line.split(",", 2)
         vec <- Vector.read(parts(1))
-      } yield (parts(0), vec)) .toList
+      } yield (parts(0), vec) 
       
-      val vecs: Iterable[Vector] = AffineTransform.toUnitCube(found.head._2.length, found map (_._2))
-
-      val words: List[String] = found.map(x => x._1)
-      val normalized = words zip vecs
-      
-      val allProjections = normalized .map { 
+      val allProjections = found .map { 
         case (word, vec) => (word, vec(0), vec(1))
       } .toList
-println(allProjections)
+
       allProjections.size must_== 17692
 
       val projections = allProjections.takeRight(150).reverse
