@@ -3,6 +3,7 @@ package scalakittens.la
 import language.postfixOps
 import scalakittens.la.Matrix._
 import scalakittens.la.Norm._
+import scalakittens.la._
 
 /**
   * Created by vpatryshev on 5/15/17.

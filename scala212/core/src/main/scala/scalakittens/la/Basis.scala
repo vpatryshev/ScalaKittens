@@ -7,19 +7,7 @@ package scalakittens.la
   * 
   * Created by vpatryshev on 5/25/17.
   */
-case class Basis(center: Vector, rotation: UnitaryMatrix) {
-  require(rotation.nCols == center.length, s"Wrong dimensionality, vector is ${center.length}, matrix is  ${rotation.nCols}x${rotation.nCols}")
-
-  /**
-    * converts a vector into this basis
-    * 
-    * @param v vector in the old basis
-    * @return the same vector in this basis
-    */
-  def apply(v: Vector): Vector = {
-    require(v.length == center.length, s"Wrong dimensionality, need ${center.length}, got ${v.length}")
-    rotation * (v - center)
-  }
+case class Basis(center: Vector, rotation: UnitaryMatrix) extends AffineTransform(center, rotation) {
 
   /**
     * converts a vector from this basis to the original one

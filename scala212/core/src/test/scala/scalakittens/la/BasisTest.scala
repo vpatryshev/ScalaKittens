@@ -8,7 +8,7 @@ import org.specs2.mutable.Specification
 class BasisTest extends Specification {
   import math._
   
-  "Matrix" should {
+  "Basis" should {
 
     val sampleUnitaryMatrix_3x3: UnitaryMatrix = {
       val alpha = Pi / 4

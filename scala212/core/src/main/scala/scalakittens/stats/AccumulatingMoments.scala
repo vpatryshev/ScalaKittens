@@ -1,5 +1,6 @@
 package scalakittens.stats
 
+import scalakittens.la.MutableVector
 import scalakittens.la._
 
 /**

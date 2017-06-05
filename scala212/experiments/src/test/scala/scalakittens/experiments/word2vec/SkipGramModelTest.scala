@@ -5,7 +5,7 @@ import java.io.FileWriter
 import org.specs2.mutable.Specification
 
 import scala.io.Source
-import scalakittens.la.{Basis, Matrix, PCA, Vector}
+import scalakittens.la.{AffineTransform, Basis, Matrix, PCA, Vector}
 import scalakittens.stats.AccumulatingMoments
 import scalakittens.{Good, IO}
 
@@ -74,18 +74,23 @@ class SkipGramModelTest extends Specification {
     }
     
     "visualize War and Piece" in {
-      val lines: Iterator[String] = Source.fromFile("warandpeace.vecs.txt").getLines
+      val lines: Iterator[String] = Source.fromResource("warandpeace.vecs.txt").getLines
 
-      val found = for {
+      val found:List[(String, Vector)] = (for {
         line <- lines
         parts = line.split(",", 2)
         vec <- Vector.read(parts(1))
-      } yield (parts(0), vec)
+      } yield (parts(0), vec)) .toList
       
-      val allProjections = found .map { 
+      val vecs: Iterable[Vector] = AffineTransform.toUnitCube(found.head._2.length, found map (_._2))
+
+      val words: List[String] = found.map(x => x._1)
+      val normalized = words zip vecs
+      
+      val allProjections = normalized .map { 
         case (word, vec) => (word, vec(0), vec(1))
       } .toList
-
+println(allProjections)
       allProjections.size must_== 17692
 
       val projections = allProjections.takeRight(150).reverse
