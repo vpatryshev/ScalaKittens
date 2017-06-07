@@ -45,7 +45,7 @@ class SkipGramModelTest extends Specification {
       
       source map scanner.scan match {
         case Good(st) =>
-          val model = SkipGramModel(st, dim=10, α=0.09, window=3, numEpochs=1000, seed=123456789L)
+          val model = SkipGramModel(st, dim=10, α=0.09, window=3, numEpochs=100, seed=123456789L)
           model.run()
           model.in.foreach {v => v.isValid must beTrue; ()}
           val size: Int = model.in.head.length
