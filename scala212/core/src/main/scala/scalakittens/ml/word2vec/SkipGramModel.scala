@@ -1,7 +1,7 @@
-package scalakittens.experiments.word2vec
+package scalakittens.ml.word2vec
 
-import Sigma._
 import scalakittens.la._
+import scalakittens.ml.word2vec.Sigma._
 
 /**
   * Created by vpatryshev on 5/11/17.

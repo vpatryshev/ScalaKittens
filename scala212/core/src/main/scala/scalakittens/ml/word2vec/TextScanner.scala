@@ -1,4 +1,4 @@
-package scalakittens.experiments.word2vec
+package scalakittens.ml.word2vec
 
 import java.lang.IllegalStateException
 

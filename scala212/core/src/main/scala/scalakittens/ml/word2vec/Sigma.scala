@@ -1,4 +1,4 @@
-package scalakittens.experiments.word2vec
+package scalakittens.ml.word2vec
 
 /**
   * Shortcut for @see https://en.wikipedia.org/wiki/Sigmoid_function, aka σ, which is <code>1/(1+exp(-x))</code>

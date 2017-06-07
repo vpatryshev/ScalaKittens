@@ -1,4 +1,4 @@
-package scalakittens.experiments.word2vec
+package scalakittens.ml.word2vec
 
 import java.io.{File, FileWriter}
 
@@ -45,7 +45,7 @@ class SkipGramModelTest extends Specification {
       
       source map scanner.scan match {
         case Good(st) =>
-          val model = SkipGramModel(st, dim=10, α=0.09, window=3, numEpochs=10, seed=123456789L)
+          val model = SkipGramModel(st, dim=10, α=0.09, window=3, numEpochs=1000, seed=123456789L)
           model.run()
           model.in.foreach {v => v.isValid must beTrue; ()}
           val size: Int = model.in.head.length
@@ -62,7 +62,7 @@ class SkipGramModelTest extends Specification {
           val vs = model.in map (newBasis(_))
           
           val uvs = AffineTransform.toUnitCube(size, vs)
-          val vectors = st.dictionary zip uvs
+          val vectors = (st.dictionary zip st.frequencies) map {case(w,f) => s"$w:$f"} zip uvs
           serialize(vectors)
           println("Rare words")
           println(vectors take 10 mkString "\n")
@@ -89,7 +89,7 @@ class SkipGramModelTest extends Specification {
         parts = line split ","
         numbers:Array[Double] = parts.tail map (_.toDouble)
         vec = Vector(numbers)
-      } yield (parts.head, vec) 
+      } yield (parts.head.split(":").head, vec) 
       
       val allProjections = found .map { 
         case (word, vec) => (word, vec(0), vec(1))
