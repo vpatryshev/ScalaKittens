@@ -8,6 +8,8 @@ import scalakittens.la.Vector.OnFunction
 
 /**
   * real-valued vector with usual operations
+  * 
+  * @see [[http://www.javadecompilers.com]] to figure out speed issues
   *
   * Created by vpatryshev on 5/14/17.
   */
@@ -225,7 +227,7 @@ trait MutableVector extends Vector {
 
 object Vector {
 
-  class OnArray(private val data: Array[Double]) extends MutableVector {
+  class OnArray(private[la] val data: Array[Double]) extends MutableVector {
 
     /**
       * length of this vector
@@ -296,7 +298,31 @@ object Vector {
       */
     override def nudge(other: Vector, coeff: Double): Unit = {
       requireCompatibility(other)
-      for (i <- range) data(i) += other(i) * coeff
+      other match {
+        case o: OnArray =>
+          for (i <- range) data(i) += o.data(i) * coeff
+        case v: Vector =>
+          for (i <- range) data(i) += other(i) * coeff
+      }
+    }
+
+    /**
+      * specialized version of +=
+      * @param other another OnArray vector
+      */
+    def +=(other: OnArray): Unit = {
+      requireCompatibility(other)
+      for (i <- range) data(i) += other.data(i)
+    }
+
+    def -=(other: OnArray): Unit = {
+      requireCompatibility(other)
+      for (i <- range) data(i) -= other.data(i)
+    }
+    
+    def nudge(other: OnArray, coeff: Double): Unit = {
+      requireCompatibility(other)
+      for (i <- range) data(i) += other.data(i) * coeff
     }
 
     override def iterator: Iterator[Double] = range.iterator map (data(_))

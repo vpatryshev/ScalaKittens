@@ -1,7 +1,5 @@
 package scalakittens.la
 
-import scalakittens.la._
-
 /**
   * Created by vpatryshev on 5/17/17.
   */

@@ -3,7 +3,6 @@ package scalakittens.la
 import org.specs2.mutable.Specification
 
 import Norm._
-import scalakittens.la._
 
 /**
   * Created by vpatryshev on 5/7/17.

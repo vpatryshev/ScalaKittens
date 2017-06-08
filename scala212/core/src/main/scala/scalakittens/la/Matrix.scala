@@ -3,7 +3,6 @@ package scalakittens.la
 import language.postfixOps
 import scalakittens.la.Matrix._
 import scalakittens.la.Norm._
-import scalakittens.la._
 
 /**
   * Created by vpatryshev on 5/15/17.
@@ -197,9 +196,26 @@ trait Matrix extends ((Int, Int) => Double) with Iterable[Double] {
     */
   def *(v: Vector): MutableVector = {
     require(nCols == v.length, s"To apply a matrix to a vector we need that number of columns ($nCols) is equal to the vector's length (${v.length})")
+    
+    v match {
+      case va: Vector.OnArray => byArray(va)
+      case _ =>
+        0 until nRows map {
+          i => (0.0 /: (0 until v.length))((s, j) => s + this(i, j)*v(j))
+        } toArray
+    }
+  }
+
+  /**
+    * Specialization of vector multiplication
+    * @param v vector on array
+    * @return product of this matrix and the array
+    */
+  private def byArray(v: Vector.OnArray): MutableVector = {
+    require(nCols == v.length, s"To apply a matrix to a vector we need that number of columns ($nCols) is equal to the vector's length (${v.length})")
 
     0 until nRows map {
-      i => (0.0 /: (0 until v.length))((s, j) => s + this(i, j)*v(j))
+      i => (0.0 /: (0 until v.length))((s, j) => s + this(i, j)*v.data(j))
     } toArray
   }
   
