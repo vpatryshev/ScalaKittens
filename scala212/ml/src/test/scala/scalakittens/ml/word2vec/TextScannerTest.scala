@@ -2,7 +2,7 @@ package scalakittens.ml.word2vec
 
 import org.specs2.mutable.Specification
 
-import scalakittens.{Good, IO, Strings}
+import scalakittens._
 
 class TextScannerTest extends Specification {
 

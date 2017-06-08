@@ -9,9 +9,11 @@ version := "1.0.0"
 
 scalaVersion := WhichScala
 lazy val core = RootProject(file("./core"))
+lazy val ml = RootProject(file("./ml"))
 lazy val experiments = RootProject(file("./experiments"))
 
-val main = Project(id = "all", base = file(".")).dependsOn(core, experiments)
+
+val main = Project(id = "all", base = file(".")).dependsOn(core, ml, experiments)
 
 scalacOptions ++= Seq("-feature", "-deprecation", "-encoding", "UTF-8", "-feature", "-target:jvm-1.8", "-unchecked",
     "-Ywarn-adapted-args", "-Ywarn-value-discard", "-Xlint")
