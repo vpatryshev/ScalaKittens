@@ -13,44 +13,6 @@ trait Norm {
   def apply(xs: Iterable[Double]): Double
   
   def apply(m: Matrix): Double = apply(m.allElements)
-
-  /**
-    * converts a vector into a vector of norm=1 (if possible)
-    *
-    * @return v / norm(v)
-    */
-  def normalize(v: Vector) = {
-    val norm = apply(v)
-    if (norm > Double.MinPositiveValue) v / norm else v
-  }
-
-  /**
-    * Project vector b to vector a
-    * @param a vector to project to
-    * @param b vector to project
-    * @return a projection of b to a
-    */
-  def project(a: Vector, b: Vector) = a * ((a * b) / apply(a))
-
-  def buildOrthonormalBasis(v: Vector): Array[Vector] = {
-    val (maxValue, whereMax) = v.zipWithIndex map {case (x, i) => (abs(x), i)} max
-
-    val vs = new Array[Vector](v.length)
-
-    vs(0) = normalize(v.copy).copy
-
-    for {
-      i <- 1 until v.length
-    } {
-      val v1: MutableVector = Vector.unit(v.length, if (i < whereMax) i-1 else i).copy
-      for (j <- 0 until i) {
-        v1 -= project(vs(j), v1)
-      }
-      vs(i) = normalize(v1).copy
-    }
-
-    vs
-  }
 }
 
 object Norm {
