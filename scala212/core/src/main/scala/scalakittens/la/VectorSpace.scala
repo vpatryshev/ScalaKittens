@@ -5,7 +5,7 @@ import java.util
 
 import scala.math.abs
 import scala.util.{Random, Try}
-import scalakittens.la.Matrix.DiagonalMatrix
+import scalakittens.la.Matrix.{DiagonalMatrix, OnFunction}
 import scalakittens.la.Norm.l2
 
 /**
@@ -17,6 +17,14 @@ case class VectorSpace(dim: Int) { space =>
     VectorSpace(dim-1)
   }
 
+  def projectToHyperplane(v: Vector): hyperplane.Vector = {
+    new hyperplane.OnFunction(i => v(i+1)).asInstanceOf[hyperplane.Vector]
+  }
+
+  def injectFromHyperplane(v: hyperplane.Vector): Vector = {
+    new OnFunction(i => if (i == 0) 0.0 else v(i-1))
+  }
+  
   require(dim > 0, s"Space dimension $dim makes no sense")
 
   /**
@@ -29,6 +37,7 @@ case class VectorSpace(dim: Int) { space =>
 
   trait Vector extends Seq[Double] with PartialFunction[Int, Double] {
 //    def space = VectorSpace.this
+    def length = dim
     
     lazy val range = 0 until dim
 
@@ -42,7 +51,7 @@ case class VectorSpace(dim: Int) { space =>
       * @return a vector whose components are minimum of the two
       */
     def inf(other: space.Vector) = {
-      new OnFunction(length, i => math.min(this(i), other(i)))
+      new OnFunction(i => math.min(apply(i), other(i)))
     }
 
     /**
@@ -51,7 +60,7 @@ case class VectorSpace(dim: Int) { space =>
       * @return a vector whose components are maximum of the two
       */
     def sup(other: space.Vector) = {
-      new OnFunction(length, i => math.max(this(i), other(i)))
+      new OnFunction(i => math.max(apply(i), other(i)))
     }
 
     /**
@@ -61,7 +70,7 @@ case class VectorSpace(dim: Int) { space =>
       * @return the product value
       */
     def *(other: space.Vector): Double = {
-      (0.0 /: range) ((s, i) => s + this (i) * other(i))
+      (0.0 /: range) ((s, i) => s + apply(i) * other(i))
     }
 
     /**
@@ -71,7 +80,7 @@ case class VectorSpace(dim: Int) { space =>
       * @return a new vector, the sum of the two
       */
     def +(other: space.Vector): Vector = {
-      new OnFunction(i => this (i) + other(i))
+      new OnFunction(i => apply(i) + other(i))
     }
 
     /**
@@ -81,18 +90,19 @@ case class VectorSpace(dim: Int) { space =>
       * @return a new vector, this minus other
       */
     def -(other: space.Vector): Vector = {
-      new OnFunction(length, i => this (i) - other(i))
+      new OnFunction(i => apply(i) - other(i))
     }
 
-    /**
-      * Appends a value to this vector, giving a new one
-      *
-      * @param d the value
-      * @return a new vector of bigger size
-      */
-    def ::(d: Double): Vector = new OnFunction(length + 1,
-      i => if (i == 0) d else this (i - 1)
-    )
+// this method should not exist. Instead, we need to have a function that embeds a hyperplane
+//    /**
+//      * Appends a value to this vector, giving a new one
+//      *
+//      * @param d the value
+//      * @return a new vector of bigger size
+//      */
+//    def ::(d: Double): Vector = new OnFunction(length + 1,
+//      i => if (i == 0) d else this (i - 1)
+//    )
 
     /**
       * this vector multiplied by a scalar
@@ -100,7 +110,7 @@ case class VectorSpace(dim: Int) { space =>
       * @param scalar the value by which to multiply 
       * @return a virtual vector
       */
-    def *(scalar: Double): Vector = new OnFunction(length, i => this (i) * scalar)
+    def *(scalar: Double): Vector = new OnFunction(i => apply(i) * scalar)
 
     /**
       * this vector divided by a scalar
@@ -118,7 +128,7 @@ case class VectorSpace(dim: Int) { space =>
     def copy: MutableVector = {
       val v = Vector(length)
 
-      range.foreach((i: Int) => v(i) = this (i))
+      range.foreach((i: Int) => v(i) = apply(i))
       v
     }
 
@@ -229,11 +239,6 @@ case class VectorSpace(dim: Int) { space =>
 
   class OnArray(private[la] val data: Array[Double]) extends MutableVector {
     require(data.length == dim, s"Dimension of this space is $dim, array length is ${data.length}")
-    
-    /**
-      * length of this vector
-      */
-    val length: Int = data.length
 
     /**
       * i-th component value of this vector
@@ -394,7 +399,7 @@ case class VectorSpace(dim: Int) { space =>
   case class RandomCube(size: Int, seed: Long) extends Factory {
     private val rnd = new Random(seed)
 
-    override private[Vector] def fill(v: MutableVector): Unit = {
+    override private[VectorSpace] def fill(v: MutableVector): Unit = {
       for {i <- 0 until dim} v(i) = rnd.nextDouble() * 2 - 1
     }
   }
@@ -408,7 +413,7 @@ case class VectorSpace(dim: Int) { space =>
   case class RandomSphere(seed: Long) extends Factory {
     private val cube = RandomCube(dim, seed)
 
-    override private[Vector] def fill(v: MutableVector): Unit = {
+    override private[VectorSpace] def fill(v: MutableVector): Unit = {
 
       val s2 = Stream.continually {
         cube.fill(v)
@@ -459,15 +464,28 @@ case class VectorSpace(dim: Int) { space =>
     case garbage => None
   }
   
-  trait SquareMatrix extends Matrix {
+  trait SquareMatrix extends Matrix[Vector, Vector] {
     override val domain = space
     override val codomain = space
 
-    def *(v: Vector): MutableVector = {
+    def rotate(u: UnitaryMatrix): Matrix[Vector, Vector] = u * this * u.transpose
+
+    def projectToHyperplane(basis: UnitaryMatrix): hyperplane.SquareMatrix = {
+      val rotatedMatrix:Matrix[Vector, Vector] = rotate(basis.transpose)
+      new Matrix.OnFunction[hyperplane.Vector, hyperplane.Vector](hyperplane, hyperplane, (i, j) => rotatedMatrix(i+1, j+1)) with hyperplane.SquareMatrix
+    }
+
+//    def injectFromHyperplane(basis: UnitaryMatrix): hyperplane.SquareMatrix = {
+//      val injected = Matrix.OnFunction[hyperplane.Vector, hyperplane.Vector](hyperplane, hyperplane, (i, j) => rotatedMatrix(i+1, j+1)) with hyperplane.SquareMatrix
+//      val rotatedMatrix:Matrix[Vector, Vector] = rotate(basis.transpose)
+//      rotatedMatrix.dropColumn(0).dropRow(0)
+//    }
+
+    override def *(v: Vector): MutableVector = {
       require(nCols == v.length, s"To apply a matrix to a vector we need that number of columns ($nCols) is equal to the vector's length (${v.length})")
 
       v match {
-        case va: domain.OnArray => byArray(va)
+        case va: OnArray => byArray(va)
         case _ =>
           val data = rowRange map {
             i => (0.0 /: v.indices)((s, j) => s + this(i, j)*v(j))
@@ -482,32 +500,24 @@ case class VectorSpace(dim: Int) { space =>
     def isUnitary(precision: Double) = l2(this * transpose - UnitMatrix) <= precision
 
     def *(v: Vector): Vector = {
-      
+      ???
     }
 
     override def transpose: UnitaryMatrix =
-      new Matrix.OnFunction(nCols, nRows, (i, j) => this(j, i)) with UnitaryMatrix
+      new Matrix.OnFunction(space, space, (i, j) => this(j, i)) with UnitaryMatrix
   }
 
   /**
     * Unit matrix in this space
     */
-  val UnitMatrix: UnitaryMatrix = new DiagonalMatrix(dim, _ => 1.0) with UnitaryMatrix
-  
-  /**
-    * Creates a new affine transform from shift vector and transform matrix
-    * @param shift the shift vector
-    * @param matrix the matrix of transformation
-    * @return a new AffineTransform
-    */
-  def AffineTransform(shift: Vector, matrix: Matrix) = new AffineTransform(shift, matrix)
+  val UnitMatrix: UnitaryMatrix = new DiagonalMatrix(space, _ => 1.0) with UnitaryMatrix
 
   /**
     * An affine transform that would map a given sequence of vectors into a unit cube
     * @param vectors the vectors to transform
     * @return an AffineTransform that would map all these vectors to a unit cube
     */
-  def unitCube(vectors: Iterable[space.Vector]): AffineTransform = {
+  def unitCube(vectors: Iterable[Vector]): (Vector => Vector) = {
     val lowerLeft = inf(vectors)
     val upperRight = sup(vectors)
     val array = (for (i <- 0 until dim) yield {
@@ -516,7 +526,7 @@ case class VectorSpace(dim: Int) { space =>
     }).toArray
     val v = Vector(array)
 
-    AffineTransform(lowerLeft, Matrix.diagonal(dim, v))
+    new AffineTransform(space, space)(Matrix.diagonal(space, v), Zero)
   }
 
   /**
@@ -525,7 +535,7 @@ case class VectorSpace(dim: Int) { space =>
     * @return an iterable of vectors inside unit cube
     */
   def toUnitCube(vectors: Iterable[Vector]): Iterable[Vector] = {
-    val trans = unitCube(vectors)
+    val trans: Vector => Vector = unitCube(vectors)
     vectors map (trans(_))
   }
 
@@ -536,7 +546,10 @@ case class VectorSpace(dim: Int) { space =>
     *
     * Created by vpatryshev on 5/25/17.
     */
-  class Basis(val center: Vector, val rotation: UnitaryMatrix) extends AffineTransform(center, rotation) {
+  class Basis(val center: Vector, val rotation: UnitaryMatrix) {
+    val transform = new AffineTransform(space, space)(center, rotation)
+    
+    def apply(v: Vector) = transform(v)
     
     /**
       * converts a vector from this basis to the original one
@@ -551,14 +564,14 @@ case class VectorSpace(dim: Int) { space =>
     def apply(center: Vector, basisVectors: Array[Vector]) = {
       require(basisVectors.length == dim, s"Expected $dim basis vectors, got ${basisVectors.length}")
       val columns: Array[MutableVector] = basisVectors map (_.copy)
-      val matrix: UnitaryMatrix = new ColumnMatrix(columns) with UnitaryMatrix
+      val matrix: UnitaryMatrix = new ColumnMatrix(space, columns) with UnitaryMatrix
       new Basis(center, matrix)
     }
 
     def build[V <: Vector](basisVectors: Array[V]): Basis = {
       require(basisVectors.length == dim, s"Expected $dim basis vectors, got ${basisVectors.length}")
       val columns: Array[MutableVector] = basisVectors map (_.copy)
-      val matrix: UnitaryMatrix = new ColumnMatrix(columns) with UnitaryMatrix
+      val matrix: UnitaryMatrix = new ColumnMatrix(space, columns) with UnitaryMatrix
       new Basis(Zero, matrix)
     }
   }
@@ -573,7 +586,7 @@ case class VectorSpace(dim: Int) { space =>
     for {
       i <- 1 until v.length
     } {
-      val v1: MutableVector = unit(v.length, if (i < whereMax) i-1 else i).copy
+      val v1: MutableVector = unit(if (i < whereMax) i-1 else i).copy
       for (j <- 0 until i) {
         v1 -= project(vs(j), v1)
       }
@@ -591,9 +604,11 @@ case class VectorSpace(dim: Int) { space =>
     */
   def project(a: space.Vector, b: space.Vector) = a * ((a * b) / Norm.l2(a))
 
-  private[la] class ColumnMatrix[V <: MutableVector](val cols: Array[V]) extends Matrix {
-    val nRows = dim
-    val nCols = cols.length
+  private[la] class ColumnMatrix[Domain,V <: MutableVector](val domain: VectorSpace, val cols: Array[V]) extends Matrix[Domain, V] {
+    override val nRows = dim
+    override val nCols = cols.length
+    
+    val codomain = space
 
     def apply(i: Int, j: Int): Double = {
       checkIndexes(i, j)
@@ -602,12 +617,14 @@ case class VectorSpace(dim: Int) { space =>
 
     override def column(j: Int): MutableVector = cols(j)
 
-    override def transpose: Matrix = new domain.RowMatrix(cols)
+    override def transpose: Matrix[V, Domain] = new domain.RowMatrix[V, Domain](domain, cols)
   }
 
-  private[la] class RowMatrix[V <: MutableVector](val rows: Array[V]) extends Matrix {
-    val nRows = rows.length
-    val nCols = dim
+  private[la] class RowMatrix[V <: MutableVector, Domain](val codomain: VectorSpace, val rows: Array[V]) extends Matrix[V, Domain] {
+    override val nRows = rows.length
+    override val nCols = dim
+    
+    val domain = space
 
     def apply(i: Int, j: Int): Double = {
       checkIndexes(i, j)
@@ -616,6 +633,6 @@ case class VectorSpace(dim: Int) { space =>
 
     override def column(j: Int): MutableVector = rows(j)
 
-    override def transpose: Matrix = new codomain.ColumnMatrix(rows)
+    override def transpose: Matrix[Domain, V] = new codomain.ColumnMatrix(space, rows)
   }
 }

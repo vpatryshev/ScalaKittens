@@ -12,7 +12,7 @@ trait Norm {
 
   def apply(xs: Iterable[Double]): Double
   
-  def apply(m: Matrix): Double = apply(m.allElements)
+  def apply(m: Matrix[_,_]): Double = apply(m.allElements)
 }
 
 object Norm {
