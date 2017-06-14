@@ -13,6 +13,8 @@ trait Norm {
   def apply(xs: Iterable[Double]): Double
   
   def apply(m: Matrix): Double = apply(m.allElements)
+  
+  def distance(x: Vector, y: Vector) = apply(x-y)
 
   /**
     * converts a vector into a vector of norm=1 (if possible)
@@ -70,8 +72,8 @@ object Norm {
     * square root of sum of squares of vector elements
     */
   val l2 = new Norm {
-    override def apply(xs: Iterable[Double]): Double = sqrt(xs map (x => x*x) sum)
-
+    override def apply(xs: Iterable[Double]): Double = 
+      sqrt { (0.0 /: xs){case (s, x) => s + x*x} }
   }
 
   /**

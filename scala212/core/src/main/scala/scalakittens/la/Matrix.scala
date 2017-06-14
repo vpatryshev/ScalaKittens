@@ -8,6 +8,8 @@ import scalakittens.la.Norm._
   * Created by vpatryshev on 5/15/17.
   */
 trait Matrix extends ((Int, Int) => Double) with Iterable[Double] {
+  def triangle = new TriangularMatrix(this)
+
   /**
     * @return number of rows
     */
@@ -62,7 +64,9 @@ trait Matrix extends ((Int, Int) => Double) with Iterable[Double] {
     */
   def row(i: Int): MutableVector = {
     val row = new Array[Double](nCols)
-    columnRange foreach (j => row(j) = this(i, j))
+    columnRange foreach (j => {
+      row(j) = this(i, j)
+    })
     Vector(row)
   }
 
@@ -241,10 +245,8 @@ trait Matrix extends ((Int, Int) => Double) with Iterable[Double] {
   override def toString = {
     val out = new StringBuilder
     out append "["
-    for (i <- 0 until nRows) {
-      out append "["
-      out.append(row(i) mkString ",")
-      out append "]\n"
+      for (i <- 0 until nRows) {
+      out append "[" append (row(i) mkString ",") append "]\n"
     }
     out append "]"
     out.toString
@@ -372,12 +374,17 @@ object Matrix {
   def apply(height: Int, width: Int): MutableMatrix = {
     require(width >= 0, s"Bad width $width")
     require(height >= 0, s"Bad height $height")
-    apply(height, width, storage = Vector(height * width))
+    try {
+      apply(height, width, storage = Vector(height * width))
+    } catch {
+      case oome: OutOfMemoryError =>
+        throw new UnsupportedOperationException(s"Out of memory; wanted ${height * width} doubles")
+    }
   }
     
   class OnVector(val nRows: Int, val nCols: Int, protected val data: MutableVector) extends MutableMatrix {
 
-    private def index(i: Int, j: Int) = {
+    protected def index(i: Int, j: Int) = {
       checkIndexes(i, j)
       i*nCols+j
     }
@@ -484,4 +491,27 @@ object Matrix {
     * @return a diagonal matrix
     */
   def diagonal(values: Double*): Matrix = diagonal(Vector(values:_*))
+  
+  class TriangularMatrix(source: Matrix) extends OnVector(source.nRows, source.nCols, Vector(source.nRows * (source.nCols+1)/2)) {
+    require(source.nRows == source.nCols)
+
+    override def index(i0: Int, j0: Int): Int = {
+      checkIndexes(i0, j0)
+      val (i, j) = if (i0 < j0) (j0, i0) else (i0, j0)
+      val idx = i*(i+1)/2 + j
+      idx
+    }
+    
+    for { i <- rowRange
+          j <- 0 to i
+    } this(i, j) = source(i, j)
+
+    /**
+      * copy of this matrix
+      *
+      * @return the new matrix
+      */
+    override def copy: MutableMatrix = new TriangularMatrix(this)
+
+  }
 }

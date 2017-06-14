@@ -35,7 +35,7 @@ object PCA {
     }
 
     def buildEigenVectors(m: Matrix, numberRequested: Int): Option[List[(Double, MutableVector)]] = {
-      require (numberRequested <= m.nCols)
+      require (numberRequested <= m.nCols, s"Oops, requested $numberRequested out of a matrix with ${m.nCols}")
       
       if (numberRequested == 0) Some(Nil) else {
         for {

@@ -30,6 +30,9 @@ trait Vector extends Seq[Double] with PartialFunction[Int, Double] {
     * @return that other vector
     */
   protected def requireCompatibility[T <: Vector](other: T): Unit = {
+    if (length != other.length) {
+      println("2tf")
+    }
     require(length == other.length,
       s"need the length, have $length, and another has ${other.length}")
   }
@@ -112,6 +115,22 @@ trait Vector extends Seq[Double] with PartialFunction[Int, Double] {
     * @return a virtual vector
     */
   def /(scalar: Double): Vector = *(1.0 / scalar)
+
+  /**
+    * Componentwise division of this vector into another
+    * Not sure if it makes sense
+    * @param f component-wise divisors
+    * @return vector(x(i)/y(i)) where x is this, y is divisor
+    */
+  def /(f: Int => Double): Vector = Vector(range map (i => this(i)/f(i)) toArray)
+
+  /**
+    * Componentwise multiplication of this vector into another
+    * Not sure if it makes sense
+    * @param f component-wise multipliers
+    * @return vector(x(i)*y(i)) where x is this, y is multiplier
+    */
+  def |*|(f: Int => Double): Vector = Vector(range map (i => this(i)*f(i)) toArray)
 
   /**
     * Materialized copy of this vector

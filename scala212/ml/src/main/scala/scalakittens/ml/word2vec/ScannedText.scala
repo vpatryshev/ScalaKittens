@@ -26,5 +26,7 @@ case class ScannedText(inverseIndex: Map[String, List[Int]],
     
     index
   }
+  
+  lazy val withFrequencies = (dictionary zip frequencies) map { case (w, f) => s"$w:$f" }
 
 }

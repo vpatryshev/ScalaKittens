@@ -3,6 +3,7 @@ package scalakittens.la
 import org.specs2.mutable.Specification
 
 import Norm._
+import scalakittens.la
 
 /**
   * Created by vpatryshev on 5/7/17.
@@ -481,6 +482,23 @@ class MatrixTest extends Specification {
         Vector(0, 1, 2, 3, 4, 5, 6, 7, 8, 9), 
         Vector(1, 0, 3, 0, 5, 0, 7, 0, 9, 0), 
         Vector(2, 0, 0, 5, 0, 0, 8, 0, 0, 11)))
+    }
+    
+    "build a triangular matrix" in {
+      val sut0 = new la.Matrix.OnFunction(2, 2, (i: Int, j: Int) => 1 + i * i + j * j).triangle
+      Array(sut0(0, 0), sut0(1, 0), sut0(0, 1), sut0(1, 1)) must_== Array(1, 2, 2, 3)
+
+      val source = new Matrix.OnFunction(10, 10, (i:Int, j:Int)  => 1 + i*i+j*j)
+      val sut = source.triangle
+      sut(5,5) must_== 51.0
+      sut(5,9) must_== 107.0
+      val sucp = sut.copy
+      sucp(5,5) must_== 51.0
+      sucp(5,9) must_== 107.0
+      sucp must_== source
+      source.transpose.copy must_== sucp
+      source must_== sut
+      source.transpose must_== sut
     }
   }
 }
