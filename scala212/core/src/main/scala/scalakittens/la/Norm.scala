@@ -13,6 +13,10 @@ trait Norm {
   def apply(xs: Iterable[Double]): Double
   
   def apply(m: Matrix[_,_]): Double = apply(m.allElements)
+  
+  def distance(xs: Iterable[Double], ys: Iterable[Double]) = 
+    this((xs zip ys) map {case (x, y) => x-y})
+      
 }
 
 object Norm {

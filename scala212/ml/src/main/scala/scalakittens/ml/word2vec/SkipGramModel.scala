@@ -94,7 +94,7 @@ case class SkipGramModel[Space <: VectorSpace](text: ScannedText, space: Space, 
       doOneEpoch(i)
       println(s"$i: ${System.currentTimeMillis - t1}")
     })
-    println(s"Average: ${(System.currentTimeMillis - t0)*1.0/(numEpochs - 1)}")
+    println(s"Average: ${(0.5 + (System.currentTimeMillis - t0)*1.0/(numEpochs - 1)).toInt}")
     
   }
 }

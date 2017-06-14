@@ -275,8 +275,12 @@ object Matrix {
   }
     
   class OnArray[Domain <: VectorSpace, Codomain <: VectorSpace](val domain: Domain, val codomain: Codomain, protected val data: Array[Double]) extends MutableMatrix[Domain, Codomain] {
-    require(data.length == domain.dim*codomain.dim)
-    private def index(i: Int, j: Int) = {
+    
+    protected def checkArray() =  require(data.length == domain.dim*codomain.dim)
+
+    checkArray()
+    
+    protected def index(i: Int, j: Int) = {
       checkIndexes(i, j)
       i*nCols+j
     }

@@ -111,6 +111,8 @@ case class VectorSpace(dim: Int) { space =>
       */
     def /(scalar: Double): Vector = *(1.0 / scalar)
 
+    def /(components: Int => Double): Vector = new OnFunction(i => this(i) / components(i))
+
     /**
       * Materialized copy of this vector
       *
@@ -468,8 +470,12 @@ case class VectorSpace(dim: Int) { space =>
     override val domain = space
     override val codomain = space
     
+    def triangle = new TriangularMatrix(this)
+    
     def rotate(u: UnitaryMatrix): SquareMatrix = {
-      val product = u * this * u.transpose
+      val half = u * this
+      val transposed = u.transpose
+      val product = half * transposed
       squareMatrix(product)
     }
 
@@ -538,6 +544,29 @@ case class VectorSpace(dim: Int) { space =>
   def diagonalMatrix(source: Int => Double): SquareMatrix = new DiagonalMatrix(source)
 
   def diagonalMatrix(values: Double*): SquareMatrix = diagonalMatrix(values)
+  
+  class TriangularMatrix(source: SquareMatrix) extends Matrix.OnArray[space.type, space.type](space, space, new Array[Double](dim*(dim+1)/2)) with SquareMatrix {
+
+    override def checkArray() = ()
+
+    override def index(i0: Int, j0: Int): Int = {
+      checkIndexes(i0, j0)
+      val (i, j) = if (i0 < j0) (j0, i0) else (i0, j0)
+      val idx = i*(i+1)/2 + j
+      idx
+    }
+
+    for { i <- rowRange
+          j <- 0 to i
+    } this(i, j) = source(i, j)
+
+    /**
+      * copy of this matrix
+      *
+      * @return the new matrix
+      */
+    override def copy: MutableMatrix[space.type, space.type] = new TriangularMatrix(this)
+  }
 
   /**
     * An affine transform that would map a given sequence of vectors into a unit cube
@@ -652,7 +681,7 @@ case class VectorSpace(dim: Int) { space =>
     override def transpose: Matrix[space.type, Domain] = new RowMatrix[Domain](domain, cols)
   }
 
-  private[la] class RowMatrix[Codomain <: VectorSpace](val codomain: Codomain, val rows: Seq[MutableVector]) extends Matrix[space.type, Codomain] {
+  class RowMatrix[Codomain <: VectorSpace](val codomain: Codomain, val rows: Seq[MutableVector]) extends Matrix[space.type, Codomain] {
     require (codomain.dim == rows.length)
     override val nRows = rows.length
     override val nCols = dim
@@ -697,4 +726,15 @@ object Spaces {
   lazy val R24 = VectorSpace(24)
   lazy val R25 = VectorSpace(25)
   lazy val R26 = VectorSpace(26)
+  lazy val R27 = VectorSpace(27)
+  lazy val R28 = VectorSpace(28)
+  lazy val R29 = VectorSpace(29)
+  lazy val R30 = VectorSpace(30)
+  lazy val R31 = VectorSpace(31)
+  lazy val R32 = VectorSpace(32)
+  lazy val R33 = VectorSpace(33)
+  lazy val R34 = VectorSpace(34)
+  lazy val R35 = VectorSpace(35)
+  lazy val R36 = VectorSpace(36)
+  lazy val R100 = VectorSpace(100)
 }
