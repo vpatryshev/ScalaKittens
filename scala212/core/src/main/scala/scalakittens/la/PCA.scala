@@ -23,23 +23,22 @@ object PCA {
         val iterator = Iterator.iterate((space.unit(0).copy, Double.MaxValue, 0)) {
           case (v, d, i) =>
             val vectorToTuple = oneStep(space)(m)(_: space.MutableVector)
-            val (m1, d1) = vectorToTuple(v);
+            val (m1, d1) = vectorToTuple(v)
             (m1, d1, i + 1)
         }
 
         val goodData = iterator find (p => p._2 <= precision || p._3 > maxRepeats)
 
         val maybeTuple: Option[(Double, space.MutableVector, Int)] = goodData map {
-          case (vector, delta, nSteps) => {
+          case (vector, delta, nSteps) => 
             val vector1: space.MutableVector = m * vector
             (vector1.sum / vector.sum, vector, nSteps)
-          }
         }
         maybeTuple
       }
     }
 
-    def buildEigenVectors(m: space.SquareMatrix, numberRequested: Int): List[(Double, space.Vector)] = new EigenVectorFinder(space).runOn[space.SquareMatrix, space.Vector](m, numberRequested)
+    def buildEigenVectors(m: space.SquareMatrix, numberRequested: Int): List[(Double, space.Vector)] = new EigenVectorFinder(space).runOn(m, numberRequested)
 
     class EigenVectorFinder(s: VectorSpace) {
 
@@ -52,7 +51,7 @@ object PCA {
       }
 
 
-      def runOn[MatrixType <: s.SquareMatrix, VectorType <: s.Vector](m: MatrixType, numberRequested: Int): List[(Double, VectorType)] = {
+      def runOn(m: s.SquareMatrix, numberRequested: Int): List[(Double, s.Vector)] = {
         require(numberRequested <= s.dim)
         val v: s.Vector = s.Zero
         if (numberRequested == 0) Nil else {
@@ -61,9 +60,9 @@ object PCA {
           oneEigenValueBasis(m) match {
             case Some((eigenValue, basis, _)) =>
               val submatrix: s.hyperplane.SquareMatrix = m.projectToHyperplane(basis)
-              val tail = finder.runOn[s.hyperplane.SquareMatrix, s.hyperplane.Vector](submatrix, numberRequested - 1)
+              val tail = finder.runOn(submatrix, numberRequested - 1)
               val newTail = tail map { case (value, vector) => (value, basis * s.injectFromHyperplane(vector)) }
-              ((eigenValue, basis.column(0)) :: newTail) map { case (value, vector) => (value, vector.asInstanceOf[VectorType]) }
+              ((eigenValue, basis.column(0)) :: newTail) map { case (value, vector) => (value, vector) }
             case None => Nil
           }
         }
