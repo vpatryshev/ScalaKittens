@@ -49,10 +49,10 @@ class SkipGramModelTest extends Specification {
       val dim = 100
       val newDim = 3
       val reductor = pcaReductor(dim, newDim, 30)
-//      doWarAndPeace(dim, numEpoch = 1000, newDim, filename, reductor) match {
-//        case Good(vs) => ok
-//        case bad => failure(bad.listErrors.toString)
-//      }
+      doWarAndPeace(dim, numEpoch = 1000, filename, reductor) match {
+        case Good(vs) => ok
+        case bad => failure(bad.listErrors.toString)
+      }
 
       ok
     }
@@ -63,9 +63,10 @@ class SkipGramModelTest extends Specification {
       val newDim = 3
       val reductor = pcaReductor(dim, newDim, 30)
 
-      doWarAndPeace(dim, numEpoch = 50, newDim, filename, reductor) match {
-        case Good(vs) => 
-          showWarAndPeace(vs.iterator)
+      doWarAndPeace(dim, numEpoch = 50, filename, reductor) match {
+        case Good((vs, lowdim)) =>
+          val lodimVs = vs zip lowdim map {case ((n, big),small) => (n, small)}
+          showWarAndPeace(lodimVs.iterator)
           ok
         case bad: Bad[_] => failure(bad.listErrors.toString + "\n" + bad.stackTrace)
       }
@@ -81,9 +82,10 @@ class SkipGramModelTest extends Specification {
       val pca = pcaReductor(dim, newDim, 30)
       val sammonReductor = new SammonDimensionReductor(dim, newDim, 30, pca)
       
-      doWarAndPeace(dim, numEpoch = 50, newDim, filename, sammonReductor, 1000) match {
-        case Good(vs) =>
-          showWarAndPeace(vs.iterator)
+      doWarAndPeace(dim, numEpoch = 50, filename, sammonReductor, 1000) match {
+        case Good((vs, lowdim)) =>
+          val lodimVs = vs zip lowdim map {case ((n, big),small) => (n, small)}
+          showWarAndPeace(lodimVs.iterator)
           ok
         case bad: Bad[_] => failure(bad.listErrors.toString + "\n" + bad.stackTrace)
       }
@@ -119,7 +121,7 @@ class SkipGramModelTest extends Specification {
     visualize("150 MOST RARE WORDS", allProjections take 150)
   }
 
-  private def doWarAndPeace(dim: Int, numEpoch: Int, newDim: Int, filename: String, reductor: DimensionReductor, chunkSize: Int = 0): Result[List[(String, Vector)]] = {
+  private def doWarAndPeace(dim: Int, numEpoch: Int, filename: String, reductor: DimensionReductor, chunkSize: Int = 0): Result[(List[(String, Vector)],IndexedSeq[Vector])] = {
     val source = IO.linesFromResource("/warandpeace.txt")
 
     val scanner = TextScanner.WarAndPeace
@@ -127,7 +129,7 @@ class SkipGramModelTest extends Specification {
     source map scanner.scan map {
       st =>
         val α = 0.9 / dim
-        val vectors: List[(String, Vector)] = buildW2vModel(dim, newDim, numEpoch, α, st, reductor, chunkSize)
+        val (vectors, lowdim) = buildW2vModel(dim, numEpoch, α, st, reductor, chunkSize)
         serialize(filename)(vectors)
 //        println("Rare words")
 //        println(vectors take 10 mkString "\n")
@@ -136,25 +138,17 @@ class SkipGramModelTest extends Specification {
 
         println(s"\nSEE ALL RESULTS IN $filename\n")
 //        vectors.length must_== 17355
-        vectors
+        (vectors, lowdim)
     }
   }
 
-  private def buildW2vModel(dim: Int, newDim: Int, numEpochs:Int, α: Double, st: ScannedText, reductor: DimensionReductor, chunkSize: Int = 0) = {
-    val allOriginalVectors: Array[MutableVector] = runSkipGram(dim, numEpochs, α, st)
+  private def buildW2vModel(dim: Int, numEpochs:Int, α: Double, st: ScannedText, reductor: DimensionReductor, chunkSize: Int = 0) = {
+    val allOriginalVectors: Array[MutableVector] = SkipGramModel.run(dim, numEpochs, α, st)
+    allOriginalVectors.foreach { v => v.isValid must beTrue; () }
     val originalVectors = if (chunkSize == 0) allOriginalVectors else allOriginalVectors.take(chunkSize)
     val vs = reductor(originalVectors)
-    val uvs = AffineTransform.toUnitCube(newDim, vs)
-    val vectors = st.withFrequencies zip uvs
-    vectors
-  }
-
-  private def runSkipGram(dim: Int, numEpochs: Int, α: Double, st: ScannedText) = {
-    val model = SkipGramModel(st, dim, α, window = 3, numEpochs, seed = 123456789L)
-    model.run()
-    val originalVectors = model.in
-    originalVectors.foreach { v => v.isValid must beTrue; () }
-    originalVectors
+    val vectors = st.withFrequencies zip originalVectors
+    (vectors, vs)
   }
 
   private def applyPCA(originalVectors: IndexedSeq[Vector], newDim: Int, precision: Double, numIterations: Int) = {
