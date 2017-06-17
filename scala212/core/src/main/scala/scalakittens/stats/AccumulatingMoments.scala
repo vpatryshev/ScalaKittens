@@ -1,34 +1,32 @@
 package scalakittens.stats
 
-import scalakittens.la.MutableVector
 import scalakittens.la._
 
 /**
   * Created by vpatryshev on 5/24/17.
   */
-case class AccumulatingMoments(private val size: Int) {
+case class AccumulatingMoments(val space: VectorSpace) {
   private var _n: Int = 0
   def n = _n
-  val sum: MutableVector = Vector.Zero(size).copy
-  private val matrix: MutableMatrix = Matrix(size, size)
+  val sum: space.MutableVector = space.Zero.copy
+  private val matrix: MutableMatrix[space.type, space.type] = Matrix(space, space)
   
-  def +=(row: Vector): Unit = {
-    require(row.length == size, s"All vectors should have the length $size, got ${row.length}")
+  def +=(row: space.Vector): Unit = {
     _n += 1
     sum += row
 
     for {
-      i <- 0 until size
-      j <- 0 until size
+      i <- 0 until space.dim
+      j <- 0 until space.dim
     } matrix(i,j) += row(i)*row(j)
   }
   
   def avg = (sum / n) .copy  
   
-  def covariance: Matrix = {
+  def covariance: Matrix[space.type, space.type] = {
     require (_n > 1, s"Can't produce covariance matrix for $n vector(s)")
 
-    new Matrix.OnFunction(size, size,
+    new Matrix.OnFunction(space, space,
           (i, j) => (matrix(i, j) - sum(i) * sum(j) / n) / (n-1)
       )
   }
@@ -38,11 +36,11 @@ case class AccumulatingMoments(private val size: Int) {
     * @param vectors those to use in calculation
     * @return average
     */
-  def apply(vectors: Iterable[Vector]): Unit = {
+  def apply(vectors: Iterable[space.Vector]): Unit = {
     vectors foreach +=
   }
 
-  def collect(vectors: Iterable[Vector]): AccumulatingMoments = {
+  def collect(vectors: Iterable[space.Vector]): AccumulatingMoments = {
     vectors foreach += 
     this
   }

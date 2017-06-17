@@ -59,7 +59,7 @@ class VectorTest extends Specification {
     }
 
     "have map()" in {
-      (Vector(0) map ((x: Double) => "oi-vei") toList) must_== Nil
+      (Vector(0) map ((x: Double) => "oi-vei") toList)   must_== Nil
 
       (Vector(3.0, 2.0, 1.0) map (":) " + _) toList) must_== List(":) 3.0", ":) 2.0", ":) 1.0")
     }
@@ -190,6 +190,19 @@ class VectorTest extends Specification {
           sut(j) must_== (if (i == j) 1.0 else 0.0)
         }
       }
+      ok
+    }
+    
+    "not fail with subspaces" in {
+      val space0 = VectorSpace(3)
+      def recurse(s: VectorSpace)(v: s.Vector): Unit = {
+        if (s.dim == 0) v else {
+          val v1 = s.projectToHyperplane(v) * 2
+          recurse(s.hyperplane)(v1)
+        }
+      }
+      val sut = space0.const(3)
+      recurse(space0)(sut) must_== space0.Vector(3, 6, 9)
       ok
     }
   }

@@ -3,6 +3,8 @@ package scalakittens.la
 import javafx.scene.transform
 import javafx.scene.transform.MatrixType
 
+import scalaz.Alpha.S
+
 /**
   * Created by vpatryshev on 5/17/17.
   */
@@ -38,9 +40,12 @@ object PCA {
       }
     }
 
-    def buildEigenVectors(m: space.SquareMatrix, numberRequested: Int): List[(Double, space.Vector)] = new EigenVectorFinder(space).runOn(m, numberRequested)
+    def buildEigenVectors(m: space.SquareMatrix, numberRequested: Int): List[(Double, space.Vector)] = {
+      val finder = new EigenVectorFinder[space.type](space)
+      finder.runOn(m, numberRequested)
+    }
 
-    class EigenVectorFinder(s: VectorSpace) {
+    class EigenVectorFinder[S <: VectorSpace](val s: S) {
 
       def oneEigenValueBasis(m: s.SquareMatrix): Option[(Double, s.UnitaryMatrix, Int)] = maxEigenValue(s)(m) map {
         case (value: Double, vector: s.Vector, nIter) =>
@@ -51,17 +56,20 @@ object PCA {
       }
 
 
-      def runOn(m: s.SquareMatrix, numberRequested: Int): List[(Double, s.Vector)] = {
+      def runOn(m: s.SquareMatrix, numberRequested: Int): List[(Double, S#Vector)] = {
         require(numberRequested <= s.dim)
         val v: s.Vector = s.Zero
         if (numberRequested == 0) Nil else {
-          val finder: EigenVectorFinder = new EigenVectorFinder(s.hyperplane)
+          val finder: EigenVectorFinder[s.hyperplane.type] = new EigenVectorFinder[s.hyperplane.type](s.hyperplane)
 
           oneEigenValueBasis(m) match {
             case Some((eigenValue, basis, _)) =>
-              val submatrix: s.hyperplane.SquareMatrix = m.projectToHyperplane(basis)
+              val submatrix: s.hyperplane.SquareMatrix = m.projectToHyperplane(basis.asInstanceOf[s.UnitaryMatrix])
               val tail = finder.runOn(submatrix, numberRequested - 1)
-              val newTail = tail map { case (value, vector) => (value, basis * s.injectFromHyperplane(vector)) }
+              val newTail = tail map { case (value, vector) => 
+                val vector1: s.Vector = s.injectFromHyperplane(vector)
+                (value, basis * vector1) 
+              }
               ((eigenValue, basis.column(0)) :: newTail) map { case (value, vector) => (value, vector) }
             case None => Nil
           }

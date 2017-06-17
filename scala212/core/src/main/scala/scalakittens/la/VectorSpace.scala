@@ -1,18 +1,21 @@
 package scalakittens.la
 
-import language.{implicitConversions, postfixOps}
+import language.{implicitConversions, postfixOps, existentials}
 import java.util
 
 import scala.math.abs
 import scala.util.{Random, Try}
-import scalakittens.la.Matrix.{DiagonalMatrix, OnFunction}
+import scalakittens.la.Matrix.DiagonalMatrix
 import scalakittens.la.Norm.l2
+import scalaz.Alpha.V
 
 /**
+  * Making vectors path-dependent.
+  * @see [[https://stackoverflow.com/questions/44588231/path-dependent-types-without-a-path]]
   * Created by vpatryshev on 6/8/17.
   */
 case class VectorSpace(dim: Int) { space =>
-  lazy val hyperplane = {
+  lazy val hyperplane: VectorSpace = {
     require(dim > 0, "0-dimensional space does not have a hyperplane")
     VectorSpace(dim-1)
   }
@@ -464,15 +467,17 @@ case class VectorSpace(dim: Int) { space =>
     case garbage => None
   }
   
-  trait SquareMatrix extends Matrix[Vector, Vector] {
+  type LocalMatrix = Matrix[space.type, space.type]
+  
+  trait SquareMatrix extends LocalMatrix {
     override val domain = space
     override val codomain = space
 
-    def rotate(u: UnitaryMatrix): Matrix[Vector, Vector] = u * this * u.transpose
+    def rotate(u: UnitaryMatrix): LocalMatrix = u * this * u.transpose
 
     def projectToHyperplane(basis: UnitaryMatrix): hyperplane.SquareMatrix = {
-      val rotatedMatrix:Matrix[Vector, Vector] = rotate(basis.transpose)
-      new Matrix.OnFunction[hyperplane.Vector, hyperplane.Vector](hyperplane, hyperplane, (i, j) => rotatedMatrix(i+1, j+1)) with hyperplane.SquareMatrix
+      val rotatedMatrix:LocalMatrix = rotate(basis.transpose)
+      new Matrix.OnFunction[hyperplane.type, hyperplane.type](hyperplane, hyperplane, (i, j) => rotatedMatrix(i+1, j+1)) with hyperplane.SquareMatrix
     }
 
 //    def injectFromHyperplane(basis: UnitaryMatrix): hyperplane.SquareMatrix = {
@@ -485,7 +490,7 @@ case class VectorSpace(dim: Int) { space =>
       require(nCols == v.length, s"To apply a matrix to a vector we need that number of columns ($nCols) is equal to the vector's length (${v.length})")
 
       v match {
-        case va: OnArray => byArray(va)
+        case va: OnArray => byArray(va).asInstanceOf[MutableVector]
         case _ =>
           val data = rowRange map {
             i => (0.0 /: v.indices)((s, j) => s + this(i, j)*v(j))
@@ -499,18 +504,16 @@ case class VectorSpace(dim: Int) { space =>
   trait UnitaryMatrix extends SquareMatrix {
     def isUnitary(precision: Double) = l2(this * transpose - UnitMatrix) <= precision
 
-    def *(v: Vector): Vector = {
-      ???
-    }
+    override def *(v: Vector): MutableVector = new OnFunction(i => row(i)*v).copy
 
     override def transpose: UnitaryMatrix =
-      new Matrix.OnFunction(space, space, (i, j) => this(j, i)) with UnitaryMatrix
+      new Matrix.OnFunction[space.type, space.type](space, space, (i, j) => this(j, i)) with UnitaryMatrix
   }
 
   /**
     * Unit matrix in this space
     */
-  val UnitMatrix: UnitaryMatrix = new DiagonalMatrix(space, _ => 1.0) with UnitaryMatrix
+  val UnitMatrix: UnitaryMatrix = new DiagonalMatrix[space.type](space, _ => 1.0) with UnitaryMatrix
 
   /**
     * An affine transform that would map a given sequence of vectors into a unit cube
@@ -526,7 +529,8 @@ case class VectorSpace(dim: Int) { space =>
     }).toArray
     val v = Vector(array)
 
-    new AffineTransform(space, space)(Matrix.diagonal(space, v), Zero)
+    val diagonal:Matrix[space.type, space.type] = Matrix.diagonal(space, v)
+    new AffineTransform[space.type, space.type](space, space)(diagonal, Zero).asInstanceOf[Vector => Vector]
   }
 
   /**
@@ -547,9 +551,9 @@ case class VectorSpace(dim: Int) { space =>
     * Created by vpatryshev on 5/25/17.
     */
   class Basis(val center: Vector, val rotation: UnitaryMatrix) {
-    val transform = new AffineTransform(space, space)(center, rotation)
+    val transform = new AffineTransform[space.type, space.type](space, space)(rotation, center)
     
-    def apply(v: Vector) = transform(v)
+    def apply(v: Vector) = transform(v).asInstanceOf[Vector]
     
     /**
       * converts a vector from this basis to the original one
@@ -564,14 +568,14 @@ case class VectorSpace(dim: Int) { space =>
     def apply(center: Vector, basisVectors: Array[Vector]) = {
       require(basisVectors.length == dim, s"Expected $dim basis vectors, got ${basisVectors.length}")
       val columns: Array[MutableVector] = basisVectors map (_.copy)
-      val matrix: UnitaryMatrix = new ColumnMatrix(space, columns) with UnitaryMatrix
+      val matrix: UnitaryMatrix = new ColumnMatrix[space.type](space, columns) with UnitaryMatrix
       new Basis(center, matrix)
     }
 
     def build[V <: Vector](basisVectors: Array[V]): Basis = {
       require(basisVectors.length == dim, s"Expected $dim basis vectors, got ${basisVectors.length}")
       val columns: Array[MutableVector] = basisVectors map (_.copy)
-      val matrix: UnitaryMatrix = new ColumnMatrix(space, columns) with UnitaryMatrix
+      val matrix: UnitaryMatrix = new ColumnMatrix[space.type](space, columns) with UnitaryMatrix
       new Basis(Zero, matrix)
     }
   }
@@ -604,10 +608,10 @@ case class VectorSpace(dim: Int) { space =>
     */
   def project(a: space.Vector, b: space.Vector) = a * ((a * b) / Norm.l2(a))
 
-  private[la] class ColumnMatrix[Domain,V <: MutableVector](val domain: VectorSpace, val cols: Array[V]) extends Matrix[Domain, V] {
+  private[la] class ColumnMatrix[Domain <: VectorSpace](val domain: Domain, val cols: Array[MutableVector]) extends Matrix[Domain, space.type] {
     override val nRows = dim
+    require (domain.dim == cols.length)
     override val nCols = cols.length
-    
     val codomain = space
 
     def apply(i: Int, j: Int): Double = {
@@ -617,13 +621,13 @@ case class VectorSpace(dim: Int) { space =>
 
     override def column(j: Int): MutableVector = cols(j)
 
-    override def transpose: Matrix[V, Domain] = new domain.RowMatrix[V, Domain](domain, cols)
+    override def transpose: Matrix[space.type, Domain] = new RowMatrix[Domain](domain, cols)
   }
 
-  private[la] class RowMatrix[V <: MutableVector, Domain](val codomain: VectorSpace, val rows: Array[V]) extends Matrix[V, Domain] {
+  private[la] class RowMatrix[Codomain <: VectorSpace](val codomain: Codomain, val rows: Array[MutableVector]) extends Matrix[space.type, Codomain] {
+    require (codomain.dim == rows.length)
     override val nRows = rows.length
     override val nCols = dim
-    
     val domain = space
 
     def apply(i: Int, j: Int): Double = {
@@ -631,8 +635,8 @@ case class VectorSpace(dim: Int) { space =>
       rows(i)(j)
     }
 
-    override def column(j: Int): MutableVector = rows(j)
+    override def row(j: Int): Vector = rows(j)
 
-    override def transpose: Matrix[Domain, V] = new codomain.ColumnMatrix(space, rows)
+    override def transpose: Matrix[Codomain, space.type] = new ColumnMatrix[Codomain](codomain, rows)
   }
 }

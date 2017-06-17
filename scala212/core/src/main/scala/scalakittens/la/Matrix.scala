@@ -10,19 +10,19 @@ import VectorSpace._
 /**
   * Created by vpatryshev on 5/15/17.
   */
-trait Matrix[Domain <: VectorSpace#Vector, Codomain <: VectorSpace#Vector] extends ((Int, Int) => Double) with Iterable[Double] {
+trait Matrix[Domain <: VectorSpace, Codomain <: VectorSpace] extends ((Int, Int) => Double) with Iterable[Double] {
 //  type Domain
 //  type CodomainVector
   
   /**
     * Vector space that is domain of this matrix
     */
-  val domain: VectorSpace
+  val domain: Domain
 
   /**
     * Vector space that is Codomain of this matrix
     */
-  val codomain: VectorSpace
+  val codomain: Codomain
 
   /**
     * @return number of rows
@@ -63,10 +63,10 @@ trait Matrix[Domain <: VectorSpace#Vector, Codomain <: VectorSpace#Vector] exten
     * @param i row number
     * @return the row
     */
-  def row(i: Int): Domain = {
+  def row(i: Int): Domain#Vector = {
     val row = new Array[Double](nCols)
     columnRange foreach (j => row(j) = this(i, j))
-    domain.Vector(row).asInstanceOf[Domain] // todo: find a fix
+    domain.Vector(row)
   }
 
   /**
@@ -75,34 +75,10 @@ trait Matrix[Domain <: VectorSpace#Vector, Codomain <: VectorSpace#Vector] exten
     * @param j column number
     * @return the column
     */
-  def column(j: Int): Codomain = {
+  def column(j: Int): codomain.Vector = {
     val col = new Array[Double](nRows)
     rowRange foreach (i => col(i) = this(i, j))
-    codomain.Vector(col).asInstanceOf[Codomain] // todo: find a fix
-  }
-
-  /**
-    * Produces a new matrix where this row is deleted
-    *
-    * @param rowNo the number of the row to delete
-    * @return a new matrix (virtual)
-    */
-  def dropRow(rowNo: Int): Matrix[Domain, codomain.hyperplane.type] = {
-    require(rowRange contains rowNo)
-
-    new Matrix.OnFunction(domain, codomain.hyperplane, (i, j) => if (i < rowNo) this(i, j) else this(i+1, j))
-  }
-
-  /**
-    * Produces a new matrix where this column is deleted
-    *
-    * @param columnNo the number of the column to delete
-    * @return a new matrix (virtual)
-    */
-  def dropColumn(columnNo: Int): Matrix[domain.hyperplane.type, Codomain] = {
-    require(rowRange contains columnNo)
-
-    new Matrix.OnFunction(domain.hyperplane, codomain, (i, j) => if (j < columnNo) this(i, j) else this(i, j + 1))
+    codomain.Vector(col)
   }
 
   def allElements: Seq[Double] = for {
@@ -175,7 +151,7 @@ trait Matrix[Domain <: VectorSpace#Vector, Codomain <: VectorSpace#Vector] exten
     * @param that another matrix
     * @return this matrix multiplied by another one; matrix is materialized
     */
-  def *[NewDomain](that: Matrix[NewDomain, Domain]): Matrix[NewDomain, Codomain] = {
+  def *[NewDomain <: VectorSpace](that: Matrix[NewDomain, Domain]): Matrix[NewDomain, Codomain] = {
     val data = new Array[Double](nRows * that.nCols)
     for {
       i <- this.rowRange
@@ -193,17 +169,17 @@ trait Matrix[Domain <: VectorSpace#Vector, Codomain <: VectorSpace#Vector] exten
     * @param v the vector
     * @return another vector, this * v; it so happens that it is mutable
     */
-  def *(v: Domain): Codomain = {
+  def *(v: Domain#Vector): codomain.Vector = {
     require(nCols == v.length, s"To apply a matrix to a vector we need that number of columns ($nCols) is equal to the vector's length (${v.length})")
     
     v match {
-      case va: domain.OnArray => byArray(va).asInstanceOf[Codomain] // todo: fixit
+      case va: domain.OnArray => byArray(va).asInstanceOf[codomain.Vector] // todo: fixit
       case _ =>
         val data = rowRange map {
           i => (0.0 /: v.indices)((s, j) => s + this(i, j)*v(j))
         } toArray
         
-        codomain.Vector(data).asInstanceOf[Codomain] // todo: fixit
+        codomain.Vector(data)
     }
   }
 
@@ -245,7 +221,7 @@ trait Matrix[Domain <: VectorSpace#Vector, Codomain <: VectorSpace#Vector] exten
   }
 }
 
-trait MutableMatrix[Domain, Codomain] extends Matrix[Domain, Codomain] {
+trait MutableMatrix[Domain <: VectorSpace, Codomain <: VectorSpace] extends Matrix[Domain, Codomain] {
 
   /**
     * generic value setter
@@ -268,8 +244,8 @@ trait MutableMatrix[Domain, Codomain] extends Matrix[Domain, Codomain] {
 }
 
 object Matrix {
-  private[la] def apply[Domain, Codomain](domain: VectorSpace, Codomain: VectorSpace, storage: Array[Double]): MutableMatrix[Domain, Codomain] = 
-    new OnArray[Domain, Codomain](domain, Codomain, storage)
+  private[la] def apply[Domain <: VectorSpace, Codomain <: VectorSpace](domain: Domain, codomain: Codomain, storage: Array[Double]): MutableMatrix[Domain, Codomain] = 
+    new OnArray[Domain, Codomain](domain, codomain, storage)
 
   /**
     * Builds a mutable matrix
@@ -278,15 +254,11 @@ object Matrix {
     * @param codomain the space of columns
     * @return a new matrix (mutable)
     */
-  def apply[Domain, Codomain](domain: VectorSpace, codomain: VectorSpace): MutableMatrix[Domain, Codomain] = {
+  def apply[Domain <: VectorSpace, Codomain <: VectorSpace](domain: Domain, codomain: Codomain): MutableMatrix[Domain, Codomain] = {
     apply(domain, codomain, storage = new Array[Double](domain.dim * codomain.dim))
   }
     
-  class OnArray[Domain, Codomain](val domain: VectorSpace, val codomain: VectorSpace, protected val data: Array[Double]) extends MutableMatrix[Domain, Codomain] {
-
-//    type Domain = domain.Vector
-//
-//    type Codomain = codomain.Vector
+  class OnArray[Domain <: VectorSpace, Codomain <: VectorSpace](val domain: Domain, val codomain: Codomain, protected val data: Array[Double]) extends MutableMatrix[Domain, Codomain] {
     
     private def index(i: Int, j: Int) = {
       checkIndexes(i, j)
@@ -318,7 +290,8 @@ object Matrix {
     * @param codomain matrix Codomain (space of columns)
     * @param f the function that gives matrix values
     */
-  class OnFunction[Domain, Codomain](val domain: VectorSpace, val codomain: VectorSpace, f: (Int, Int) => Double) extends Matrix[Domain, Codomain] {
+  class OnFunction[Domain <: VectorSpace, Codomain <: VectorSpace]
+    (val domain: Domain, val codomain: Codomain, f: (Int, Int) => Double) extends Matrix[Domain, Codomain] {
 
     override def apply(i: Int, j: Int): Double = {
       checkIndexes(i, j)
@@ -334,7 +307,7 @@ object Matrix {
     * @param codomain matrix Codomain (space of columns)
     * @param pf the partial function that gives matrix values if defined, all other values are 0.
     */
-  class OnPartialFunction[Domain, Codomain](val domain: VectorSpace, val codomain: VectorSpace, pf: PartialFunction[(Int, Int), Double]) extends Matrix[Domain, Codomain] {
+  class OnPartialFunction[Domain <: VectorSpace, Codomain <: VectorSpace](val domain: Domain, val codomain: Codomain, pf: PartialFunction[(Int, Int), Double]) extends Matrix[Domain, Codomain] {
 
     override def apply(i: Int, j: Int): Double = {
       checkIndexes(i, j)
@@ -351,8 +324,8 @@ object Matrix {
     * @param space the vector space in which the matrix acts
     * @param source whatever function that provides matrix values for the diagonal, the rest is 0
     */
-  class DiagonalMatrix(space: VectorSpace, source: Int => Double) 
-    extends Matrix.OnPartialFunction(space, space, diagonalize(source))
+  class DiagonalMatrix[Space <: VectorSpace](space: Space, source: Int => Double) 
+    extends Matrix.OnPartialFunction[Space, Space](space, space, diagonalize(source))
 
   /**
     * Zero matrix
@@ -361,8 +334,8 @@ object Matrix {
     * @param codomain the space of columns
     * @return a zero matrix of given dimensions
     */
-  def Zero(domain: VectorSpace, codomain: VectorSpace): Matrix[domain.Vector, codomain.Vector] = 
-    new OnFunction[domain.Vector, codomain.Vector](domain, codomain, (i, j) => 0.0)
+  def Zero(domain: VectorSpace, codomain: VectorSpace): Matrix[domain.type, codomain.type] = 
+    new OnFunction[domain.type, codomain.type](domain, codomain, (i, j) => 0.0)
 
   /**
     * builds a diagonal matrix of given size; source provides values. It's virtual.
@@ -371,5 +344,5 @@ object Matrix {
     * @param source whatever function that provides matrix values for the diagonal, the rest is 0
     * @return the diagonal matrix
     */
-  def diagonal(space: VectorSpace, source: Int => Double) = new DiagonalMatrix(space, source)
+  def diagonal[S <: VectorSpace](space: S, source: Int => Double): Matrix[S, S] = new DiagonalMatrix[S](space, source) with Matrix[S, S]
 }

@@ -3,8 +3,8 @@ package scalakittens.la
 /**
   * Affine transform for vectors
   */
-class AffineTransform(val domainSpace: VectorSpace, val codomainSpace: VectorSpace) {
-  def apply(matrix: Matrix[domainSpace.Vector, codomainSpace.Vector], shift: domainSpace.Vector) = new (domainSpace.Vector => codomainSpace.Vector) {
+class AffineTransform[Dom <: VectorSpace, Codom <: VectorSpace](val domainSpace: Dom, val codomainSpace: Codom) {
+  def apply(matrix: Matrix[Dom, Codom], shift: domainSpace.Vector) = new (domainSpace.Vector => Codom#Vector) {
     
     /**
       * applies this transform to a vector
@@ -12,8 +12,8 @@ class AffineTransform(val domainSpace: VectorSpace, val codomainSpace: VectorSpa
       * @param v vector
       * @return the result of transformation
       */
-    def apply(v: domainSpace.Vector): codomainSpace.Vector = {
-      val shifted: domainSpace.Vector = v - shift
+    def apply(v: domainSpace.Vector): Codom#Vector = {
+      val shifted: Dom#Vector = v - shift
       matrix * shifted
     }
     
