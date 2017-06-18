@@ -6,11 +6,13 @@ import org.specs2.mutable.Specification
   * Created by vpatryshev on 5/7/17.
   */
 class AffineTransformTest extends Specification {
-  
+  val R0 = VectorSpace(0)
+  val R3 = VectorSpace(3)
+
   "AffineTransform" should {
 
     "transform" in {
-      val m0: Matrix = Matrix(0, 3, Vector())
+      val m0 = Matrix(R0, R3, new Array[Double](0))
       val sut0 = new AffineTransform(Vector(1,1,1), m0)
       sut0(Vector(0,0,0)) must_== Vector()
 

@@ -314,18 +314,6 @@ object Matrix {
       if (pf.isDefinedAt((i, j))) pf((i, j)) else 0.0
     }
   }
-  
-  private def diagonalize(f: Int => Double): PartialFunction[(Int, Int), Double] =
-  { case (i, j) if i == j => f(i) }
-
-  /**
-    * Diagonal matrix of given size; source provides values. It's virtual.
-    *
-    * @param space the vector space in which the matrix acts
-    * @param source whatever function that provides matrix values for the diagonal, the rest is 0
-    */
-  class DiagonalMatrix[Space <: VectorSpace](space: Space, source: Int => Double) 
-    extends Matrix.OnPartialFunction[Space, Space](space, space, diagonalize(source))
 
   /**
     * Zero matrix
@@ -336,13 +324,4 @@ object Matrix {
     */
   def Zero(domain: VectorSpace, codomain: VectorSpace): Matrix[domain.type, codomain.type] = 
     new OnFunction[domain.type, codomain.type](domain, codomain, (i, j) => 0.0)
-
-  /**
-    * builds a diagonal matrix of given size; source provides values. It's virtual.
-    *
-    * @param space the vector space in which the matrix acts
-    * @param source whatever function that provides matrix values for the diagonal, the rest is 0
-    * @return the diagonal matrix
-    */
-  def diagonal[S <: VectorSpace](space: S, source: Int => Double): Matrix[S, S] = new DiagonalMatrix[S](space, source) with Matrix[S, S]
 }
