@@ -395,11 +395,10 @@ case class VectorSpace(dim: Int) { space =>
   /**
     * this factory creates uniform random vectors in the cube [-1..1]<sup>size</sup>
     *
-    * @param size vector length
     * @param seed random seed
     * @return random cube factory
     */
-  case class RandomCube(size: Int, seed: Long) extends Factory {
+  case class RandomCube(seed: Long) extends Factory {
     private val rnd = new Random(seed)
 
     override private[VectorSpace] def fill(v: MutableVector): Unit = {
@@ -414,7 +413,7 @@ case class VectorSpace(dim: Int) { space =>
     * @return random sphere factory
     */
   case class RandomSphere(seed: Long) extends Factory {
-    private val cube = RandomCube(dim, seed)
+    private val cube = RandomCube(seed)
 
     override private[VectorSpace] def fill(v: MutableVector): Unit = {
 
@@ -553,7 +552,7 @@ case class VectorSpace(dim: Int) { space =>
   class Basis(val center: Vector, val rotation: UnitaryMatrix) {
     val transform = new AffineTransform[space.type, space.type](space, space)(rotation, center)
     
-    def apply(v: Vector) = transform(v).asInstanceOf[Vector]
+    def apply(v: Vector) = transform(v)
     
     /**
       * converts a vector from this basis to the original one

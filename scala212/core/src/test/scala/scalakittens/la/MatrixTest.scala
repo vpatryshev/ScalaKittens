@@ -18,11 +18,13 @@ class MatrixTest extends Specification {
       } toArray
     } toArray
   }
+  
+  val R0 = 
 
-  case class TestMatrix(h: Int, w: Int, f: Int => Int => Double) extends MutableMatrix {
-    override def nRows: Int = h
-    override def nCols: Int = w
-    val d = nxm(h, w, f)
+  case class TestMatrix(val domain: VectorSpace, val codomain: VectorSpace, f: Int => Int => Double) extends MutableMatrix[domain.type, codomain.type] {
+    override def nRows: Int = codomain.dim
+    override def nCols: Int = domain.dim
+    val d = nxm(nRows, nCols, f)
     override def update(i: Int, j: Int, value: Double): Unit = {
       val row = d(i)
       row(j) = value
@@ -30,10 +32,10 @@ class MatrixTest extends Specification {
 
     def notImplemented: Nothing = throw new UnsupportedOperationException
     
-    override def transpose: Matrix = notImplemented
-    override def +(other: Matrix): Matrix = notImplemented
-    override def -(other: Matrix): Matrix = notImplemented
-    override def copy: MutableMatrix = notImplemented
+    override def transpose: Matrix[codomain.type, domain.type] = notImplemented
+    override def +(other: Matrix[domain.type, codomain.type]): Matrix[domain.type, codomain.type] = notImplemented
+    override def -(other: Matrix[domain.type, codomain.type]): Matrix[domain.type, codomain.type] = notImplemented
+    override def copy: MutableMatrix[domain.type, codomain.type] = notImplemented
     override def apply(i: Int, j: Int): Double = {
       checkIndexes(i, j)
       val row = d(i)
