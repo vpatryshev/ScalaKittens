@@ -3,12 +3,9 @@ package scalakittens.la
 import language.{existentials, implicitConversions, postfixOps}
 import java.util
 
-import org.apache.commons.math3.linear.DiagonalMatrix
-
 import scala.math.abs
 import scala.util.{Random, Try}
 import scalakittens.la.Norm.l2
-import scalaz.Alpha.S
 
 /**
   * Making vectors path-dependent.
@@ -54,7 +51,7 @@ case class VectorSpace(dim: Int) { space =>
       * @param other vector
       * @return a vector whose components are minimum of the two
       */
-    def inf(other: space.Vector) = {
+    def inf(other: Vector) = {
       new OnFunction(i => math.min(apply(i), other(i)))
     }
 
@@ -63,7 +60,7 @@ case class VectorSpace(dim: Int) { space =>
       * @param other vector
       * @return a vector whose components are maximum of the two
       */
-    def sup(other: space.Vector) = {
+    def sup(other: Vector) = {
       new OnFunction(i => math.max(apply(i), other(i)))
     }
 
@@ -73,7 +70,7 @@ case class VectorSpace(dim: Int) { space =>
       * @param other another vector of the same length
       * @return the product value
       */
-    def *(other: space.Vector): Double = {
+    def *(other: Vector): Double = {
       (0.0 /: range) ((s, i) => s + apply(i) * other(i))
     }
 
@@ -83,7 +80,7 @@ case class VectorSpace(dim: Int) { space =>
       * @param other another vector
       * @return a new vector, the sum of the two
       */
-    def +(other: space.Vector): Vector = {
+    def +(other: Vector): Vector = {
       new OnFunction(i => apply(i) + other(i))
     }
 
@@ -93,7 +90,7 @@ case class VectorSpace(dim: Int) { space =>
       * @param other another vector
       * @return a new vector, this minus other
       */
-    def -(other: space.Vector): Vector = {
+    def -(other: Vector): Vector = {
       new OnFunction(i => apply(i) - other(i))
     }
 
@@ -150,7 +147,7 @@ case class VectorSpace(dim: Int) { space =>
     
     override def equals(other: Any): Boolean = {
       other match {
-        case v: space.Vector => range.forall(i => this (i) == v(i))
+        case v: Vector => range.forall(i => this (i) == v(i))
         case _ => false
       }
     }
@@ -282,7 +279,7 @@ case class VectorSpace(dim: Int) { space =>
       * @param other another vector
       * @return this vector, its value is now the sum of this and another
       */
-    override def +=(other: space.Vector): Unit = {
+    override def +=(other: Vector): Unit = {
       for (i <- range) data(i) += other(i)
     }
 
@@ -292,7 +289,7 @@ case class VectorSpace(dim: Int) { space =>
       * @param other another vector
       * @return this vector, its value is now the difference of this and another
       */
-    override def -=(other: space.Vector): Unit = {
+    override def -=(other: Vector): Unit = {
       for (i <- range) data(i) -= other(i)
     }
 
@@ -304,9 +301,9 @@ case class VectorSpace(dim: Int) { space =>
       * @param coeff coefficient
       * @return this + coeff * other
       */
-    override def nudge(other: space.Vector, coeff: Double): Unit = {
+    override def nudge(other: Vector, coeff: Double): Unit = {
       other match {
-        case o: space.OnArray =>
+        case o: OnArray =>
           for (i <- range) data(i) += o.data(i) * coeff
         case _ =>
           for (i <- range) data(i) += other(i) * coeff
@@ -317,15 +314,15 @@ case class VectorSpace(dim: Int) { space =>
       * specialized version of +=
       * @param other another OnArray vector
       */
-    def +=(other: space.OnArray): Unit = {
+    def +=(other: OnArray): Unit = {
       for (i <- range) data(i) += other.data(i)
     }
 
-    def -=(other: space.OnArray): Unit = {
+    def -=(other: OnArray): Unit = {
       for (i <- range) data(i) -= other.data(i)
     }
 
-    def nudge(other: space.OnArray, coeff: Double): Unit = {
+    def nudge(other: OnArray, coeff: Double): Unit = {
       for (i <- range) data(i) += other.data(i) * coeff
     }
 
@@ -367,14 +364,14 @@ case class VectorSpace(dim: Int) { space =>
       *
       * @param v the vector to fill
       */
-    private[VectorSpace] def fill(v: space.MutableVector): Unit
+    private[VectorSpace] def fill(v: MutableVector): Unit
 
     /**
       * instantiates a new vector
       *
       * @return a new vector
       */
-    def apply(): space.Vector = {
+    def apply(): Vector = {
       val v: MutableVector = Vector()
       fill(v)
       v
@@ -525,7 +522,7 @@ case class VectorSpace(dim: Int) { space =>
   /**
     * Unit matrix in this space
     */
-  val UnitMatrix: UnitaryMatrix = new space.DiagonalMatrix(_ => 1.0) with UnitaryMatrix
+  val UnitMatrix: UnitaryMatrix = new DiagonalMatrix(_ => 1.0) with UnitaryMatrix
 
   /**
     * Unitary matrix built from given basis vectors
@@ -629,7 +626,7 @@ case class VectorSpace(dim: Int) { space =>
   def buildOrthonormalBasis(v: Vector): Array[Vector] = {
     val (maxValue, whereMax) = v.zipWithIndex map {case (x, i) => (abs(x), i)} max
 
-    val vs = new Array[Vector](space.dim)
+    val vs = new Array[Vector](dim)
 
     vs(0) = v.normalize(Norm.l2).copy
 
@@ -652,7 +649,7 @@ case class VectorSpace(dim: Int) { space =>
     * @param b vector to project
     * @return a projection of b to a
     */
-  def project(a: space.Vector, b: space.Vector) = a * ((a * b) / Norm.l2(a))
+  def project(a: Vector, b: Vector) = a * ((a * b) / Norm.l2(a))
 
   private[la] class ColumnMatrix[Domain <: VectorSpace](val domain: Domain, val cols: Seq[MutableVector]) extends Matrix[Domain, space.type] {
     override val nRows = dim
@@ -685,4 +682,34 @@ case class VectorSpace(dim: Int) { space =>
 
     override def transpose: Matrix[Codomain, space.type] = new ColumnMatrix[Codomain](codomain, rows)
   }
+}
+
+object Spaces {
+  val R0 = VectorSpace(0)
+  val R1 = VectorSpace(1)
+  val R2 = VectorSpace(2)
+  val R3 = VectorSpace(3)
+  val R4 = VectorSpace(4)
+  val R5 = VectorSpace(5)
+  val R6 = VectorSpace(6)
+  val R7 = VectorSpace(7)
+  val R8 = VectorSpace(8)
+  val R9 = VectorSpace(9)
+  val R10 = VectorSpace(10)
+  val R11 = VectorSpace(11)
+  val R12 = VectorSpace(12)
+  val R13 = VectorSpace(13)
+  val R14 = VectorSpace(14)
+  val R15 = VectorSpace(15)
+  val R16 = VectorSpace(16)
+  val R17 = VectorSpace(17)
+  val R18 = VectorSpace(18)
+  val R19 = VectorSpace(19)
+  val R20 = VectorSpace(20)
+  val R21 = VectorSpace(21)
+  val R22 = VectorSpace(22)
+  val R23 = VectorSpace(23)
+  val R24 = VectorSpace(24)
+  val R25 = VectorSpace(25)
+  val R26 = VectorSpace(26)
 }
