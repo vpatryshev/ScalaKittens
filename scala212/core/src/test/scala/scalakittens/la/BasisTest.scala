@@ -7,27 +7,29 @@ import org.specs2.mutable.Specification
   */
 class BasisTest extends Specification {
   import math._
+  import Spaces._
   
   "Basis" should {
 
-    val sampleUnitaryMatrix_3x3: UnitaryMatrix = {
+    val sampleUnitaryMatrix_3x3: R3.UnitaryMatrix = {
       val alpha = Pi / 4
       val beta = Pi / 3
 
-      Matrix.Unitary(
-        Array(Vector(cos(alpha) * cos(beta), cos(alpha) * sin(beta), sin(alpha)),
-          Vector(-sin(alpha) * cos(beta), -sin(alpha) * sin(beta), cos(alpha)),
-          Vector(sin(beta), -cos(beta), 0)
+      R3.Unitary(
+        Array(
+          R3.Vector(cos(alpha) * cos(beta), cos(alpha) * sin(beta), sin(alpha)),
+          R3.Vector(-sin(alpha) * cos(beta), -sin(alpha) * sin(beta), cos(alpha)),
+          R3.Vector(sin(beta), -cos(beta), 0)
         ))
     }
 
     "transform forth and back" in {
-      val baseVector = Vector(1, 1, 1)
+      val baseVector = R3.Vector(1, 1, 1)
 
-      val v0 = Vector(0, 0, 0)
-      val v1: Vector = Vector(-0.8660254037844386, 0.5, -1.414213562373095)
+      val v0 = R3.Vector(0, 0, 0)
+      val v1: R3.Vector = R3.Vector(-0.8660254037844386, 0.5, -1.414213562373095)
 
-      val sut = Basis(baseVector, sampleUnitaryMatrix_3x3)
+      val sut = new R3.Basis(baseVector, sampleUnitaryMatrix_3x3)
 
       sut(baseVector) must_== v0
       sut.unapply(v0) must_== baseVector

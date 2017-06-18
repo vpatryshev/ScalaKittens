@@ -239,6 +239,15 @@ trait MutableMatrix[Domain <: VectorSpace, Codomain <: VectorSpace] extends Matr
 }
 
 object Matrix {
+
+  /**
+    * Builds a mutable matrix
+    *
+    * @param domain the space of rows
+    * @param codomain the space of columns
+    * @param storage the array where all matrix elements are stored
+    * @return a new matrix (mutable)
+    */
   private[la] def apply[Domain <: VectorSpace, Codomain <: VectorSpace](domain: Domain, codomain: Codomain, storage: Array[Double]): MutableMatrix[Domain, Codomain] = 
     new OnArray[Domain, Codomain](domain, codomain, storage)
 
@@ -252,9 +261,13 @@ object Matrix {
   def apply[Domain <: VectorSpace, Codomain <: VectorSpace](domain: Domain, codomain: Codomain): MutableMatrix[Domain, Codomain] = {
     apply(domain, codomain, storage = new Array[Double](domain.dim * codomain.dim))
   }
+
+  def build[Domain <: VectorSpace, Codomain <: VectorSpace](domain: Domain, codomain: Codomain): MutableMatrix[Domain, Codomain] = {
+    apply(domain, codomain, storage = new Array[Double](domain.dim * codomain.dim))
+  }
     
   class OnArray[Domain <: VectorSpace, Codomain <: VectorSpace](val domain: Domain, val codomain: Codomain, protected val data: Array[Double]) extends MutableMatrix[Domain, Codomain] {
-    
+    require(data.length == domain.dim*codomain.dim)
     private def index(i: Int, j: Int) = {
       checkIndexes(i, j)
       i*nCols+j

@@ -36,9 +36,11 @@ case class AccumulatingMoments[Space <: VectorSpace](val space: Space) {
     *
     * @param vectors those to use in calculation
     * @return this
+    *         
+    * TODO: make it type-safe
     */
-  def collect[V <: space.Vector](vectors: TraversableOnce[V]): AccumulatingMoments[Space] = {
-    vectors foreach += 
+  def collect(vectors: TraversableOnce[Space#Vector]): AccumulatingMoments[Space] = {
+    vectors foreach ((v:Space#Vector) => this.+=(v.asInstanceOf[space.Vector])) 
     this
   }
 }

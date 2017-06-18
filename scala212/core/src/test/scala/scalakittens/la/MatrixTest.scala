@@ -8,17 +8,8 @@ import Norm._
   * Created by vpatryshev on 5/7/17.
   */
 class MatrixTest extends Specification {
-  import Matrix._
   import math._
-  
-  val R0 = VectorSpace(0)
-  val R2 = VectorSpace(2)
-  val R3 = VectorSpace(3)
-  val R4 = VectorSpace(4)
-  val R5 = VectorSpace(5)
-  val R7 = VectorSpace(7)
-  val R10 = VectorSpace(10)
-  val R25 = VectorSpace(25)
+  import Spaces._
   
   def nxm(n: Int, m: Int, f: Int => Int => Double) = {
     (0 until n) map { i =>
@@ -150,7 +141,6 @@ class MatrixTest extends Specification {
           1.1250000000000009, 3.6806079660838646, 1.2500000000000002,
           3.6806079660838655, 5.375000000000001, 2.165063509461097,
           1.2500000000000002, 2.1650635094610973, 7.5))
-      val sm = R3
       val sut = m.projectToHyperplane(sampleUnitaryMatrix_3x3)
       l2(sut - R3.hyperplane.diagonalMatrix(5, -1)) < 0.0001 aka sut.toString must beTrue
     }
@@ -158,10 +148,10 @@ class MatrixTest extends Specification {
 
   "Matrix with hidden structure" should {
     def build(n: VectorSpace, m: VectorSpace, f: Int => Int => Double): MutableMatrix[n.type, m.type] = {
-      val sut = Matrix(n, m)
+      val sut: MutableMatrix[n.type, m.type] = Matrix(n, m)
       sut.nRows === n.dim
       sut.nCols === m.dim
-      val content: TestMatrix[n.type, m.type] = TestMatrix(n, m, f)
+      val content: Matrix[n.type, m.type] = TestMatrix(n, m, f)
       content.nRows === n.dim
       content.nCols === m.dim
       sut := content
@@ -290,7 +280,7 @@ class MatrixTest extends Specification {
     }
     
     "build a matrix from partial function" in {
-      val sut = new Matrix.OnPartialFunction(3, 10, {case (i:Int, j:Int) if j % (i+1) == 0 => i+j})
+      val sut = new Matrix.OnPartialFunction(R3, R10, {case (i:Int, j:Int) if j % (i+1) == 0 => i+j})
       sut === Matrix(R10, R3, Array(
         0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 
         1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 

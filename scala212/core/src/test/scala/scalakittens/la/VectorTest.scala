@@ -7,16 +7,57 @@ import org.specs2.mutable.Specification
   */
 class VectorTest extends Specification {
   import math._
+  import Spaces._
 
-  val R0 = VectorSpace(0)
-  val R1 = VectorSpace(1)
-  val R2 = VectorSpace(2)
-  val R3 = VectorSpace(3)
-  val R4 = VectorSpace(4)
-  val R5 = VectorSpace(5)
-  val R6 = VectorSpace(6)
-  val R10 = VectorSpace(10)
+  "VectorSpace" should {
 
+    "build unit cube" in {
+      val vectors = R3.Vector(0,1,2)::R3.Vector(0,2,4)::R3.Vector(-2,3,10)::Nil
+      val unitCube = R3.unitCube(vectors)
+
+      unitCube(R3.Vector(0,0,0)) aka unitCube.toString must_== Vector(1,-0.5,-0.25)
+      unitCube(R3.Vector(-1, 0, 0)) must_== Vector(0.5,-0.5,-0.25)
+      unitCube(R3.Vector(0,1,0)) must_== Vector(1,0,-0.25)
+      unitCube(R3.Vector(0,0,1)) must_== Vector(1.0,-0.5,-0.125)
+    }
+    "build orthonormal basis 2x2" in {
+      val vecs = R2.buildOrthonormalBasis(R2.Vector(3, 4))
+      for {i <- 0 until 2; j <- 0 until 2} {
+        val prod = vecs(i)*vecs(j)
+        val expected = if (i == j) 1.0 else 0.0
+        abs(prod - expected) < 0.0001 aka s"@($i, $j): ${vecs(i)}*${vecs(j)} = $prod != $expected " must beTrue
+      }
+
+      val v0 = Vector(0.6000000000000001, 0.8)
+      val v1 = Vector(-0.8000000000000001, 0.5999999999999999)
+      vecs(0) must_== v0
+      vecs(1) must_== v1
+      vecs.toList must_== List(v0, v1)
+      ok
+    }
+
+    "build orthonormal basis 3x3" in {
+      val vecs = R3.buildOrthonormalBasis(R3.Vector(3, 5, 4))
+      for {i <- 0 until 3; j <- 0 until 3} {
+        val prod = vecs(i)*vecs(j)
+        val expected = if (i == j) 1.0 else 0.0
+        abs(prod - expected) < 0.0001 aka s"@($i, $j): ${vecs(i)}*${vecs(j)} = $prod != $expected " must beTrue
+      }
+      ok
+    }
+
+    "build orthonormal basis 4x4" in {
+      val vecs = R4.buildOrthonormalBasis(R4.Vector(17, -1, 3, 4))
+      for {i <- 0 until 4; j <- 0 until 4} {
+        val prod = vecs(i)*vecs(j)
+        val expected = if (i == j) 1.0 else 0.0
+        abs(prod - expected) < 0.0001 aka s"@($i, $j): ${vecs(i)}*${vecs(j)} = $prod != $expected " must beTrue
+      }
+      ok
+    }
+
+  }
+  
   "Vector" should {
     "exist" in {
       ok
@@ -65,7 +106,7 @@ class VectorTest extends Specification {
       R3.Vector(Pi, 0, Pi) forall (_ == Pi) must beFalse
     }
 
-    "have forall()" in {
+    "have exists()" in {
       R0.Vector() exists (Pi == _*1.1) must beFalse
       R3.Vector(Pi, Pi, Pi) exists (x => x*x == Pi*Pi) must beTrue
       R3.Vector(2.0, Pi, 1.0) exists (x => x*x == Pi*Pi) must beTrue
@@ -165,6 +206,11 @@ class VectorTest extends Specification {
       sut.nudge(R2.Vector(6.0, 4.75), 2.0)
       sut === R2.Vector(15.25, 2.0)
     }
+
+    "project" in {
+      R2.project(R2.Vector(1, 1), R2.Vector(2, -2)) must_== R2.Vector(0.0, 0.0)
+      R2.project(R2.Vector(1, 1), R2.Vector(0, -2)) must_== R2.Vector(-1.414213562373095, -1.414213562373095)
+    }
   }
 
   "factory" should {
@@ -186,7 +232,7 @@ class VectorTest extends Specification {
     "produce a vector from function" in {
       val sut1 = new R0.OnFunction(i => 42)
       sut1 === R0.Vector()
-      new R6.OnFunction(i => (i*sqrt(i)).toInt) === Vector(0, 1, 2, 5, 8, 11)
+      new Spaces.R6.OnFunction(i => (i*sqrt(i)).toInt) === Vector(0, 1, 2, 5, 8, 11)
     }
     
     "produce a unit vector" in {
@@ -200,13 +246,15 @@ class VectorTest extends Specification {
       ok
     }
     
-    "not fail with subspaces" in {
+    "compile with subspaces" in {
       val space0 = VectorSpace(3)
       def recurse(s: VectorSpace)(v: s.Vector): Unit = {
-        if (s.dim == 0) v else {
+        val ignoreme = if (s.dim == 0) v else {
           val v1 = s.projectToHyperplane(v) * 2
           recurse(s.hyperplane)(v1)
         }
+        
+        ()
       }
       val sut = space0.const(3)
       recurse(space0)(sut) === space0.Vector(3, 6, 9)
