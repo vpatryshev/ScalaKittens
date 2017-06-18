@@ -1,8 +1,5 @@
 package scalakittens.la
 
-import javafx.scene.transform
-import javafx.scene.transform.MatrixType
-
 /**
   * Created by vpatryshev on 5/17/17.
   */
@@ -54,7 +51,7 @@ object PCA {
       }
 
 
-      def runOn(m: s.SquareMatrix, numberRequested: Int): List[(Double, S#Vector)] = {
+      def runOn(m: s.SquareMatrix, numberRequested: Int): List[(Double, s.Vector)] = {
         require(numberRequested <= s.dim)
         if (numberRequested == 0) Nil else {
           val finder: EigenVectorFinder[s.hyperplane.type] = new EigenVectorFinder[s.hyperplane.type](s.hyperplane)
@@ -63,11 +60,12 @@ object PCA {
             case Some((eigenValue, basis, _)) =>
               val submatrix: s.hyperplane.SquareMatrix = m.projectToHyperplane(basis.asInstanceOf[s.UnitaryMatrix])
               val tail = finder.runOn(submatrix, numberRequested - 1)
-              val newTail = tail map { case (value, vector) => 
+              val newTail: List[(Double, s.Vector)] = tail map { case (value, vector) => 
                 val vector1: s.Vector = s.injectFromHyperplane(vector)
                 (value, basis * vector1) 
               }
-              ((eigenValue, basis.column(0)) :: newTail) map { case (value, vector) => (value, vector) }
+              val v: s.Vector = basis.column(0).asInstanceOf[s.Vector]
+              ((eigenValue, v) :: newTail) map { case (value, vector) => (value, vector) }
             case None => Nil
           }
         }

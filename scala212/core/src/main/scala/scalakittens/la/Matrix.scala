@@ -3,16 +3,11 @@ package scalakittens.la
 import java.util
 
 import language.postfixOps
-import scalakittens.la.Matrix._
-import scalakittens.la.Norm._
-import VectorSpace._
 
 /**
   * Created by vpatryshev on 5/15/17.
   */
 trait Matrix[Domain <: VectorSpace, Codomain <: VectorSpace] extends ((Int, Int) => Double) with Iterable[Double] {
-//  type Domain
-//  type CodomainVector
   
   /**
     * Vector space that is domain of this matrix
