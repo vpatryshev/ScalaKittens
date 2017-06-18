@@ -8,22 +8,18 @@ import Norm._
   */
 class PCATest extends Specification {
   import math._
+  import Spaces._
   
-  def matrix(h: Int, w: Int, values: Double*): Matrix = {
-    val m = Matrix(h, w)
-    for {
-      i <- 0 until h
-      j <- 0 until w
-    } m(i, j) = values(i*w+j)
-    
-    m
-  }
+  def matrix[VS <: VectorSpace](vs: VS, values: Double*) = 
+    vs.squareMatrix(values.toArray)
+
+  //    vs.squareMatrix((i, j) => values(i*vs.dim+j))
   
   "Iterations method" should {
     "not fail when (1,0) is orthogonal to the main eigenvector" in {
-      val m = matrix(2, 2, 0, 100, 100, 0)
-      val method = PCA.Iterations(0.001, 100)
-      val Some((value: Double, vec: Vector, nIter)) = method.maxEigenValue(m)
+      val m = matrix(R2, 0, 100, 100, 0)
+      val method = PCA.Iterations(R2)(0.001, 100)
+      val Some((value: Double, vec: R3.Vector, nIter)) = method.maxEigenValue(R2)(m)
 
       value must_== 100.0
 
@@ -31,9 +27,9 @@ class PCATest extends Specification {
     }
 
     "produce first eigenvector for a 3x3" in {
-      val m = matrix(3, 3, 5, 1, 2, 1, 4, 1, 2, 1, 3)
-      val method = PCA.Iterations(0.001, 100)
-      val Some((value: Double, vec: Vector, nIter)) = method.maxEigenValue(m)
+      val m = matrix(R3, 5, 1, 2, 1, 4, 1, 2, 1, 3)
+      val method = PCA.Iterations(R3)(0.001, 100)
+      val Some((value: Double, vec: R3.Vector, nIter)) = method.maxEigenValue(R3)(m)
       
       value must_== 6.895482499314163
       
@@ -45,14 +41,14 @@ class PCATest extends Specification {
     
     "produce two eigenvectors for a 3x3 in many small steps" in {
       val n = 3
-      val m = matrix(3, 3, 5, 1, 2, 1, 4, 1, 2, 1, 3)
-      val method = PCA.Iterations(0.0001, 100)
-      val Some((value1: Double, vector1: Vector, nIter1)) = method.maxEigenValue(m)
+      val m = matrix(R3, 5, 1, 2, 1, 4, 1, 2, 1, 3)
+      val method = PCA.Iterations(R3)(0.0001, 100)
+      val Some((value1: Double, vector1: R3.Vector, nIter1)) = method.maxEigenValue(R3)(m)
 
       value1 must_== 6.8951514452581313
-      vector1 must_== Vector(0.752603939328221, 0.431649775140211, 0.4972582650183391)
+      vector1 must_== R3.Vector(0.752603939328221, 0.431649775140211, 0.4972582650183391)
       l2(vector1) must_== 1.0
-      val newBasis = Matrix.Unitary(l2.buildOrthonormalBasis(vector1))
+      val newBasis = R3.UnitaryMatrix(R3.buildOrthonormalBasis(vector1))
       newBasis.column(0) must_== vector1
       val newBasisT = newBasis.transpose
       newBasisT.row(0) must_== vector1
@@ -80,14 +76,14 @@ class PCATest extends Specification {
     }
 
     "produce three eigenvectors for a 3x3 in steps" in {
-      val m = matrix(3, 3, 5, 1, 2, 1, 4, 1, 2, 1, 3)
-      val method = PCA.Iterations(0.0001, 100)
-      val Some((eigenValue1: Double, basis: UnitaryMatrix, nIter1)) = method.oneEigenValueBasis(m)
+      val m = matrix(R3, R3, 5, 1, 2, 1, 4, 1, 2, 1, 3)
+      val method = PCA.Iterations(R3)(0.0001, 100)
+      val Some((eigenValue1: Double, basis: R3.UnitaryMatrix, nIter1)) = method.oneEigenValueBasis(R3)(m)
 
       eigenValue1 must_== 6.8951514452581313
       basis.column(0) must_== Vector(0.752603939328221, 0.431649775140211, 0.4972582650183391)
 
-      val Some(allThree) = method.buildEigenVectors(m, 3)
+      val Some(allThree) = method.buildEigenVectors(R3)(m, 3)
       
       allThree must_== 
         (6.895151445258131,  Vector(0.752603939328221,0.431649775140211,0.4972582650183391))::

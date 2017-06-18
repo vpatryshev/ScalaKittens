@@ -1,6 +1,6 @@
 package scalakittens.la
 
-import language.{existentials, implicitConversions, postfixOps}
+import language.{implicitConversions, postfixOps}
 import java.util
 
 import scala.math.abs
@@ -466,13 +466,13 @@ case class VectorSpace(dim: Int) { space =>
   
   type LocalMatrix = Matrix[space.type, space.type]
   
-  private def squareMatrix(f: (Int, Int) => Double): SquareMatrix =
+  def squareMatrix(f: (Int, Int) => Double): SquareMatrix =
     new Matrix.OnFunction[space.type, space.type](space, space, f) with SquareMatrix
 
-  private def squareMatrix(f: PartialFunction[(Int, Int), Double]): SquareMatrix =
-    new Matrix.OnPartialFunction[space.type, space.type](space, space, f) with SquareMatrix
+//  private def squareMatrix(f: PartialFunction[(Int, Int), Double]): SquareMatrix =
+//    new Matrix.OnPartialFunction[space.type, space.type](space, space, f) with SquareMatrix
 
-  private[la] def squareMatrix(data: Array[Double]): SquareMatrix = squareMatrix((i, j) => data(i*dim+j))
+  def squareMatrix(data: Array[Double]): SquareMatrix = squareMatrix((i, j) => data(i*dim+j))
   
   trait SquareMatrix extends LocalMatrix {
     override val domain = space
