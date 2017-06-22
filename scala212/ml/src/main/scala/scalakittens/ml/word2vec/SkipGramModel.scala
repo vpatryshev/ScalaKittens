@@ -1,19 +1,19 @@
 package scalakittens.ml.word2vec
-
+  
 import scalakittens.la._
+import scalakittens.la.MutableVector
 import scalakittens.ml.word2vec.Sigma._
 
 /**
   * Created by vpatryshev on 5/11/17.
   */
-case class SkipGramModel(text: ScannedText, dim: Int, α: Double, window: Int, numEpochs: Int, seed: Long = System.nanoTime()) {
-
-  require (0 < α && α < 1.0/dim, s"α=$α should be between 0 and ${1.0/dim}")
+case class SkipGramModel[Space <: VectorSpace](text: ScannedText, space: Space, α: Double, window: Int, numEpochs: Int, seed: Long = System.nanoTime()) {
   
-  lazy val vecFactory = Vector.RandomSphere(dim, seed)
+  require (0 < α && α < 1.0/space.dim, s"α=$α should be between 0 and ${1.0/space.dim}")
+  lazy val vecFactory = space.RandomSphere(seed)
 
-  lazy val in: Array[MutableVector] = {
-    val in = new Array[MutableVector](text.dictionarySize)
+  lazy val in: Array[Space#MutableVector] = {
+    val in = new Array[Space#MutableVector](text.dictionarySize)
 
     for {i <- in.indices} in(i) = vecFactory().copy
     
@@ -22,7 +22,7 @@ case class SkipGramModel(text: ScannedText, dim: Int, α: Double, window: Int, n
 
   def checkme(msg: String = "", which: Int = -1): Unit = {
     in.indices.foreach(i => {
-      val v = in(i)
+      val v: MutableVector = in(i)
 
       if (which < 0 || i == which)
       v.foreach(
@@ -36,22 +36,25 @@ case class SkipGramModel(text: ScannedText, dim: Int, α: Double, window: Int, n
   
   val huffman = new HuffmanTree(text.frequencies)
   
-  val out: Array[MutableVector] = new Array[MutableVector](huffman.size)
+  val out: Array[space.MutableVector] = new Array[space.MutableVector](huffman.size)
 
   for {i <- out.indices} out(i) = vecFactory().copy
 
-  def product(i: Int, j: Int) = in(i) * out(j)
+  // TODO: get rid of casting
+  def product(i: Int, j: Int) = {
+    out(j) * in(i).asInstanceOf[space.Vector]
+  }
   
   def proximity(i: Int, o: Int) = σ(product(i, o))
 
   import math._
 
   def update(i: Int, o: Int): Unit = {
-    val v = in(i)
-    val neu: MutableVector = Vector.Zero(dim).copy
+    val v = in(i).asInstanceOf[space.MutableVector] // TODO: get rid of casting
+    val neu: space.MutableVector = space.Zero.copy
   
     for {j <- huffman.path(o)} {
-      val w = out(abs(j))
+      val w: space.MutableVector = out(abs(j))
       val prox: Double = proximity(i, abs(j))
       val g = α * ((if (j < 0) 0 else 1) - prox)
       if (g != 0) {

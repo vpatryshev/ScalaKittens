@@ -5,7 +5,7 @@ import java.io.{File, FileWriter}
 import org.specs2.mutable.Specification
 
 import scala.io.Source
-import scalakittens.la.{AffineTransform, Basis, Matrix, PCA, Vector}
+import scalakittens.la.{AffineTransform, Matrix, PCA, VectorSpace}
 import scalakittens.stats.AccumulatingMoments
 import scalakittens.{Good, IO}
 
@@ -14,11 +14,12 @@ import scalakittens.{Good, IO}
 class SkipGramModelTest extends Specification {
   val modelFileName = "warandpeace.vecs.txt"
   
-  def serialize(vectors: List[(String, Vector)]): Unit = {
+  def serialize[Space <: VectorSpace](space: Space, vectors: List[(String, Space#Vector)]): Unit = {
     val file = new File(s"$modelFileName.tmp")
     file.delete()
 //    file.canWrite aka s"Cannot write to $file!" must beTrue
     val out = new FileWriter(file)
+    out.write(s"dim=${space.dim}\n")
     for {
       (w, v) <- vectors
     } {
@@ -45,32 +46,41 @@ class SkipGramModelTest extends Specification {
       
       source map scanner.scan match {
         case Good(st) =>
-          val model = SkipGramModel(st, dim=10, α=0.09, window=3, numEpochs=100, seed=123456789L)
+          val dim = 10
+          val space = VectorSpace(dim)
+          val model = SkipGramModel[space.type](st, space, α=0.09, window=3, numEpochs=100, seed=123456789L)
           model.run()
           model.in.foreach {v => v.isValid must beTrue; ()}
           val size: Int = model.in.head.length
-          val acc = AccumulatingMoments(size).collect(model.in)
-          val avg = acc.avg
-          val cov = acc.covariance
+          val acc:AccumulatingMoments[space.type] = new AccumulatingMoments[space.type](space)
+          
+          acc.collect(model.in)
+          
+          val avg: space.Vector = acc.avg
+          val cov: space.SquareMatrix = acc.covariance
           println(s"avg=$avg")
           println(s"covariance=\n$cov\n\n")
-          val Some(eigens) = PCA.Iterations(0.001, 10).buildEigenVectors(cov, 10)
+          val method = PCA.Iterations(0.001, 10)
+            
+          val eigens: List[(Double, space.Vector)] = method.buildEigenVectors(model.space)(cov, 10)
           println("\nEIGENVALUES:\n")
           println(eigens map (_._1))
-          val newBasis = Basis(avg.copy, Matrix.Unitary(eigens.map (_._2).toArray).transpose)
+          val eigenVectors = eigens.map(_._2.copy).toArray
+          val umat = space.unitaryMatrix(eigenVectors)
+          val newBasis = space.Basis(avg, umat.transpose)
           
           val vs = model.in map (newBasis(_))
           
-          val uvs = AffineTransform.toUnitCube(size, vs)
+          val uvs = space.toUnitCube(vs)
           val vectors = (st.dictionary zip st.frequencies) map {case(w,f) => s"$w:$f"} zip uvs
-          serialize(vectors)
+          serialize(space, vectors)
           println("Rare words")
-          println(vectors take 10 mkString "\n")
+          println(eigenVectors take 10 mkString "\n")
           println("Frequent words")
-          println((vectors takeRight 10).reverse mkString "\n") 
+          println((eigenVectors takeRight 10).reverse mkString "\n") 
 
           println(s"\nSEE ALL RESULTS IN $modelFileName\n")
-          vectors.length must_== 17355
+          eigenVectors.length must_== 17355
 
           ok
           
@@ -83,12 +93,15 @@ class SkipGramModelTest extends Specification {
     
     "visualize War and Piece" in {
       val lines: Iterator[String] = Source.fromResource(modelFileName).getLines
-
+      val Header = "dim=(\\d+)".r
+      val Header(dim) = lines.next
+      val space = VectorSpace(dim.toInt)
+ 
       val found = for {
         line <- lines
         parts = line split ","
         numbers:Array[Double] = parts.tail map (_.toDouble)
-        vec = Vector(numbers)
+        vec = space.Vector(numbers)
       } yield (parts.head.split(":").head, vec) 
       
       val allProjections = found .map { 
@@ -160,7 +173,7 @@ class SkipGramModelTest extends Specification {
         
         val chars = 0 until N map (layout.getOrElse(_, ' '))
 
-        print(chars mkString)
+        print(chars.mkString)
         println
     }
   }
