@@ -1,7 +1,6 @@
 # Scala Kittens Project
 
-*Attention Please*
-This project is currently split into two versions: scala210 and scala211. Libraries are different in these two versions of Scala.
+This project is split into versions: scala210, scala211, scala212. Libraries are different in these two versions of Scala.
 
 In this project I store small solutions to typical problems, which are free to grab and too small for building a "library".
 [Scala kittens][slides] has examples of this kind of stuff, one-liners. Probably they deserve to be put to gist.
