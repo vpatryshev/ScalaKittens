@@ -32,10 +32,10 @@ class StatsTest extends Specification {
       val cov = averager.covariance
 
       val expected = Array(
-        Vector(1.0, 3.0, -0.5, 0.0),
-        Vector(3.0, 9.0, -1.5, 0.0),
-        Vector(-0.5, -1.5, 0.25, 0.0),
-        Vector(0.0, 0.0, 0.0, 0.33333333333333337)
+        R4.Vector(1.0, 3.0, -0.5, 0.0),
+        R4.Vector(3.0, 9.0, -1.5, 0.0),
+        R4.Vector(-0.5, -1.5, 0.25, 0.0),
+        R4.Vector(0.0, 0.0, 0.0, 0.33333333333333337)
       )
 
       for {

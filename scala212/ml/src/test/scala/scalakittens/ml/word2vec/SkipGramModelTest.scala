@@ -5,7 +5,7 @@ import java.io.{File, FileWriter}
 import org.specs2.mutable.Specification
 
 import scala.io.Source
-import scalakittens.la.{AffineTransform, Matrix, PCA, VectorSpace}
+import scalakittens.la.{Matrix, PCA, VectorSpace}
 import scalakittens.stats.AccumulatingMoments
 import scalakittens.{Good, IO}
 
@@ -51,7 +51,7 @@ class SkipGramModelTest extends Specification {
           val model = SkipGramModel[space.type](st, space, α=0.09, window=3, numEpochs=100, seed=123456789L)
           model.run()
           model.in.foreach {v => v.isValid must beTrue; ()}
-          val size: Int = model.in.head.length
+//          val size: Int = model.in.head.length
           val acc:AccumulatingMoments[space.type] = new AccumulatingMoments[space.type](space)
           
           acc.collect(model.in)

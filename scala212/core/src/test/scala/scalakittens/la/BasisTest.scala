@@ -36,7 +36,7 @@ class BasisTest extends Specification {
       sut(v0) must_== v1
       val v2 = sut.unapply(v1)
       Norm.l2(v2 - v0) < 0.000001 aka v2.toString must beTrue
-      val v3 = Vector(2.6730326074756157, 0.7411809548974794, 1.3660254037844384)
+      val v3 = R3.Vector(2.6730326074756157, 0.7411809548974794, 1.3660254037844384)
       sut.unapply(baseVector) must_== v3
     }
   }

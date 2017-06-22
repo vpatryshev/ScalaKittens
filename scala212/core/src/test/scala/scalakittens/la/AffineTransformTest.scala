@@ -27,7 +27,7 @@ class AffineTransformTest extends Specification {
       
       sut2(R3.Vector(2,3,4)) must_== R2.Vector(0, 20)
       
-      val sut3 = new AffineTransform(R2,R3)(Matrix(R2, R2, Array(0,1,1,0,1,-1)), R2.Vector(1,2))
+      val sut3 = new AffineTransform(R2,R3)(Matrix(R2, R3, Array(0,1,1,0,1,-1)), R2.Vector(1,2))
       sut3(R2.Vector(1,1)) must_== R3.Vector(-1, 0, 1)
     }
   }

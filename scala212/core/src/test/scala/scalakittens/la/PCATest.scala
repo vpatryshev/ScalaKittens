@@ -20,9 +20,9 @@ class PCATest extends Specification {
       val method = PCA.Iterations(0.001, 100)
       val Some((value: Double, vec: R2.Vector, nIter)) = method.maxEigenValue(R2)(m)
 
-      value must_== 100.0
+      value === 100.0
 
-      vec must_== Vector(0.0,1.0)
+      vec === R2.Vector(0.0,1.0)
     }
 
     "produce first eigenvector for a 3x3" in {
@@ -30,10 +30,10 @@ class PCATest extends Specification {
       val method = PCA.Iterations(0.001, 100)
       val Some((value: Double, vec: R3.Vector, nIter)) = method.maxEigenValue(R3)(m)
       
-      value must_== 6.895482499314163
+      value === 6.895482499314163
       
-      vec must_== Vector(0.7528109532832238,0.431249716162522,0.4972920177587291)
-      l2(vec) must_== 1.0
+      vec === R3.Vector(0.7528109532832238,0.431249716162522,0.4972920177587291)
+      l2(vec) === 1.0
       val delta: Double = l2(m * vec / value - vec)
       delta < 0.0005 aka s"error=$delta" must beTrue
     }
@@ -44,13 +44,13 @@ class PCATest extends Specification {
       val method = PCA.Iterations(0.0001, 100)
       val Some((value1: Double, vector1: R3.Vector, nIter1)) = method.maxEigenValue(R3)(m)
 
-      value1 must_== 6.8951514452581313
-      vector1 must_== R3.Vector(0.752603939328221, 0.431649775140211, 0.4972582650183391)
-      l2(vector1) must_== 1.0
+      value1 === 6.8951514452581313
+      vector1 === R3.Vector(0.752603939328221, 0.431649775140211, 0.4972582650183391)
+      l2(vector1) === 1.0
       val newBasis = R3.unitaryMatrix(R3.buildOrthonormalBasis(vector1).map(_.copy))
-      newBasis.column(0) must_== vector1
+      newBasis.column(0) === vector1
       val newBasisT = newBasis.transpose
-      newBasisT.row(0) must_== vector1
+      newBasisT.row(0) === vector1
       val checkBasis = R3.UnitMatrix rotate newBasis
       l2(checkBasis - R3.UnitMatrix) < 0.0001 aka checkBasis.toString must beTrue
       val m1 = m rotate newBasis.transpose
@@ -63,9 +63,16 @@ class PCATest extends Specification {
       
       val submatrix:R2.SquareMatrix = m1.projectToHyperplane().asInstanceOf[R2.SquareMatrix]
       val Some((value2: Double, vector2: R2.Vector, _: Int)) = method.maxEigenValue(R2)(submatrix)
-      value2 must_== 3.397409072501745
-      l2(vector2) must_== 1.0
-      vector2 must_== R2.Vector(0.9819718282130517,0.18902732235292571)
+      value2 === 3.397409072501745
+      l2(vector2) === 1.0
+
+      val expected2 = R2.Vector(0.9819718282130517, 0.18902732235292571)
+      vector2.toString === expected2.toString
+      val d = vector2 - expected2
+      l2(d) must_== 0.0
+      val same2 = vector2 == expected2
+      same2 must beTrue
+      vector2 === expected2
 
       val vector3 = R3.injectFromHyperplane[R2.type](vector2)
       val vector3InOurBasis = newBasis * vector3
@@ -83,12 +90,12 @@ class PCATest extends Specification {
 
       val Some((eigenValue1: Double, basis: R3.UnitaryMatrix, nIter1)) = finder.oneEigenValueBasis(m)
 
-      eigenValue1 must_== 6.8951514452581313
-      basis.column(0) must_== R3.Vector(0.752603939328221, 0.431649775140211, 0.4972582650183391)
+      eigenValue1 === 6.8951514452581313
+      basis.column(0) === R3.Vector(0.752603939328221, 0.431649775140211, 0.4972582650183391)
 
       val allThree = method.buildEigenVectors(R3)(m, 3)
       
-      allThree must_== 
+      allThree === 
         (6.895151445258131,  R3.Vector(0.752603939328221,0.431649775140211,0.4972582650183391))::
         (3.397409072501745,  R3.Vector(-0.4578505139226017,0.8857791252792523,-0.07594898366885619))::
         (1.7075984315510695, R3.Vector(-0.4732443527486125,-0.17051044789375186,0.8642719304423923))::Nil

@@ -1,7 +1,6 @@
 package scalakittens.ml.word2vec
   
 import scalakittens.la._
-import scalakittens.la.MutableVector
 import scalakittens.ml.word2vec.Sigma._
 
 /**
@@ -22,7 +21,7 @@ case class SkipGramModel[Space <: VectorSpace](text: ScannedText, space: Space, 
 
   def checkme(msg: String = "", which: Int = -1): Unit = {
     in.indices.foreach(i => {
-      val v: MutableVector = in(i)
+      val v: Space#Vector = in(i)
 
       if (which < 0 || i == which)
       v.foreach(

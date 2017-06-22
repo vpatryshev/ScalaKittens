@@ -143,7 +143,10 @@ case class VectorSpace(dim: Int) { space =>
     
     override def equals(other: Any): Boolean = {
       other match {
-        case v: Vector => range.forall(i => this (i) == v(i))
+        case v: VectorSpace#Vector => 
+          length == v.length && 
+            range.forall(i => {this(i) == v(i)
+        })
         case _ => false
       }
     }
