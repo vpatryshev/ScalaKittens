@@ -14,7 +14,7 @@ import scalakittens.la.Norm.l2
   */
 case class VectorSpace(dim: Int) { space =>
   lazy val hyperplane: VectorSpace = {
-    require(dim > 0, "0-dimensional space does not have a hyperplane")
+    require(dim >= 0, "0-dimensional space does not have a hyperplane")
     VectorSpace(dim-1)
   }
 
@@ -22,11 +22,9 @@ case class VectorSpace(dim: Int) { space =>
     new hyperplane.OnFunction(i => v(i+1)).asInstanceOf[hyperplane.Vector]
   }
 
-  def injectFromHyperplane(v: hyperplane.Vector): Vector = {
-    new OnFunction(i => if (i == 0) 0.0 else v(i-1))
-  }
+  def injectFromHyperplane[Hyperplane <: VectorSpace](v: Hyperplane#Vector): Vector = new OnFunction(i => if (i == 0) 0.0 else v(i-1))
   
-  require(dim > 0, s"Space dimension $dim makes no sense")
+  require(dim >= 0, s"Space dimension $dim makes no sense")
 
   /**
     * real-valued vector with usual operations
@@ -35,7 +33,6 @@ case class VectorSpace(dim: Int) { space =>
     *
     * Created by vpatryshev on 5/14/17.
     */
-
   trait Vector extends Seq[Double] with PartialFunction[Int, Double] {
 //    def space = VectorSpace.this
     def length = dim
@@ -70,7 +67,7 @@ case class VectorSpace(dim: Int) { space =>
       * @param other another vector of the same length
       * @return the product value
       */
-    def *(other: Vector): Double = {
+    def *[V <: space.Vector](other: V): Double = {
       (0.0 /: range) ((s, i) => s + apply(i) * other(i))
     }
 
@@ -127,10 +124,9 @@ case class VectorSpace(dim: Int) { space =>
       * @return a new vector with its data stored somewhere
       */
     def copy: MutableVector = {
-      val v = Vector(length)
-
-      range.foreach((i: Int) => v(i) = apply(i))
-      v
+      val data: Array[Double] = new Array[Double](dim)
+      range.foreach((i: Int) => data(i) = apply(i))
+      new OnArray(data)
     }
 
     override def iterator = range.iterator map this
@@ -350,8 +346,6 @@ case class VectorSpace(dim: Int) { space =>
     *
     * @return a new Vec
     */
-  def Vector(): MutableVector = Vector(new Array[Double](dim))
-
   def Vector(values: Double*): MutableVector = Vector(Array(values: _*))
 
   /**
@@ -372,7 +366,7 @@ case class VectorSpace(dim: Int) { space =>
       * @return a new vector
       */
     def apply(): Vector = {
-      val v: MutableVector = Vector()
+      val v: MutableVector = new OnArray(new Array[Double](dim))
       fill(v)
       v
     }
@@ -453,7 +447,7 @@ case class VectorSpace(dim: Int) { space =>
     acc
   }
 
-  private val Regex = "Vec\\(\\[([\\d\\.,\\-E ]+)\\]\\)".r
+  private lazy val Regex = "Vec\\(\\[([\\d\\.,\\-E ]+)\\]\\)".r
 
   def readVector(s: String): Option[Vector] = 
     s match {
@@ -483,19 +477,13 @@ case class VectorSpace(dim: Int) { space =>
       squareMatrix(product)
     }
 
-    def projectToHyperplane(basis: UnitaryMatrix): hyperplane.SquareMatrix = {
+    def projectToHyperplane(basis: UnitaryMatrix = UnitMatrix): hyperplane.SquareMatrix = {
       val rotatedMatrix:LocalMatrix = rotate(basis.transpose)
-      val matrix = hyperplane.squareMatrix((i, j) => rotatedMatrix(i + 1, j + 1))
-      matrix.asInstanceOf[hyperplane.SquareMatrix]
+      val newMatrix = hyperplane.squareMatrix((i, j) => rotatedMatrix(i + 1, j + 1))
+      newMatrix.asInstanceOf[hyperplane.SquareMatrix]
     }
 
-//    def injectFromHyperplane(basis: UnitaryMatrix): hyperplane.SquareMatrix = {
-//      val injected = Matrix.OnFunction[hyperplane.Vector, hyperplane.Vector](hyperplane, hyperplane, (i, j) => rotatedMatrix(i+1, j+1)) with hyperplane.SquareMatrix
-//      val rotatedMatrix:Matrix[Vector, Vector] = rotate(basis.transpose)
-//      rotatedMatrix.dropColumn(0).dropRow(0)
-//    }
-
-    override def *(v: Vector): MutableVector = {
+    override def *[V <: space.Vector](v: V): space.Vector = {
       require(nCols == v.length, s"To apply a matrix to a vector we need that number of columns ($nCols) is equal to the vector's length (${v.length})")
 
       v match {
@@ -513,7 +501,7 @@ case class VectorSpace(dim: Int) { space =>
   trait UnitaryMatrix extends SquareMatrix {
     def isUnitary(precision: Double) = l2(this * transpose - UnitMatrix) <= precision
 
-    override def *(v: Vector): MutableVector = new OnFunction(i => row(i)*v).copy
+    override def *[V <: space.Vector](v: V): space.Vector = new OnFunction(i => row(i)*v).copy
 
     override def transpose: UnitaryMatrix =
       new Matrix.OnFunction[space.type, space.type](space, space, (i, j) => this(j, i)) with UnitaryMatrix
@@ -552,7 +540,7 @@ case class VectorSpace(dim: Int) { space =>
     * @param source whatever function that provides matrix values for the diagonal, the rest is 0
     * @return the diagonal matrix
     */
-  def diagonalMatrix(source: Int => Double): SquareMatrix = new DiagonalMatrix(source) with SquareMatrix
+  def diagonalMatrix(source: Int => Double): SquareMatrix = new DiagonalMatrix(source)
 
   def diagonalMatrix(source: Array[Double]): SquareMatrix = diagonalMatrix(source.apply _)
 
@@ -573,7 +561,7 @@ case class VectorSpace(dim: Int) { space =>
     val v = Vector(array)
 
     val diagonal:SquareMatrix = diagonalMatrix(v)
-    new AffineTransform[space.type, space.type](space, space)(diagonal, Zero).asInstanceOf[Vector => Vector]
+    new AffineTransform[space.type, space.type](space, space)(diagonal, lowerLeft)
   }
 
   /**
@@ -607,11 +595,15 @@ case class VectorSpace(dim: Int) { space =>
     def unapply(v: Vector): Vector = rotation.transpose * v + center
   }
 
+  def unitaryMatrix(columns: Array[MutableVector]): UnitaryMatrix = new ColumnMatrix[space.type](space, columns) with UnitaryMatrix
+  
   object Basis {
+    def apply(center: Vector, matrix: UnitaryMatrix) = new Basis(center, matrix)
+    
     def apply(center: Vector, basisVectors: Array[Vector]) = {
       require(basisVectors.length == dim, s"Expected $dim basis vectors, got ${basisVectors.length}")
       val columns: Array[MutableVector] = basisVectors map (_.copy)
-      val matrix: UnitaryMatrix = new ColumnMatrix[space.type](space, columns) with UnitaryMatrix
+      val matrix: UnitaryMatrix = unitaryMatrix(columns)
       new Basis(center, matrix)
     }
 
@@ -649,7 +641,7 @@ case class VectorSpace(dim: Int) { space =>
     * @param b vector to project
     * @return a projection of b to a
     */
-  def project(a: Vector, b: Vector) = a * ((a * b) / Norm.l2(a))
+  def project[V <: space.Vector](a: Vector, b: V) = a * ((a * b) / Norm.l2(a))
 
   private[la] class ColumnMatrix[Domain <: VectorSpace](val domain: Domain, val cols: Seq[MutableVector]) extends Matrix[Domain, space.type] {
     override val nRows = dim
@@ -685,31 +677,31 @@ case class VectorSpace(dim: Int) { space =>
 }
 
 object Spaces {
-  val R0 = VectorSpace(0)
-  val R1 = VectorSpace(1)
-  val R2 = VectorSpace(2)
-  val R3 = VectorSpace(3)
-  val R4 = VectorSpace(4)
-  val R5 = VectorSpace(5)
-  val R6 = VectorSpace(6)
-  val R7 = VectorSpace(7)
-  val R8 = VectorSpace(8)
-  val R9 = VectorSpace(9)
-  val R10 = VectorSpace(10)
-  val R11 = VectorSpace(11)
-  val R12 = VectorSpace(12)
-  val R13 = VectorSpace(13)
-  val R14 = VectorSpace(14)
-  val R15 = VectorSpace(15)
-  val R16 = VectorSpace(16)
-  val R17 = VectorSpace(17)
-  val R18 = VectorSpace(18)
-  val R19 = VectorSpace(19)
-  val R20 = VectorSpace(20)
-  val R21 = VectorSpace(21)
-  val R22 = VectorSpace(22)
-  val R23 = VectorSpace(23)
-  val R24 = VectorSpace(24)
-  val R25 = VectorSpace(25)
-  val R26 = VectorSpace(26)
+  lazy val R0 = VectorSpace(0)
+  lazy val R1 = VectorSpace(1)
+  lazy val R2 = VectorSpace(2)
+  lazy val R3 = VectorSpace(3)
+  lazy val R4 = VectorSpace(4)
+  lazy val R5 = VectorSpace(5)
+  lazy val R6 = VectorSpace(6)
+  lazy val R7 = VectorSpace(7)
+  lazy val R8 = VectorSpace(8)
+  lazy val R9 = VectorSpace(9)
+  lazy val R10 = VectorSpace(10)
+  lazy val R11 = VectorSpace(11)
+  lazy val R12 = VectorSpace(12)
+  lazy val R13 = VectorSpace(13)
+  lazy val R14 = VectorSpace(14)
+  lazy val R15 = VectorSpace(15)
+  lazy val R16 = VectorSpace(16)
+  lazy val R17 = VectorSpace(17)
+  lazy val R18 = VectorSpace(18)
+  lazy val R19 = VectorSpace(19)
+  lazy val R20 = VectorSpace(20)
+  lazy val R21 = VectorSpace(21)
+  lazy val R22 = VectorSpace(22)
+  lazy val R23 = VectorSpace(23)
+  lazy val R24 = VectorSpace(24)
+  lazy val R25 = VectorSpace(25)
+  lazy val R26 = VectorSpace(26)
 }

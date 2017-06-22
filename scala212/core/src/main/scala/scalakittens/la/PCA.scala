@@ -4,10 +4,10 @@ package scalakittens.la
   * Created by vpatryshev on 5/17/17.
   */
 object PCA {
-  case class Iterations(space: VectorSpace)(precision: Double, maxRepeats: Int) {
+  case class Iterations(precision: Double, maxRepeats: Int) {
 
     private def oneStep(space: VectorSpace)(m: space.SquareMatrix)(v: space.MutableVector): (space.MutableVector, Double) = {
-      val vector: space.MutableVector = m * v
+      val vector: space.Vector = m * v
       val normalized: space.Vector = vector.normalize(Norm.l2)
       val v1: space.MutableVector = normalized.copy
       val d = Norm.l2(v1 - v)
@@ -28,14 +28,14 @@ object PCA {
 
         val maybeTuple: Option[(Double, space.MutableVector, Int)] = goodData map {
           case (vector, delta, nSteps) => 
-            val vector1: space.MutableVector = m * vector
+            val vector1: space.Vector = m * vector
             (vector1.sum / vector.sum, vector, nSteps)
         }
         maybeTuple
       }
     }
 
-    def buildEigenVectors(m: space.SquareMatrix, numberRequested: Int): List[(Double, space.Vector)] = {
+    def buildEigenVectors(space: VectorSpace)(m: space.SquareMatrix, numberRequested: Int): List[(Double, space.Vector)] = {
       val finder = new EigenVectorFinder[space.type](space)
       finder.runOn(m, numberRequested)
     }
@@ -61,7 +61,7 @@ object PCA {
               val submatrix: s.hyperplane.SquareMatrix = m.projectToHyperplane(basis.asInstanceOf[s.UnitaryMatrix])
               val tail = finder.runOn(submatrix, numberRequested - 1)
               val newTail: List[(Double, s.Vector)] = tail map { case (value, vector) => 
-                val vector1: s.Vector = s.injectFromHyperplane(vector)
+                val vector1: s.Vector = s.injectFromHyperplane[s.hyperplane.type](vector)
                 (value, basis * vector1) 
               }
               val v: s.Vector = basis.column(0).asInstanceOf[s.Vector]

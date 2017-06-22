@@ -14,7 +14,7 @@ class StatsTest extends Specification {
   
   "AccumulatingMoments" should {
     "calculate moments" in {
-      val moments = AccumulatingMoments(R3)
+      val moments = new AccumulatingMoments(R3)
       val averager = moments.collect(List(R3.Vector(1.0, 2.0, 3.0), R3.Vector(-1.0, -1.0, -1.0)))
       
       averager.avg must_== R3.Vector(0.0, 0.5, 1.0)
@@ -27,7 +27,7 @@ class StatsTest extends Specification {
         R4.Vector(2.0, 6.0, -1.0, 0.0), // 0, 0, 0, -2/3
         R4.Vector(3.0, 9.0, -1.5, 1.0)) // 1, 3, -0.5, 1/3
 
-      val moments = AccumulatingMoments(R4)
+      val moments = new AccumulatingMoments(R4)
       val averager = moments.collect(vectors)
       val cov = averager.covariance
 

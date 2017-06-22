@@ -5,7 +5,7 @@ import scalakittens.la._
 /**
   * Created by vpatryshev on 5/24/17.
   */
-case class AccumulatingMoments[Space <: VectorSpace](val space: Space) {
+class AccumulatingMoments[Space <: VectorSpace](val space: Space) {
   private var _n: Int = 0
   def n = _n
   val sum: space.MutableVector = space.Zero.copy
@@ -21,14 +21,12 @@ case class AccumulatingMoments[Space <: VectorSpace](val space: Space) {
     } matrix(i,j) += row(i)*row(j)
   }
   
-  def avg = (sum / n) .copy  
+  def avg: Space#MutableVector = (sum / n) .copy 
   
-  def covariance: Matrix[Space, Space] = {
+  // TODO: get rid of casting
+  def covariance[S <: Space]: S#SquareMatrix = {
     require (_n > 1, s"Can't produce covariance matrix for $n vector(s)")
-
-    new Matrix.OnFunction[Space, Space](space, space,
-          (i, j) => (matrix(i, j) - sum(i) * sum(j) / n) / (n-1)
-      )
+    space.squareMatrix((i, j) => (matrix(i, j) - sum(i) * sum(j) / n) / (n-1)) .asInstanceOf[S#SquareMatrix]
   }
   
   /**
@@ -39,8 +37,8 @@ case class AccumulatingMoments[Space <: VectorSpace](val space: Space) {
     *         
     * TODO: make it type-safe
     */
-  def collect(vectors: TraversableOnce[Space#Vector]): AccumulatingMoments[Space] = {
-    vectors foreach ((v:Space#Vector) => this.+=(v.asInstanceOf[space.Vector])) 
+  def collect[V <: Space#Vector](vectors: TraversableOnce[V]): AccumulatingMoments[Space] = {
+    vectors foreach ((v:V) => this.+=(v.asInstanceOf[space.Vector])) 
     this
   }
 }

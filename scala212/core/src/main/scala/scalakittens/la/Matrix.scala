@@ -164,7 +164,7 @@ trait Matrix[Domain <: VectorSpace, Codomain <: VectorSpace] extends ((Int, Int)
     * @param v the vector
     * @return another vector, this * v; it so happens that it is mutable
     */
-  def *(v: Domain#Vector): codomain.Vector = {
+  def *[V <: Domain#Vector](v: V): Codomain#Vector = {
     require(nCols == v.length, s"To apply a matrix to a vector we need that number of columns ($nCols) is equal to the vector's length (${v.length})")
     
     v match {

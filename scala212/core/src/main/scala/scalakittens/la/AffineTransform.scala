@@ -19,6 +19,6 @@ class AffineTransform[Dom <: VectorSpace, Codom <: VectorSpace](val domainSpace:
       matrix * shifted
     }
     
-    override def toString = s"AffineTransform($matrix,\n$shift)"
+    override def toString = s"AffineTransform(\n$matrix,\n$shift\n)"
   }
 }
