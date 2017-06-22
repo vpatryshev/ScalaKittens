@@ -274,12 +274,10 @@ object Matrix {
     }
 
     override def update(i: Int, j: Int, value: Double): Unit = {
-      checkIndexes(i, j)
       data(index(i,j)) = value
     }
 
     override def apply(i: Int, j: Int): Double = {
-      checkIndexes(i, j)
       data(index(i, j))
     }
 

@@ -258,7 +258,7 @@ class VectorTest extends Specification {
         ()
       }
       val sut = space0.const(3)
-      recurse(space0)(sut) === ()
+      recurse(space0)(sut)
       ok
     }
   }
