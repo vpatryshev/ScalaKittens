@@ -91,17 +91,6 @@ case class VectorSpace(dim: Int) { space =>
       new OnFunction(i => apply(i) - other(i))
     }
 
-// this method should not exist. Instead, we need to have a function that embeds a hyperplane
-//    /**
-//      * Appends a value to this vector, giving a new one
-//      *
-//      * @param d the value
-//      * @return a new vector of bigger size
-//      */
-//    def ::(d: Double): Vector = new OnFunction(length + 1,
-//      i => if (i == 0) d else this (i - 1)
-//    )
-
     /**
       * this vector multiplied by a scalar
       *
@@ -450,7 +439,7 @@ case class VectorSpace(dim: Int) { space =>
     acc
   }
 
-  private lazy val Regex = "Vec\\(\\[([\\d\\.,\\-E ]+)\\]\\)".r
+  private lazy val Regex = "Vec\\(\\[?([\\d\\.,\\-E ]+)\\]?\\)".r
 
   def readVector(s: String): Option[Vector] = 
     s match {
@@ -520,9 +509,9 @@ case class VectorSpace(dim: Int) { space =>
     * @param basis vectors of this basis
     * @return the matrix
     */
-  def Unitary(basis: Seq[Vector]): UnitaryMatrix = 
+  def unitaryMatrix(basis: Seq[Vector]): UnitaryMatrix = 
     new ColumnMatrix[space.type](space, basis map (_.copy)) with UnitaryMatrix {
-      require(basis.nonEmpty)
+      require(basis.length == dim)
       require(basis.forall(_.length == basis.length))
     }
 
@@ -544,8 +533,6 @@ case class VectorSpace(dim: Int) { space =>
     * @return the diagonal matrix
     */
   def diagonalMatrix(source: Int => Double): SquareMatrix = new DiagonalMatrix(source)
-
-  def diagonalMatrix(source: Array[Double]): SquareMatrix = diagonalMatrix(source.apply _)
 
   def diagonalMatrix(values: Double*): SquareMatrix = diagonalMatrix(values)
 
@@ -584,7 +571,7 @@ case class VectorSpace(dim: Int) { space =>
     *
     * Created by vpatryshev on 5/25/17.
     */
-  class Basis(val center: Vector, val rotation: UnitaryMatrix) {
+  case class Basis(center: Vector, rotation: UnitaryMatrix) extends (Vector => Vector) {
     val transform = new AffineTransform[space.type, space.type](space, space)(rotation, center)
     
     def apply(v: Vector) = transform(v)
@@ -597,20 +584,20 @@ case class VectorSpace(dim: Int) { space =>
       */
     def unapply(v: Vector): Vector = rotation.transpose * v + center
   }
-
-  def unitaryMatrix(columns: Array[MutableVector]): UnitaryMatrix = new ColumnMatrix[space.type](space, columns) with UnitaryMatrix
   
   object Basis {
-    def apply(center: Vector, matrix: UnitaryMatrix) = new Basis(center, matrix)
     
-    def apply(center: Vector, basisVectors: Array[Vector]) = {
+    def apply(center: Vector, basisVectors: Array[MutableVector]): Basis = {
       require(basisVectors.length == dim, s"Expected $dim basis vectors, got ${basisVectors.length}")
-      val columns: Array[MutableVector] = basisVectors map (_.copy)
-      val matrix: UnitaryMatrix = unitaryMatrix(columns)
+      val matrix: UnitaryMatrix = unitaryMatrix(basisVectors)
       new Basis(center, matrix)
     }
 
-    def build[V <: Vector](basisVectors: Array[V]): Basis = {
+    def apply(center: Vector, basisVectors: Array[Vector]): Basis = {
+      apply(center, basisVectors map (_.copy))
+    }
+
+    def apply[V <: Vector](basisVectors: Array[V]): Basis = {
       require(basisVectors.length == dim, s"Expected $dim basis vectors, got ${basisVectors.length}")
       val columns: Array[MutableVector] = basisVectors map (_.copy)
       val matrix: UnitaryMatrix = new ColumnMatrix[space.type](space, columns) with UnitaryMatrix

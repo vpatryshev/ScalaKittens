@@ -105,7 +105,7 @@ class PCATest extends Specification {
         (value, vector) <- allThree
       } l2(m * vector - vector * value) < 0.001 must beTrue
       
-      val eigenBasis = R3.unitaryMatrix(allThree map (_._2.asInstanceOf[R3.MutableVector]) toArray)
+      val eigenBasis = R3.unitaryMatrix(allThree map (_._2.asInstanceOf[R3.MutableVector]))
       eigenBasis.isUnitary(0.001) must beTrue
     }
   }

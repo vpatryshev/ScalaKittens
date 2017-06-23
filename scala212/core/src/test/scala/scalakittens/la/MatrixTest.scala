@@ -2,13 +2,10 @@ package scalakittens.la
 
 import org.specs2.mutable.Specification
 
-import Norm._
-
 /**
   * Created by vpatryshev on 5/7/17.
   */
 class MatrixTest extends Specification {
-  import math._
   import Spaces._
   
   def nxm(n: Int, m: Int, f: Int => Int => Double) = {
@@ -91,58 +88,6 @@ class MatrixTest extends Specification {
     "multiply by a vector" in {
       val sut = TestMatrix(R4, R3, i => j => i * 10 + j)
       (sut * R4.Vector(0, 1, 2, 3)) === R3.Vector(14, 74, 134)
-    }
-
-    val alpha = Pi / 4
-    val beta = Pi / 3
-
-    val sampleUnitaryMatrix_3x3: R3.UnitaryMatrix = {
-      R3.Unitary(
-        Array(R3.Vector(cos(alpha) * cos(beta), cos(alpha) * sin(beta), sin(alpha)),
-          R3.Vector(-sin(alpha) * cos(beta), -sin(alpha) * sin(beta), cos(alpha)),
-          R3.Vector(sin(beta), -cos(beta), 0)
-        ))
-    }
-
-    val sampleUnitaryMatrix_2x2: R2.UnitaryMatrix = R2.Unitary(
-      Array(R2.Vector(cos(beta), sin(beta)),
-        R2.Vector(-sin(beta), cos(beta))
-      ))
-
-    "check unitariness" in {
-      val u0 = R2.Unitary(Array(R2.Vector(0, 1), R2.Vector(1, 0)))
-      u0.isUnitary(0) aka s"delta = ${l2(u0 * u0.transpose - R2.UnitMatrix)}" must beTrue
-
-      sampleUnitaryMatrix_2x2.isUnitary(0.001) aka s"delta = ${l2(sampleUnitaryMatrix_2x2 * sampleUnitaryMatrix_2x2.transpose - R2.UnitMatrix)}" must beTrue
-
-      sampleUnitaryMatrix_3x3.isUnitary(0.001) aka s"delta = ${l2(sampleUnitaryMatrix_3x3 * sampleUnitaryMatrix_3x3.transpose - R3.UnitMatrix)}" must beTrue
-
-    }
-
-    "rotate" in {
-
-      val m0 = R3.diagonalMatrix(10, 5, -1)
-
-      val m1 = m0 rotate sampleUnitaryMatrix_3x3
-
-      val m2 = m1 rotate sampleUnitaryMatrix_3x3.transpose
-
-      l2(m2 - m0) < 0.00001 aka m2.toString must beTrue
-
-      m1 === Matrix(R3, R3,
-        Array(1.1250000000000009, 3.6806079660838646, 1.2500000000000002,
-              3.6806079660838655, 5.375000000000001, 2.165063509461097,
-              1.2500000000000002, 2.1650635094610973, 7.5))
-    }
-    
-    "project to hyperplane" in {
-      val m = R3.squareMatrix(
-        Array(
-          1.1250000000000009, 3.6806079660838646, 1.2500000000000002,
-          3.6806079660838655, 5.375000000000001, 2.165063509461097,
-          1.2500000000000002, 2.1650635094610973, 7.5))
-      val sut = m.projectToHyperplane(sampleUnitaryMatrix_3x3)
-      l2(sut - R3.hyperplane.diagonalMatrix(5, -1)) < 0.0001 aka sut.toString must beTrue
     }
   }
 

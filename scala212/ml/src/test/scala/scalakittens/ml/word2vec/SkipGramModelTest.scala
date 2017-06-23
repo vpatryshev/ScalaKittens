@@ -5,7 +5,7 @@ import java.io.{File, FileWriter}
 import org.specs2.mutable.Specification
 
 import scala.io.Source
-import scalakittens.la.{Matrix, PCA, VectorSpace}
+import scalakittens.la.{PCA, VectorSpace}
 import scalakittens.stats.AccumulatingMoments
 import scalakittens.{Good, IO}
 
@@ -66,10 +66,13 @@ class SkipGramModelTest extends Specification {
           println("\nEIGENVALUES:\n")
           println(eigens map (_._1))
           val eigenVectors = eigens.map(_._2.copy).toArray
+          eigenVectors.length must_== dim
           val umat = space.unitaryMatrix(eigenVectors)
-          val newBasis = space.Basis(avg, umat.transpose)
+          val newBasis: space.Vector => space.Vector = space.Basis(avg, umat.transpose)
           
-          val vs = model.in map (newBasis(_))
+          val vs = model.in map newBasis
+          
+          vs.length must_== 17355
           
           val uvs = space.toUnitCube(vs)
           val vectors = (st.dictionary zip st.frequencies) map {case(w,f) => s"$w:$f"} zip uvs
@@ -80,7 +83,6 @@ class SkipGramModelTest extends Specification {
           println((eigenVectors takeRight 10).reverse mkString "\n") 
 
           println(s"\nSEE ALL RESULTS IN $modelFileName\n")
-          eigenVectors.length must_== 17355
 
           ok
           

@@ -45,7 +45,7 @@ object PCA {
       def oneEigenValueBasis(m: s.SquareMatrix): Option[(Double, s.UnitaryMatrix, Int)] = maxEigenValue(s)(m) map {
         case (value: Double, vector: s.Vector, nIter) =>
           val vectors = s.buildOrthonormalBasis(vector)
-          val basis: s.Basis = s.Basis.build(vectors)
+          val basis: s.Basis = s.Basis.apply(vectors)
 
           (value, basis.rotation, nIter)
       }
