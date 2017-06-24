@@ -60,6 +60,17 @@ class MatrixTest extends Specification {
       log === "000102031011121320212223"
     }
 
+    "produce all elements" in {
+      val data = 
+        Array(4.0, 2.0, 4.0, 2.0, 4.0,
+          24.0, 22.0, 24.0, 22.0, 24.0,
+          44.0, 42.0, 44.0, 42.0, 44.0)
+      
+      val sut = Matrix(R5, R3, data)
+      
+      sut.allElements.toList === data.toList
+    }
+    
     "multiply" in {
       val sut1 = TestMatrix(R4, R3, i => j => i * 10 + j)
       val sut2 = TestMatrix(R5, R4, i => j => (i - j + 1000) % 2 * 1.0)
@@ -89,6 +100,36 @@ class MatrixTest extends Specification {
       val sut = TestMatrix(R4, R3, i => j => i * 10 + j)
       (sut * R4.Vector(0, 1, 2, 3)) === R3.Vector(14, 74, 134)
     }
+
+    "multiply by an immutable vector" in {
+      val sut = TestMatrix(R4, R3, i => j => i * 10 + j)
+      (sut * new R4.OnFunction(i => 1.0*i)) === R3.Vector(14, 74, 134)
+    }
+    
+    "not compare with garbage" in {
+      val sut: Any = TestMatrix(R4, R3, i => j => i * 10 + j)
+      
+      sut.equals("nothing") must beFalse
+    }
+
+    "not compare with a matrix of different dimensions" in {
+      val sut: Any = TestMatrix(R4, R3, i => j => i * 10 + j)
+      sut.equals(TestMatrix(R4, R4, i => j => i * 10 + j)) must beFalse
+      sut.equals(TestMatrix(R3, R3, i => j => i * 10 + j)) must beFalse
+      sut.equals(TestMatrix(R3, R4, i => j => i * 10 + j)) must beFalse
+    }
+    
+    "get built" in {
+      val sut = Matrix.build[R3.type, R2.type](R3, R2)
+      sut(1,2) = 3.14
+      sut(1,2) === 3.14
+    }
+    
+    "have zero matrix" in {
+      val sut = Matrix.Zero(R3, R2)
+      for (x <- sut.allElements) {x === 0.0 }
+      sut.allElements.toList.length === 6
+    } 
   }
 
   "Matrix with hidden structure" should {

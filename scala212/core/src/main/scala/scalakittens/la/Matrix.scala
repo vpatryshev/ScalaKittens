@@ -5,6 +5,14 @@ import java.util
 import language.postfixOps
 
 /**
+  * Matrix defined on vector spaces over real numbers (Doubles, in Scala).
+  * Domain is the space where matrix rows live;
+  * Codomain is the space where matrix columns live.
+  * So, a 2x3 matrix, with 2 rows and 3 columns, represents
+  * a linear operator from a 3-dimensional space to a 2-dimensional one.
+  * 
+  * For categorical reasons, the first type argument is domain, the second is codomain.
+  * 
   * Created by vpatryshev on 5/15/17.
   */
 trait Matrix[Domain <: VectorSpace, Codomain <: VectorSpace] extends ((Int, Int) => Double) with Iterable[Double] {

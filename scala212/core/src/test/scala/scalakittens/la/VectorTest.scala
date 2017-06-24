@@ -67,8 +67,107 @@ class VectorTest extends Specification {
       ok
     }
 
+    "produce a vector from function" in {
+      val sut1 = new R0.OnFunction(i => 42)
+      sut1 === R0.Vector()
+      new Spaces.R6.OnFunction(i => (i*sqrt(i)).toInt) === R6.Vector(0, 1, 2, 5, 8, 11)
+    }
+
+    "produce a unit vector" in {
+      R1.unit(0) === R1.Vector(1.0)
+      for (i <- 0 until 10) {
+        val sut = R10.unit(i)
+        for (j <- 0 until 10) {
+          sut(j) === (if (i == j) 1.0 else 0.0)
+        }
+      }
+      ok
+    }
+
+    "compile with subspaces" in {
+      val space0 = VectorSpace(3)
+      def recurse(s: VectorSpace)(v: s.Vector): Unit = {
+        val ignoreme = if (s.dim == 0) v else {
+          val v1 = s.projectToHyperplane(v) * 2
+          recurse(s.hyperplane)(v1)
+        }
+        ignoreme mustNotEqual null
+        ()
+      }
+      val sut = space0.const(3)
+      recurse(space0)(sut)
+      ok
+    }
+
+    "read vectors" in {
+      val sut = R3.Vector(math.Pi, math.E, Double.MinPositiveValue)
+      val s = sut.toString
+      R3.readVector(s) === Some(sut)
+      R2.readVector(s) === None
+      R4.readVector(s) === None
+      R3.readVector("this is not a vector") === None
+    }
+
+    "build square matrix" in {
+      val sm: R3.SquareMatrix = R3.squareMatrix((i, j) => 1.0 / (i + j + 1))
+      sm(0, 2) === sm(2, 0)
+      sm(0, 1) === 0.5
+    }
+
+
+    val alpha = Pi / 4
+    val beta = Pi / 3
+
+    val sampleUnitaryMatrix_3x3: R3.UnitaryMatrix = {
+      R3.unitaryMatrix(
+        Array(R3.Vector(cos(alpha) * cos(beta), cos(alpha) * sin(beta), sin(alpha)),
+          R3.Vector(-sin(alpha) * cos(beta), -sin(alpha) * sin(beta), cos(alpha)),
+          R3.Vector(sin(beta), -cos(beta), 0)
+        ))
+    }
+
+    val sampleUnitaryMatrix_2x2: R2.UnitaryMatrix = R2.unitaryMatrix(
+      Array(R2.Vector(cos(beta), sin(beta)),
+        R2.Vector(-sin(beta), cos(beta))
+      ))
+
+    "check unitariness" in {
+      val u0 = R2.unitaryMatrix(Array(R2.Vector(0, 1), R2.Vector(1, 0)))
+      u0.isUnitary(0) aka s"delta = ${l2(u0 * u0.transpose - R2.UnitMatrix)}" must beTrue
+
+      sampleUnitaryMatrix_2x2.isUnitary(0.001) aka s"delta = ${l2(sampleUnitaryMatrix_2x2 * sampleUnitaryMatrix_2x2.transpose - R2.UnitMatrix)}" must beTrue
+
+      sampleUnitaryMatrix_3x3.isUnitary(0.001) aka s"delta = ${l2(sampleUnitaryMatrix_3x3 * sampleUnitaryMatrix_3x3.transpose - R3.UnitMatrix)}" must beTrue
+    }
+
+    "project to hyperplane" in {
+      val m = R3.squareMatrix(
+        Array(
+          1.1250000000000009, 3.6806079660838646, 1.2500000000000002,
+          3.6806079660838655, 5.375000000000001, 2.165063509461097,
+          1.2500000000000002, 2.1650635094610973, 7.5))
+      val sut = m.projectToHyperplane(sampleUnitaryMatrix_3x3)
+      l2(sut - R3.hyperplane.diagonalMatrix(5, -1)) < 0.0001 aka sut.toString must beTrue
+    }
+
+    "rotate square matrix" in {
+
+      val m0 = R3.diagonalMatrix(10, 5, -1)
+
+      val m1 = m0 rotate sampleUnitaryMatrix_3x3
+
+      val m2 = m1 rotate sampleUnitaryMatrix_3x3.transpose
+
+      l2(m2 - m0) < 0.00001 aka m2.toString must beTrue
+
+      m1 === Matrix(R3, R3,
+        Array(
+          1.1250000000000009, 3.6806079660838646, 1.2500000000000002,
+          3.6806079660838655, 5.375000000000001, 2.165063509461097,
+          1.2500000000000002, 2.1650635094610973, 7.5))
+    }
   }
-  
+
   "Vector" should {
     "exist" in {
       ok
@@ -260,9 +359,16 @@ class VectorTest extends Specification {
       (R2.Vector(Double.MaxValue, Double.MinValue) sup R2.Vector(Double.MaxValue, Double.MinValue)) === R2.Vector(Double.MaxValue, Double.MinValue)
       (R2.Vector(Double.MinValue, Double.MaxValue) sup R2.Vector(Double.MaxValue, Double.MinValue)) === R2.Vector(Double.MaxValue, Double.MaxValue)
     }
+
+    "normalize" in {
+      R0.Vector().normalize(l2) must_== R0.Vector()
+      R1.Vector(0).normalize(l2) must_== R1.Vector(0)
+      R3.Vector(0, 0, 0).normalize(l2) must_== R3.Vector(0, 0, 0)
+      R2.Vector(-sqrt(2), sqrt(2)).normalize(l2) must_== R2.Vector(-sqrt(0.5), sqrt(0.5))
+    }
   }
 
-  "factory" should {
+  "Factories" should {
     "be able to produce empty vector" in {
       R0.Zero === R0.Vector()
     }
@@ -284,108 +390,6 @@ class VectorTest extends Specification {
         math.abs(Norm.l2(factory()) - 1.0) < 1.0E-10 must beTrue
       }
       ok
-    }
-  }
-  
-  "Vector object" should {
-    "produce a vector from function" in {
-      val sut1 = new R0.OnFunction(i => 42)
-      sut1 === R0.Vector()
-      new Spaces.R6.OnFunction(i => (i*sqrt(i)).toInt) === R6.Vector(0, 1, 2, 5, 8, 11)
-    }
-    
-    "produce a unit vector" in {
-      R1.unit(0) === R1.Vector(1.0)
-      for (i <- 0 until 10) {
-        val sut = R10.unit(i)
-        for (j <- 0 until 10) {
-          sut(j) === (if (i == j) 1.0 else 0.0)
-        }
-      }
-      ok
-    }
-    
-    "compile with subspaces" in {
-      val space0 = VectorSpace(3)
-      def recurse(s: VectorSpace)(v: s.Vector): Unit = {
-        val ignoreme = if (s.dim == 0) v else {
-          val v1 = s.projectToHyperplane(v) * 2
-          recurse(s.hyperplane)(v1)
-        }
-        ignoreme mustNotEqual null
-        ()
-      }
-      val sut = space0.const(3)
-      recurse(space0)(sut)
-      ok
-    }
-    
-    "read vectors" in {
-      val sut = R3.Vector(math.Pi, math.E, Double.MinPositiveValue)
-      val s = sut.toString
-      R3.readVector(s) === Some(sut)
-      R2.readVector(s) === None
-      R4.readVector(s) === None
-      R3.readVector("this is not a vector") === None
-    }
-    
-    "build square matrix" in {
-      val sm: R3.SquareMatrix = R3.squareMatrix((i, j) => 1.0 / (i + j + 1))
-      sm(0, 2) === sm(2, 0)
-      sm(0, 1) === 0.5
-    }
-
-
-    val alpha = Pi / 4
-    val beta = Pi / 3
-
-    val sampleUnitaryMatrix_3x3: R3.UnitaryMatrix = {
-      R3.unitaryMatrix(
-        Array(R3.Vector(cos(alpha) * cos(beta), cos(alpha) * sin(beta), sin(alpha)),
-          R3.Vector(-sin(alpha) * cos(beta), -sin(alpha) * sin(beta), cos(alpha)),
-          R3.Vector(sin(beta), -cos(beta), 0)
-        ))
-    }
-
-    val sampleUnitaryMatrix_2x2: R2.UnitaryMatrix = R2.unitaryMatrix(
-      Array(R2.Vector(cos(beta), sin(beta)),
-        R2.Vector(-sin(beta), cos(beta))
-      ))
-
-    "check unitariness" in {
-      val u0 = R2.unitaryMatrix(Array(R2.Vector(0, 1), R2.Vector(1, 0)))
-      u0.isUnitary(0) aka s"delta = ${l2(u0 * u0.transpose - R2.UnitMatrix)}" must beTrue
-
-      sampleUnitaryMatrix_2x2.isUnitary(0.001) aka s"delta = ${l2(sampleUnitaryMatrix_2x2 * sampleUnitaryMatrix_2x2.transpose - R2.UnitMatrix)}" must beTrue
-
-      sampleUnitaryMatrix_3x3.isUnitary(0.001) aka s"delta = ${l2(sampleUnitaryMatrix_3x3 * sampleUnitaryMatrix_3x3.transpose - R3.UnitMatrix)}" must beTrue
-    }
-    
-    "project to hyperplane" in {
-      val m = R3.squareMatrix(
-        Array(
-          1.1250000000000009, 3.6806079660838646, 1.2500000000000002,
-          3.6806079660838655, 5.375000000000001, 2.165063509461097,
-          1.2500000000000002, 2.1650635094610973, 7.5))
-      val sut = m.projectToHyperplane(sampleUnitaryMatrix_3x3)
-      l2(sut - R3.hyperplane.diagonalMatrix(5, -1)) < 0.0001 aka sut.toString must beTrue
-    }
-
-    "rotate square matrix" in {
-
-      val m0 = R3.diagonalMatrix(10, 5, -1)
-
-      val m1 = m0 rotate sampleUnitaryMatrix_3x3
-
-      val m2 = m1 rotate sampleUnitaryMatrix_3x3.transpose
-
-      l2(m2 - m0) < 0.00001 aka m2.toString must beTrue
-
-      m1 === Matrix(R3, R3,
-        Array(
-          1.1250000000000009, 3.6806079660838646, 1.2500000000000002,
-          3.6806079660838655, 5.375000000000001, 2.165063509461097,
-          1.2500000000000002, 2.1650635094610973, 7.5))
     }
   }
 
