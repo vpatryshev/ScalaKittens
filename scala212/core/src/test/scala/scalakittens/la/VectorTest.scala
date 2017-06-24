@@ -140,7 +140,7 @@ class VectorTest extends Specification {
       sampleUnitaryMatrix_3x3.isUnitary(0.001) aka s"delta = ${l2(sampleUnitaryMatrix_3x3 * sampleUnitaryMatrix_3x3.transpose - R3.UnitMatrix)}" must beTrue
     }
 
-    "project to hyperplane" in {
+    "project matrix to hyperplane" in {
       val m = R3.squareMatrix(
         Array(
           1.1250000000000009, 3.6806079660838646, 1.2500000000000002,
@@ -150,6 +150,21 @@ class VectorTest extends Specification {
       l2(sut - R3.hyperplane.diagonalMatrix(5, -1)) < 0.0001 aka sut.toString must beTrue
     }
 
+    "project vector to hyperplane" in {
+      val v = R3.Vector(111.0, 222.0, 333.0)
+      val sut = R3.projectToHyperplane(v)
+      sut.length must_== 2
+      sut must_== R2.Vector(222.0, 333.0)
+    }
+
+    "inject vector from hyperplane" in {
+      val v = R3.Vector(111.0, 222.0, 333.0)
+      val sut = R4.injectFromHyperplane(v)
+      sut.length must_== 4
+      sut must_== R4.Vector(0.0, 111.0, 222.0, 333.0)
+      R4.injectFromHyperplane(R2.Vector(1.1, 2.2)) must throwA[Exception]
+    }
+    
     "rotate square matrix" in {
 
       val m0 = R3.diagonalMatrix(10, 5, -1)

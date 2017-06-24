@@ -1,5 +1,6 @@
 package scalakittens.la
 
+import language.existentials
 /**
   * Created by vpatryshev on 5/17/17.
   */
@@ -36,10 +37,12 @@ object PCA {
     }
 
     def buildEigenVectors(space: VectorSpace)(m: space.SquareMatrix, numberRequested: Int): List[(Double, space.Vector)] = {
-      val finder = new EigenVectorFinder[space.type](space)
-      finder.runOn(m, numberRequested)
+      eigenVectorFinder(space).runOn(m, numberRequested)
     }
 
+    // need to specify space type because we go deeper into subspace
+    def eigenVectorFinder(s: VectorSpace): EigenVectorFinder[s.type] = new EigenVectorFinder(s)
+    
     class EigenVectorFinder[S <: VectorSpace](val s: S) {
 
       def oneEigenValueBasis(m: s.SquareMatrix): Option[(Double, s.UnitaryMatrix, Int)] = maxEigenValue(s)(m) map {
@@ -50,18 +53,16 @@ object PCA {
           (value, basis.rotation, nIter)
       }
 
-
       def runOn(m: s.SquareMatrix, numberRequested: Int): List[(Double, s.Vector)] = {
         require(numberRequested <= s.dim)
         if (numberRequested == 0) Nil else {
-          val finder: EigenVectorFinder[s.hyperplane.type] = new EigenVectorFinder[s.hyperplane.type](s.hyperplane)
 
           oneEigenValueBasis(m) match {
             case Some((eigenValue, basis, _)) =>
               val submatrix: s.hyperplane.SquareMatrix = m.projectToHyperplane(basis.asInstanceOf[s.UnitaryMatrix])
-              val tail = finder.runOn(submatrix, numberRequested - 1)
+              val tail = eigenVectorFinder(s.hyperplane).runOn(submatrix, numberRequested - 1)
               val newTail: List[(Double, s.Vector)] = tail map { case (value, vector) => 
-                val vector1: s.Vector = s.injectFromHyperplane[s.hyperplane.type](vector)
+                val vector1: s.Vector = s.injectFromHyperplane(vector)
                 (value, basis * vector1) 
               }
               val v: s.Vector = basis.column(0).asInstanceOf[s.Vector]

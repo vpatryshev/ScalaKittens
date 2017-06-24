@@ -22,3 +22,7 @@ class AffineTransform[Dom <: VectorSpace, Codom <: VectorSpace](val domainSpace:
     override def toString = s"AffineTransform(\n$matrix,\n$shift\n)"
   }
 }
+
+object AffineTransform {
+  def apply[Dom <: VectorSpace, Codom <: VectorSpace](domainSpace: Dom, codomainSpace: Codom) = new AffineTransform(domainSpace, codomainSpace)
+}

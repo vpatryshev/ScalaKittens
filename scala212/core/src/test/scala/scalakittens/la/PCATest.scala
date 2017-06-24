@@ -74,7 +74,7 @@ class PCATest extends Specification {
       same2 must beTrue
       vector2 === expected2
 
-      val vector3 = R3.injectFromHyperplane[R2.type](vector2)
+      val vector3 = R3.injectFromHyperplane(vector2)
       val vector3InOurBasis = newBasis * vector3
       val vector3AfterM = m * vector3InOurBasis
       val diff = vector3AfterM - vector3InOurBasis * value2
@@ -86,7 +86,7 @@ class PCATest extends Specification {
       val method = PCA.Iterations(0.0001, 100)
       val tuples = method.buildEigenVectors(R3)(m, 3)
       tuples mustNotEqual null
-      val finder = new method.EigenVectorFinder[R3.type](R3)
+      val finder = method.eigenVectorFinder(R3)
 
       val Some((eigenValue1: Double, basis: R3.UnitaryMatrix, nIter1)) = finder.oneEigenValueBasis(m)
 

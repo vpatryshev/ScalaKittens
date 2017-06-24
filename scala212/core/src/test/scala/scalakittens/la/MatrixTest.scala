@@ -120,16 +120,12 @@ class MatrixTest extends Specification {
     }
     
     "get built" in {
-      val sut = Matrix.build[R3.type, R2.type](R3, R2)
+      val sut = Matrix.build(R3, R2)
+      sut.domain === R3
+      sut.codomain === R2
       sut(1,2) = 3.14
       sut(1,2) === 3.14
     }
-    
-    "have zero matrix" in {
-      val sut = Matrix.Zero(R3, R2)
-      for (x <- sut.allElements) {x === 0.0 }
-      sut.allElements.toList.length === 6
-    } 
   }
 
   "Matrix with hidden structure" should {
@@ -137,9 +133,13 @@ class MatrixTest extends Specification {
       val sut: MutableMatrix[n.type, m.type] = Matrix(n, m)
       sut.nRows === m.dim
       sut.nCols === n.dim
-      val content: Matrix[n.type, m.type] = TestMatrix(n, m, f)
+      sut.domain === n
+      sut.codomain === m
+      val content: MutableMatrix[n.type, m.type] = TestMatrix(n, m, f)
       content.nRows === m.dim
       content.nCols === n.dim
+      content.domain === n
+      content.codomain === m
       sut := content
       sut === content
 
@@ -186,9 +186,11 @@ class MatrixTest extends Specification {
     }
 
     "return column" in {
-      val sut: Matrix[R5.type, R10.type] = build(R5, R10, i => j => 1.0 + i * j * 1.0)
+      val sut = build(R5, R10, i => j => 1.0 + i * j * 1.0)
       sut.nRows === 10
       sut.nCols === 5
+      sut.domain === R5
+      sut.codomain === R10
       sut.column(2) ===
         R10.Vector(1.0, 3.0, 5.0, 7.0, 9.0, 11.0, 13.0, 15.0, 17.0, 19.0)
       build(R10, R0, i => j => 1.0+i*j*1.0).column(4) ===
@@ -196,7 +198,7 @@ class MatrixTest extends Specification {
     }
 
     "transpose" in {
-      val sut0: Matrix[R5.type, R10.type] = build(R5, R10, i => j => i*10.0+j)
+      val sut0 = build(R5, R10, i => j => i*10.0+j)
       sut0(1, 2) === 12.0
       sut0(2, 1) === 21.0
       sut0.column(0) === R10.Vector(0.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0)
@@ -205,6 +207,8 @@ class MatrixTest extends Specification {
       val sut = sut0.transpose
       sut.nCols  === 10
       sut.nRows === 5
+      sut.domain === R10
+      sut.codomain === R5
       sut.row(0) === R10.Vector(0.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0)
       sut(1, 2) === 21.0
       
@@ -230,12 +234,12 @@ class MatrixTest extends Specification {
 
     "+" in {
       val f1: Int => Int => Double = i => j => 3.0 + 2.0 * j + 11.0*i
-      val mx1: Matrix[R5.type, R10.type] = build(R5, R10, f1)
+      val mx1 = build(R5, R10, f1)
       mx1.nRows === 10
       mx1(0, 1) aka mx1.toString must_== 5.0
       f1(0)(5) === 13.0
 
-      val mx2: Matrix[R5.type, R10.type] = build(R5, R10, i => j => 1.0 - j - i)
+      val mx2 = build(R5, R10, i => j => 1.0 - j - i)
       mx2.nRows === 10
       val sut = mx1 + mx2
       sut.nRows === 10
@@ -249,8 +253,8 @@ class MatrixTest extends Specification {
     }
 
     "-" in {
-      val mx1: Matrix[R5.type, R10.type] = build(R5, R10, i => j => 1.0 + 2*i + 10*j)
-      val mx2: Matrix[R5.type, R10.type] = build(R5, R10, i => j =>       i + 3*j)
+      val mx1 = build(R5, R10, i => j => 1.0 + 2*i + 10*j)
+      val mx2 = build(R5, R10, i => j =>       i + 3*j)
       mx1(1, 2) === 23.0
       mx2(1, 2) === 7.0
       val sut = mx1 - mx2

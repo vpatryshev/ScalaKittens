@@ -22,7 +22,11 @@ case class VectorSpace(dim: Int) { space =>
     new hyperplane.OnFunction(i => v(i+1)).asInstanceOf[hyperplane.Vector]
   }
 
-  def injectFromHyperplane[Hyperplane <: VectorSpace](v: Hyperplane#Vector): Vector = new OnFunction(i => if (i == 0) 0.0 else v(i-1))
+  def injectFromHyperplane(v: VectorSpace#Vector): Vector = {
+    // the following check runs in runtime, who knows where is Hyperplane coming from
+    require(v.length + 1 == dim)
+    new OnFunction(i => if (i == 0) 0.0 else v(i-1))
+  }
   
   require(dim >= 0, s"Space dimension $dim makes no sense")
 
@@ -512,7 +516,6 @@ case class VectorSpace(dim: Int) { space =>
   def unitaryMatrix(basis: Seq[Vector]): UnitaryMatrix = 
     new ColumnMatrix[space.type](space, basis map (_.copy)) with UnitaryMatrix {
       require(basis.length == dim)
-      require(basis.forall(_.length == basis.length))
     }
 
   private def diagonalize(f: Int => Double): PartialFunction[(Int, Int), Double] =

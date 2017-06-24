@@ -328,14 +328,4 @@ object Matrix {
       if (pf.isDefinedAt((i, j))) pf((i, j)) else 0.0
     }
   }
-
-  /**
-    * Zero matrix
- *
-    * @param domain the space of rows
-    * @param codomain the space of columns
-    * @return a zero matrix of given dimensions
-    */
-  def Zero(domain: VectorSpace, codomain: VectorSpace): Matrix[domain.type, codomain.type] = 
-    new OnFunction[domain.type, codomain.type](domain, codomain, (i, j) => 0.0)
 }
