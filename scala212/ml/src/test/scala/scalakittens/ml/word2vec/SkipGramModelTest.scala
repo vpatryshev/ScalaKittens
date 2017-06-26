@@ -6,7 +6,6 @@ import org.specs2.mutable.Specification
 
 import scala.io.Source
 import scalakittens.la.Spaces.{R10, R3, _}
-import scalakittens.ml.dimreduction.{DimensionReducer, SammonDimensionReducer}
 import scalakittens._
 import scalakittens.la._
 import scalakittens.ml.dimreduction.{DimensionReducer, PcaDimensionReducer, SammonDimensionReducer}
@@ -34,7 +33,8 @@ class SkipGramModelTest extends Specification {
     }
     out.close()
     file.canRead aka s"output file $file somehow disappeared" must beTrue
-    file.length > 100000  aka s"output file $file too small: ${file.length}" must beTrue
+    val minSize = 20 * vectors.length
+    file.length > minSize aka s"output file $file too small: ${file.length}, expected at least $minSize" must beTrue
     file.renameTo(new File(modelFileName))
     ()
   }
