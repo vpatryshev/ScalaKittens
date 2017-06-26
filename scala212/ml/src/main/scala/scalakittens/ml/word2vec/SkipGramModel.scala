@@ -101,7 +101,7 @@ case class SkipGramModel[Space <: VectorSpace](text: ScannedText, space: Space, 
 
 object SkipGramModel {
 
-  def run(dim: Int, numEpochs: Int, α: Double, st: ScannedText) = {
+  def run(dim: VectorSpace, numEpochs: Int, α: Double, st: ScannedText) = {
     val model = SkipGramModel(st, dim, α, window = 3, numEpochs, seed = 123456789L)
     model.run()
     val originalVectors = model.in
