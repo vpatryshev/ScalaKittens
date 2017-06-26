@@ -281,5 +281,24 @@ class MatrixTest extends Specification {
         1, 0, 3, 0, 5, 0, 7, 0, 9, 0, 
         2, 0, 0, 5, 0, 0, 8, 0, 0, 11))
     }
+
+    "build a triangular matrix" in {
+      val sut0 = R2.squareMatrix((i, j) => 1 + i * i + j * j).triangle
+      
+      Array(sut0(0, 0), sut0(1, 0), sut0(0, 1), sut0(1, 1)) must_== Array(1, 2, 2, 3)
+
+      val source = R10.squareMatrix((i, j)  => 1 + i*i+j*j)
+
+      val sut = source.triangle
+      sut(5,5) must_== 51.0
+      sut(5,9) must_== 107.0
+      val sucp = sut.copy
+      sucp(5,5) must_== 51.0
+      sucp(5,9) must_== 107.0
+      sucp must_== source
+      source.transpose.copy must_== sucp
+      source must_== sut
+      source.transpose must_== sut
+    }
   }
 }

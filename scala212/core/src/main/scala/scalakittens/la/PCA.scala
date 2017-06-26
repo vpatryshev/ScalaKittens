@@ -28,7 +28,7 @@ object PCA {
         val goodData = iterator find (p => p._2 <= precision || p._3 > maxRepeats)
 
         val maybeTuple: Option[(Double, space.MutableVector, Int)] = goodData map {
-          case (vector, delta, nSteps) => 
+          case (vector, delta, nSteps) =>
             val vector1: space.Vector = m * vector
             (vector1.sum / vector.sum, vector, nSteps)
         }
@@ -42,7 +42,7 @@ object PCA {
 
     // need to specify space type because we go deeper into subspace
     def eigenVectorFinder(s: VectorSpace): EigenVectorFinder[s.type] = new EigenVectorFinder(s)
-    
+
     class EigenVectorFinder[S <: VectorSpace](val s: S) {
 
       def oneEigenValueBasis(m: s.SquareMatrix): Option[(Double, s.UnitaryMatrix, Int)] = maxEigenValue(s)(m) map {
@@ -61,9 +61,9 @@ object PCA {
             case Some((eigenValue, basis, _)) =>
               val submatrix: s.hyperplane.SquareMatrix = m.projectToHyperplane(basis.asInstanceOf[s.UnitaryMatrix])
               val tail = eigenVectorFinder(s.hyperplane).runOn(submatrix, numberRequested - 1)
-              val newTail: List[(Double, s.Vector)] = tail map { case (value, vector) => 
+              val newTail: List[(Double, s.Vector)] = tail map { case (value, vector) =>
                 val vector1: s.Vector = s.injectFromHyperplane(vector)
-                (value, basis * vector1) 
+                (value, basis * vector1)
               }
               val v: s.Vector = basis.column(0).asInstanceOf[s.Vector]
               ((eigenValue, v) :: newTail) map { case (value, vector) => (value, vector) }
@@ -72,6 +72,5 @@ object PCA {
         }
       }
     }
-
   }
 }
