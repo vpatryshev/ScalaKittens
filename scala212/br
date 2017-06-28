@@ -1,0 +1,28 @@
+# Creates a new branch either from dev or from whatever you specify
+
+export curdir=${PWD##*/}
+
+#set -e
+if [ -z $1 ]; then
+  echo "../branch new_branch_name
+or
+../branch base_branch_name new_branch_name"
+  exit 1
+elif [ -z $2 ]; then
+  export fromb=dev
+  export newb=$1
+else
+  export fromb=$1
+  export newb=$2
+fi
+
+git checkout $fromb
+git pull --rebase
+git branch | grep $newb >/dev/null
+if [ "$?" != "0" ]; then
+  git checkout -b $newb
+  git fetch origin
+  git push -u origin $newb
+fi
+git checkout $newb
+git merge $fromb
