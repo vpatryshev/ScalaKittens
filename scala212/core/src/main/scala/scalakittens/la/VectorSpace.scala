@@ -248,13 +248,27 @@ case class VectorSpace(dim: Int) { space =>
     override def copy: MutableVector = Vector(util.Arrays.copyOf(data, length))
 
     /**
+      * scalar product of this vector with another
+      *
+      * @param other another vector of the same length
+      * @return the product value
+      */
+    override def *[V <: space.Vector](other: V): Double = {
+      other match {
+        case o: OnArray => ArrayOps.scalarProduct(data, o.data)
+        case _ =>
+          (0.0 /: range) ((s, i) => s + data(i) * other(i))
+      }
+    }
+
+    /**
       * this vector is multiplied by a scalar, in place
       *
       * @param scalar the value by which to multiply 
       * @return this, now all its values are multiplied by scalar
       */
     override def *=(scalar: Double): Unit = {
-      for (i <- range) data(i) *= scalar
+      ArrayOps.multBy(data, scalar)
     }
 
     /**
@@ -274,7 +288,11 @@ case class VectorSpace(dim: Int) { space =>
       * @return this vector, its value is now the sum of this and another
       */
     override def +=(other: Vector): Unit = {
-      for (i <- range) data(i) += other(i)
+      other match {
+        case o: OnArray => this += o
+        case _ =>
+          for (i <- range) data(i) += other(i)
+      }
     }
 
     /**
@@ -284,7 +302,11 @@ case class VectorSpace(dim: Int) { space =>
       * @return this vector, its value is now the difference of this and another
       */
     override def -=(other: Vector): Unit = {
-      for (i <- range) data(i) -= other(i)
+      other match {
+        case o: OnArray => this -= o
+        case _ =>
+          for (i <- range) data(i) -= other(i)
+      }
     }
 
     /**
@@ -297,8 +319,7 @@ case class VectorSpace(dim: Int) { space =>
       */
     override def nudge(other: Vector, coeff: Double): Unit = {
       other match {
-        case o: OnArray =>
-          for (i <- range) data(i) += o.data(i) * coeff
+        case o: OnArray => nudge(o, coeff)
         case _ =>
           for (i <- range) data(i) += other(i) * coeff
       }
@@ -309,11 +330,11 @@ case class VectorSpace(dim: Int) { space =>
       * @param other another OnArray vector
       */
     def +=(other: OnArray): Unit = {
-      for (i <- range) data(i) += other.data(i)
+      ArrayOps.addTo(data, other.data)
     }
 
     def -=(other: OnArray): Unit = {
-      for (i <- range) data(i) -= other.data(i)
+      ArrayOps.subtractFrom(data, other.data)
     }
 
     def nudge(other: OnArray, coeff: Double): Unit = {
