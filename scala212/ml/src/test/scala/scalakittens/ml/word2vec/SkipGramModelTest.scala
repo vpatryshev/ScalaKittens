@@ -5,7 +5,7 @@ import java.io.{File, FileWriter}
 import org.specs2.mutable.Specification
 
 import scala.io.Source
-import scalakittens.la.Spaces.{R10, R3, _}
+import scalakittens.la.Spaces._
 import scalakittens._
 import scalakittens.la._
 import scalakittens.ml.dimreduction.{DimensionReducer, PcaDimensionReducer, SammonDimensionReducer}
