@@ -44,20 +44,20 @@ class SkipGramModelTest extends Specification {
 
   "SkipGramModel" should {
 
-    "process 'War And Peace' slowly with PCA" in {
-      val filename = bigModelFileName
-      filename == null must beFalse
-      val dim = R100
-      val newDim = R3
-      val reducer = pcaReducer(dim, newDim, 30)
-      reducer == null must beFalse
+//    "process 'War And Peace' slowly with PCA" in {
+//      val filename = bigModelFileName
+//      filename == null must beFalse
+//      val dim = R100
+//      val newDim = R3
+//      val reducer = pcaReducer(dim, newDim, 30)
+//      reducer == null must beFalse
 //      doWarAndPeace(dim, numEpoch = 1000, newDim, filename, reducer) match {
 //        case Good(vs) => ok
 //        case bad => failure(bad.listErrors.toString)
 //      }
-
-      ok
-    }
+//
+//      ok
+//    }
 
     "process 'War And Peace' with PCA, fast" in {
       val filename = "warandpeace.vecs.fast.txt"

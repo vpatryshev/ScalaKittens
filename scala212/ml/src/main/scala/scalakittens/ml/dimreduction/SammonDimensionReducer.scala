@@ -6,6 +6,7 @@ import scalakittens.la._
   * Sammon algorithm for dimension reduction
   * @see [[http://theoval.cmp.uea.ac.uk/~gcc/matlab/sammon/sammon.pdf]]
   * @see [[https://en.wikipedia.org/wiki/Sammon_mapping]]
+  * @see [[https://link.springer.com/article/10.1007%2Fs100440050006]] - why you need PCA as initialization
   *     
   * Created by vpatryshev on 6/11/17.
   */
