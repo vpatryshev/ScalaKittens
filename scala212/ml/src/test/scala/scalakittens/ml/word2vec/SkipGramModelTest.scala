@@ -9,6 +9,7 @@ import scalakittens.la.Spaces._
 import scalakittens._
 import scalakittens.la._
 import scalakittens.ml.dimreduction.{DimensionReducer, PcaDimensionReducer, SammonDimensionReducer}
+import scalakittens.ml.TestTools._
 
 // TODO: implement https://en.wikipedia.org/wiki/Nonlinear_dimensionality_reduction#Methods_based_on_proximity_matrices
 
@@ -77,10 +78,7 @@ class SkipGramModelTest extends Specification {
     "process 'War And Peace' with Sammon, fast" in {
       val filename = "warandpeace.vecs.sammon.txt"
 
-      val pca = pcaReducer(R10, R3, 30)
-      val sammonReducer: DimensionReducer[R10.Vector, R3.Vector] = new SammonDimensionReducer[R10.type, R3.type](R10, R3, 30) {
-        val init: IndexedSeq[R10.Vector] => IndexedSeq[R3.Vector] = v => pca.reduce(v).map(_.asInstanceOf[R3.Vector])
-      }
+      val sammonReducer: DimensionReducer[R10.Vector, R3.Vector] = SammonDimensionReducer.withPCA[R10.type, R3.type](R10, R3, 30)
 
       doWarAndPeace[R10.type, R3.type](R10, R3, numEpoch = 50, filename, sammonReducer, 1000) match {
         case Good(vs: List[(String, R3.Vector)]) =>
@@ -192,47 +190,4 @@ class SkipGramModelTest extends Specification {
     ok
   }
 
-  def visualize(title: String, projections: List[(String, Double, Double)]): Unit = {
-    println
-    println
-    println("=" * 150)
-    println(s"                                    $title\n")
-    println("-" * 150)
-    val xs = projections.map(_._2)
-    val ys = projections.map(_._3)
-
-    val (xmin, xmax) = (xs.min, xs.max)
-    val (ymin, ymax) = (ys.min, ys.max)
-
-    val N = 120
-    val M = 60
-    val xScale = (xmax - xmin) / N
-    val yScale = (ymax - ymin) / M
-
-    val sample = projections map {
-      case (w, x, y) => (w, ((x - xmin) / xScale).toInt + 1, ((y - ymin) / yScale).toInt)
-    }
-
-    val samplesByLine = sample.groupBy(_._3)
-
-    0 to M foreach {
-      j =>
-        val row = samplesByLine.getOrElse(j, Nil) map (t => t._1 -> t._2)
-
-        val layout = (Map[Int, Char]() /: row) {
-          case (charMap, (w, pos)) =>
-            val wordRange = math.max(pos - 1, 0) until math.min(N, pos + w.length + 1)
-            if (wordRange exists charMap.contains) charMap else {
-              val m1 = 0 until w.length map (i => i + pos -> w.charAt(i)) toMap
-
-              charMap ++ m1
-            }
-        }
-
-        val chars = 0 until N map (layout.getOrElse(_, ' '))
-
-        print(chars mkString)
-        println
-    }
-  }
 }

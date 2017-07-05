@@ -17,7 +17,7 @@ abstract class SammonDimensionReducer[S <: VectorSpace, T <: VectorSpace](
    ) extends DimensionReducer[S#Vector, T#Vector] {
   type Target = T
 
-  val init: IndexedSeq[S#Vector] => IndexedSeq[target.Vector]
+  protected val init: IndexedSeq[S#Vector] => IndexedSeq[target.Vector]
   
   class Iterations(originalVectors: IndexedSeq[S#Vector], magicFactor: Double = 0.35) {
     lazy val initialVectors = init(originalVectors)
@@ -142,5 +142,19 @@ abstract class SammonDimensionReducer[S <: VectorSpace, T <: VectorSpace](
     val iterations = new Iterations(originalVectors)
     println(s"Will run on ${originalVectors.length} vectors")
     iterations.run()
+  }
+}
+
+object SammonDimensionReducer {
+  private def pcaReducer[S <: VectorSpace, T<: VectorSpace](source: S, target: T, numIterations: Int) =
+    new PcaDimensionReducer[S, T](source, target, precision = 0.001, numIterations)
+
+  def withPCA[S <: VectorSpace, T <: VectorSpace](source: S, target: T, numIterations: Int) = {
+    val pca = pcaReducer(source, target, numIterations)
+    val reducer: DimensionReducer[S#Vector, T#Vector] = new SammonDimensionReducer[S, T](source, target, numIterations) {
+      protected val init: IndexedSeq[S#Vector] => IndexedSeq[target.Vector] = v => pca.reduce(v).map(_.asInstanceOf[target.Vector])
+    }
+
+    reducer
   }
 }
