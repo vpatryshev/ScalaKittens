@@ -17,16 +17,17 @@ abstract class SammonDimensionReducer[S <: VectorSpace, T <: VectorSpace](
    ) extends DimensionReducer[S#Vector, T#Vector] {
   type Target = T
 
+  val dim = source.dim
+
   protected val init: IndexedSeq[S#Vector] => IndexedSeq[target.Vector]
   
-  class Iterations(originalVectors: IndexedSeq[S#Vector], magicFactor: Double = 0.35) {
+  class Iterations(originalVectors: IndexedSeq[S#Vector], magicFactor: Double = 0.05) {
     lazy val initialVectors = init(originalVectors)
-    val dim = initialVectors.head.length
-    val size = initialVectors.size
+    val size = originalVectors.size
     val globalSpace = VectorSpace(size)
     type DistanceMatrix = globalSpace.SquareMatrix
     
-    def distanceMatrix[Space <: VectorSpace](vs: IndexedSeq[Space#Vector]): DistanceMatrix = {
+    def distanceMatrix[Space <: VectorSpace](space: Space, vs: IndexedSeq[Space#Vector]): DistanceMatrix = {
       val matrix = globalSpace.squareMatrix((i, j) => {
         val d = Norm.l2.distance(vs(i), vs(j))
         if (d.isNaN) throw new IllegalStateException(s"Bad distance matrix at $i, $j: d=$d, for vectors ${vs(i)} and ${vs(j)}")
@@ -35,7 +36,7 @@ abstract class SammonDimensionReducer[S <: VectorSpace, T <: VectorSpace](
       matrix.triangle
     }
     
-    lazy val originalDistanceMatrix: DistanceMatrix = distanceMatrix(originalVectors).triangle
+    lazy val originalDistanceMatrix: DistanceMatrix = distanceMatrix(globalSpace, originalVectors).triangle
 
     lazy val summaryNorm = Norm.l2(originalDistanceMatrix) / 2
     
@@ -67,11 +68,14 @@ abstract class SammonDimensionReducer[S <: VectorSpace, T <: VectorSpace](
       for {
         j <- 0 until size if j != p
       } {
-        val distance = m(p, j)
-        val dpj_ = originalDistanceMatrix(p, j)
-        val quotient: Double = (dpj_ - distance) / distance / dpj_
-        val delta: target.Vector = vectors(p) - vectors(j) * quotient
-        v += delta
+        val dpj = m(p, j)
+        if (math.abs(dpj) > Double.MinPositiveValue) {
+          val dpj_ = originalDistanceMatrix(p, j)
+          val quotient: Double = (dpj_ - dpj) / dpj / dpj_
+          val delta: target.Vector = vectors(p) - vectors(j) * quotient
+          if (!delta.isValid) throw new IllegalStateException(s"Invalid delta while calculating dE/dy: delta=$delta, quotent=$quotient, j=$j, p=$p, distance = $dpj, dpj=${dpj_}")
+          v += delta
+        }
       }
       v
     }
@@ -82,22 +86,24 @@ abstract class SammonDimensionReducer[S <: VectorSpace, T <: VectorSpace](
         j <- 0 until size if j != p
       } {
         val dpj = m(p, j)
-        val dpj_ = originalDistanceMatrix(p, j)
+        if (math.abs(dpj) > Double.MinPositiveValue) {
+          val dpj_ = originalDistanceMatrix(p, j)
 
-        val q1 = 1.0 / dpj_ / dpj
-        val q2 = dpj_ / dpj / dpj
+          val q1 = 1.0 / dpj_ / dpj
+          val q2 = dpj_ / dpj / dpj
         
-        v += new target.OnFunction(q => {
-          val d = vectors(p)(q) - vectors(j)(q)
-          q1 * (dpj_ - dpj - d*d*q2)
+          v += new target.OnFunction(q => {
+            val d = vectors(p)(q) - vectors(j)(q)
+            q1 * (dpj_ - dpj - d * d * q2)
+          })
         }
-        )
       }
       v
     }
     
     def Δ(vs: IndexedSeq[target.Vector], m: DistanceMatrix, p: Int): target.Vector = {
       val firstDerivative = `dE/dy`(vs, m, p)
+      if (!firstDerivative.isValid) throw new IllegalStateException(s"Bad first derivative: $firstDerivative, for p=$p")
       val secondDerivative = `d2E/dy2`(vs, m, p)
       val result = firstDerivative / (secondDerivative compose math.abs)
       
@@ -108,7 +114,7 @@ abstract class SammonDimensionReducer[S <: VectorSpace, T <: VectorSpace](
 
     def step(i: Int, vectors: IndexedSeq[target.Vector]): (IndexedSeq[target.Vector], DistanceMatrix) = {
       println(s"--> Step $i")
-      val matrix = distanceMatrix(vectors)
+      val matrix = distanceMatrix(globalSpace, vectors)
       val newVectors = vectors.indices map { p => {
 //        if (p > 5) vectors(p) else 
         {

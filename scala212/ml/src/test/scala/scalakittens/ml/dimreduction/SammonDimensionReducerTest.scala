@@ -2,10 +2,11 @@ package scalakittens.ml.dimreduction
 
 import org.specs2.mutable.Specification
 
-import scalakittens.la.Spaces.R3
+import scalakittens.la.Spaces.{R2, R3}
 import math._
 import scalakittens.la.Norm
 import scalakittens.ml.TestTools._
+import scalakittens.ml.dimreduction.SammonDimensionReducer.pcaReducer
 
 /**
   * Created by vpatryshev on 7/3/17.
@@ -13,65 +14,9 @@ import scalakittens.ml.TestTools._
   */
 class SammonDimensionReducerTest extends Specification {
   
-  def buildTestFigure: Array[R3.Vector] = {
-    val step: Double = 0.025
-    
-    def wingPointAt(alpha: Double, beta: Double) = {
-      R3.Vector(cos(alpha)*(1+cos(beta)), sin(alpha)*(1+cos(beta)), sin(beta))
-    }
-    
-    def wing(alpha: Double, from: Double, to: Double): Array[R3.Vector] = {
-      val wingSize = (abs(from - to) / step).toInt
-      val out = new Array[R3.Vector](wingSize)
-      for {
-        i <- 0 until wingSize
-      } {
-        val beta = (to - from)*i/(wingSize-1)
-        out(i) = wingPointAt(alpha, from + beta)
-      }
-      out
-    }
-    
-    def connector(alpha1: Double, alpha2: Double, beta: Double): Array[R3.Vector] = {
-      val from = wingPointAt(alpha1, beta)
-      val to = wingPointAt(alpha2, beta)
-      val z = from(2)
-      val midPoint = (from + to) / 2
-      val center = R3.Vector(midPoint(0) + (to(1)-from(1))/2, midPoint(1) - (to(0)-from(0))/2, z)
-      val r = Norm.l2(center - from)
-      val size = (Pi/4/step*r).toInt - 1
-      val out = new Array[R3.Vector](size)
-
-      for {
-        i <- 0 until size
-      } {
-        val gamma = -Pi/2 + alpha1 - (Pi/2)*(i+1)/size
-        out(i) = R3.Vector(center(0) + r * cos(gamma), center(1) + r * sin(gamma), z)
-      }
-      out
-    }
-    
-    val wp0 = wingPointAt(0, -Pi*3/4)
-    val wp1 = wingPointAt(0, Pi*3/4)
-    val wp2 = wingPointAt(Pi/2, Pi*3/4)
-    val w0 = wing(0, -Pi*3/4, Pi*3/4)
-    val w1 = wing(Pi/2, Pi*3/4, -Pi*3/4)
-    val w2 = wing(Pi, -Pi*3/4, Pi*3/4)
-    val w3 = wing(Pi*3/2, Pi*3/4, -Pi*3/4)
-    val c01 = connector(0, Pi/2, Pi*3/4)
-    val wp1n = w1.last
-    val vp20 = w2.head
-    val c12 = connector(Pi/2, Pi, Pi*5/4)
-    val c23 = connector(Pi, Pi*3/2, Pi*3/4)
-    val c34 = connector(Pi*3/2, Pi*2, Pi*5/4)
-    val res = w0 ++ c01 ++ w1 ++ c12 ++ w2 ++ c23 ++ w3 ++ c34
-
-    res
-  }
-  
   "Test figure" should {
     "be ok" in {
-      val points: List[R3.Vector] = buildTestFigure.toList
+      val points: List[R3.Vector] = testFigure3dButterfly.toList
       val toView1: List[(Int, Double, Double)] = points.map ((v:R3.Vector) => {
         ((v.apply(2)*100).toInt, v.apply(0), v.apply(1))
       })
@@ -98,7 +43,40 @@ class SammonDimensionReducerTest extends Specification {
       ok
     }
 
-    "withPCA" in {
+    "reduce butterfly withPCA" in {
+      val pca = new PcaDimensionReducer[R3.type, R2.type](R3, R2, precision = 0.001, 50)
+      
+      val sammon: DimensionReducer[R3.Vector, R2.Vector] = SammonDimensionReducer.withPCA[R3.type, R2.type](R3, R2, 300)
+      
+      val source = testFigure3dButterfly
+      val vpca = pca.reduce(source).toList map {v => ("P", v.apply(0), v.apply(1))}
+      visualize("after pca", vpca)
+      
+      val vsam = sammon.reduce(source).toList map {v => ("S", v.apply(0), v.apply(1))}
+      visualize("after sammon", vsam)
+      ok
+    }
+
+    "reduce cube withPCA" in {
+      val pca = new PcaDimensionReducer[R3.type, R2.type](R3, R2, precision = 0.001, 50)
+
+      val sammon: DimensionReducer[R3.Vector, R2.Vector] = SammonDimensionReducer.withPCA[R3.type, R2.type](R3, R2, 300)
+
+      val source = Array(
+        R3.Vector(0,0,0),
+        R3.Vector(0,0,1),
+        R3.Vector(0,1,0),
+        R3.Vector(0,1,1),
+        R3.Vector(1,0,0),
+        R3.Vector(1,0,1),
+        R3.Vector(1,1,0),
+        R3.Vector(1,1,1)
+      )
+      val vpca = pca.reduce(source).toList map {v => ("P", v.apply(0), v.apply(1))}
+      visualize("after pca", vpca)
+
+      val vsam = sammon.reduce(source).toList map {v => ("S", v.apply(0), v.apply(1))}
+      visualize("after sammon", vsam)
       ok
     }
 
