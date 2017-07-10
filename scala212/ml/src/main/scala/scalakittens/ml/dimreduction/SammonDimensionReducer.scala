@@ -21,8 +21,9 @@ abstract class SammonDimensionReducer[S <: VectorSpace, T <: VectorSpace](
 
   protected val init: IndexedSeq[S#Vector] => IndexedSeq[target.Vector]
   
-  class Iterations(originalVectors: IndexedSeq[S#Vector], magicFactor: Double = 0.05) {
+  class Iterations(originalVectors: IndexedSeq[S#Vector], magicFactor: Double = 0.1) {
     lazy val initialVectors = init(originalVectors)
+    lazy val maxNorm = 10 * initialVectors.map(Norm.l2(_)).max
     val size = originalVectors.size
     val globalSpace = VectorSpace(size)
     type DistanceMatrix = globalSpace.SquareMatrix
@@ -69,73 +70,69 @@ abstract class SammonDimensionReducer[S <: VectorSpace, T <: VectorSpace](
         j <- 0 until size if j != p
       } {
         val dpj = m(p, j)
-        if (math.abs(dpj) > Double.MinPositiveValue) {
+        if (math.abs(dpj) > 1/maxNorm) {
           val dpj_ = originalDistanceMatrix(p, j)
-          val quotient: Double = (dpj_ - dpj) / dpj / dpj_
-          val delta: target.Vector = vectors(p) - vectors(j) * quotient
-          if (!delta.isValid) throw new IllegalStateException(s"Invalid delta while calculating dE/dy: delta=$delta, quotent=$quotient, j=$j, p=$p, distance = $dpj, dpj=${dpj_}")
-          v += delta
-        }
-      }
-      v
-    }
-
-    def `d2E/dy2`(vectors: IndexedSeq[target.Vector], m: DistanceMatrix, p: Int): Int => Double = {
-      val v = target.Zero.copy
-      for {
-        j <- 0 until size if j != p
-      } {
-        val dpj = m(p, j)
-        if (math.abs(dpj) > Double.MinPositiveValue) {
-          val dpj_ = originalDistanceMatrix(p, j)
-
-          val q1 = 1.0 / dpj_ / dpj
-          val q2 = dpj_ / dpj / dpj
-        
-          v += new target.OnFunction(q => {
-            val d = vectors(p)(q) - vectors(j)(q)
-            q1 * (dpj_ - dpj - d * d * q2)
-          })
+          val quotient: Double = (dpj - dpj_) / dpj
+          val delta: target.Vector = vectors(p) - vectors(j)
+//          if (!delta.isValid) throw new IllegalStateException(s"Invalid delta while calculating dE/dy: delta=$delta, quotent=$quotient, j=$j, p=$p, dpj = $dpj, dpj=${dpj_}")
+//          if (Norm.l2(delta)*magicFactor > maxNorm) throw new IllegalStateException(s"Too big delta while calculating dE/dy: delta=$delta, quotent=$quotient, j=$j, p=$p, djp = $dpj, dpj=${dpj_}")
+          v += delta * quotient
         }
       }
       v
     }
     
     def Δ(vs: IndexedSeq[target.Vector], m: DistanceMatrix, p: Int): target.Vector = {
-      val firstDerivative = `dE/dy`(vs, m, p)
-      if (!firstDerivative.isValid) throw new IllegalStateException(s"Bad first derivative: $firstDerivative, for p=$p")
-      val secondDerivative = `d2E/dy2`(vs, m, p)
-      val result = firstDerivative / (secondDerivative compose math.abs)
+      val gradient = `dE/dy`(vs, m, p)
+      if (!gradient.isValid) throw new IllegalStateException(s"Bad first derivative: $gradient, for p=$p")
       
-      if (!result.isValid) throw new IllegalStateException(s"Bad delta at $p: $result; first Derivative = $firstDerivative, second derivative = $secondDerivative")
+      if (!gradient.isValid) throw new IllegalStateException(s"Invalid delta at $p: ${gradient}; first Derivative = $gradient")
+      val stepSize = Norm.l2(gradient)
+      if (stepSize > maxNorm) gradient * (maxNorm / stepSize) else gradient
+    }
 
-      result
+    def shift(i: Int, vectors: IndexedSeq[target.Vector], matrix: DistanceMatrix): IndexedSeq[target.Vector] = {
+      println(s"--> Step $i")
+      val newVectors = vectors.indices map { p => {
+          val d = Δ(vectors, matrix, p)
+          if (!d.isValid) throw new IllegalStateException(s"Bad vector$p in step $i: $d, where original is ${vectors(p)} and d=$d")
+          d
+      }}
+      newVectors
     }
 
     def step(i: Int, vectors: IndexedSeq[target.Vector]): (IndexedSeq[target.Vector], DistanceMatrix) = {
       println(s"--> Step $i")
       val matrix = distanceMatrix(globalSpace, vectors)
       val newVectors = vectors.indices map { p => {
-//        if (p > 5) vectors(p) else 
-        {
-          val d = Δ(vectors, matrix, p)
-          val v = vectors(p) - d * magicFactor
-          if (!v.isValid) throw new IllegalStateException(s"Bad vector$p in step $i: $v, where original is ${vectors(p)} and d=$d")
-          v
-        }
+        val d = Δ(vectors, matrix, p)
+        val v = vectors(p) - d * magicFactor
+        if (!v.isValid) throw new IllegalStateException(s"Bad vector$p in step $i: $v, where original is ${vectors(p)} and d=$d")
+        v
       }}
       (newVectors, matrix)
     }
     
+    def pub(vs: IndexedSeq[target.Vector]) = vs map (_.toString) mkString "\n"
+    
     def run():  IndexedSeq[target.Vector] = {
-      
-      val result = (initialVectors /: (1 to numSteps)){(vs, i) => {
+      val m0 = distanceMatrix(globalSpace, initialVectors)
+      val err0 = error(m0)
+      val result = ((initialVectors, err0, m0) /: (1 to numSteps)){case ((vs, err0, mx0), i) => {
         val t0 = System.currentTimeMillis
-        val (newVs, mx) = step(i, vs)
+        
         val t1 = System.currentTimeMillis
-        val err = error(mx)
+        val delta = shift(i, vs, mx0)
+        vs.zip(delta)        
+        val v1 = (vs zip delta) map (_ + _)
+        val err = error(mx1)
+        if (err > err0) newVs = (vs + newVs)/2
         val t2 = System.currentTimeMillis
-        println(s"Step $i, error = $err; t1=${t1-t0}, t2=${t2-t1}")
+        val delta = vs zip newVs map {case (x,y) => Norm.l2.distance(x,y)} sum
+        
+        println(s"Step $i, error = $err; delta = $delta; t1=${t1-t0}, t2=${t2-t1}")
+        println(pub(vs))
+        println(pub(newVs))
         newVs
         }
       }

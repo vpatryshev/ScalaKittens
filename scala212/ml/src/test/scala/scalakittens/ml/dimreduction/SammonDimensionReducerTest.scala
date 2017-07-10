@@ -68,9 +68,9 @@ class SammonDimensionReducerTest extends Specification {
         R3.Vector(0,1,0),
         R3.Vector(0,1,1),
         R3.Vector(1,0,0),
-        R3.Vector(1,0,1),
-        R3.Vector(1,1,0),
-        R3.Vector(1,1,1)
+        R3.Vector(1,0,0.9),
+        R3.Vector(1,0.9,0),
+        R3.Vector(1,0.9,0.9)
       )
       val vpca = pca.reduce(source).toList map {v => ("P", v.apply(0), v.apply(1))}
       visualize("after pca", vpca)
