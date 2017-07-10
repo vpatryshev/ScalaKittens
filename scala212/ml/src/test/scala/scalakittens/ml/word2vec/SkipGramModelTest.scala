@@ -10,6 +10,7 @@ import scalakittens._
 import scalakittens.la._
 import scalakittens.ml.dimreduction.{DimensionReducer, PcaDimensionReducer, SammonDimensionReducer}
 import scalakittens.ml.TestTools._
+import scalakittens.ml.dimreduction.Viz._
 
 // TODO: implement https://en.wikipedia.org/wiki/Nonlinear_dimensionality_reduction#Methods_based_on_proximity_matrices
 

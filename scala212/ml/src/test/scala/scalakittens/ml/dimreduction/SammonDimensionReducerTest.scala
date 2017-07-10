@@ -6,7 +6,7 @@ import scalakittens.la.Spaces.{R2, R3}
 import math._
 import scalakittens.la.Norm
 import scalakittens.ml.TestTools._
-import scalakittens.ml.dimreduction.SammonDimensionReducer.pcaReducer
+import scalakittens.ml.dimreduction.Viz._
 
 /**
   * Created by vpatryshev on 7/3/17.
@@ -38,12 +38,9 @@ class SammonDimensionReducerTest extends Specification {
     }
   }
   
-  "SammonDimensionReducerTest" should {
-    "reduce" in {
-      ok
-    }
+  "SammonDimensionReducer" should {
 
-    "reduce butterfly withPCA" in {
+    "reduce butterfly with PCA and Sammon" in {
       val pca = new PcaDimensionReducer[R3.type, R2.type](R3, R2, precision = 0.001, 50)
       
       val sammon: DimensionReducer[R3.Vector, R2.Vector] = SammonDimensionReducer.withPCA[R3.type, R2.type](R3, R2, 300)
