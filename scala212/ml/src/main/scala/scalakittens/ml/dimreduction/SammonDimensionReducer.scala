@@ -34,6 +34,7 @@ abstract class SammonDimensionReducer[S <: VectorSpace, T <: VectorSpace](
     type DistanceMatrix = globalSpace.SquareMatrix
     lazy val initialVectors = init(originalVectors)
     lazy val maxNorm = 10 * initialVectors.map(Norm.l2(_)).max
+    val minDouble = 0.0//math.sqrt(Double.MinPositiveValue)
     lazy val originalDistanceMatrix: DistanceMatrix = distanceMatrix(globalSpace, originalVectors).triangle
     lazy val summaryNorm = Norm.l2(originalDistanceMatrix) / 2
     val size = originalVectors.size
@@ -70,6 +71,22 @@ abstract class SammonDimensionReducer[S <: VectorSpace, T <: VectorSpace](
       }
     }
 
+    lazy val numberOfVerticesInUnitCube = 1 << target.dim
+
+    private def vertexFor(i: Int): target.Vector = {
+      val absNo = i % numberOfVerticesInUnitCube
+      val d = 0.00
+      val coordinates = (for {
+        bitNo <- 0 until target.dim
+      } yield if (((1 << bitNo) & absNo) == 0) d else -d) toArray
+      
+      new target.OnArray(coordinates)
+    }
+    
+    private def stepInDirectionOf(i: Int) = {
+      vertexFor(i)
+    }
+
     def `dE/dy`(vectors: IndexedSeq[target.Vector], m: DistanceMatrix, p: Int): target.Vector = {
       val v: target.MutableVector = target.Zero.copy
       for {
@@ -80,8 +97,6 @@ abstract class SammonDimensionReducer[S <: VectorSpace, T <: VectorSpace](
           val dpj_ = originalDistanceMatrix(p, j)
           val quotient: Double = (dpj - dpj_) / dpj
           val delta: target.Vector = vectors(p) - vectors(j)
-          //          if (!delta.isValid) throw new IllegalStateException(s"Invalid delta while calculating dE/dy: delta=$delta, quotent=$quotient, j=$j, p=$p, dpj = $dpj, dpj=${dpj_}")
-          //          if (Norm.l2(delta)*magicFactor > maxNorm) throw new IllegalStateException(s"Too big delta while calculating dE/dy: delta=$delta, quotent=$quotient, j=$j, p=$p, djp = $dpj, dpj=${dpj_}")
           v += delta * quotient
         }
       }
@@ -119,16 +134,17 @@ abstract class SammonDimensionReducer[S <: VectorSpace, T <: VectorSpace](
         val step = shift(i, vs, mx0) map (_ * factor)
 
         val t1 = System.currentTimeMillis
+//        println(s"#$i.1: ${t1-t0}ms")
         val newVs = (vs zip step).map { case (v, d) => v - d }
-        Viz.visualize("Horizontal", newVs map { v => ("*", v.apply(0), v.apply(1)) })
         val mx1 = distanceMatrix(globalSpace, newVs)
         val t2 = System.currentTimeMillis
+//        println(s"#$i.2: ${t2-t1}ms")
         val err = error(mx1)
-        val t3 = System.currentTimeMillis
+        Viz.visualize(s"Sammon, step $i, err $err", newVs map { v => ("*", v.apply(0), v.apply(1)) })
 
-        val delta = step map (Norm.l2(_)) sum
-
-        //        println(s"Step $i, factor=$factor, error = $err; delta = $delta; t1=${t1 - t0}, t2=${t2 - t1}, , t3=${t3 - t2}")
+//        val t3 = System.currentTimeMillis
+//        val delta = step map (Norm.l2(_)) sum
+//        println(s"Step $i, factor=$factor, error = $err; delta = $delta; t1=${t1 - t0}, t2=${t2 - t1}, , t3=${t3 - t2}")
 
         if (err < err0 * 0.999) {
           recurse(newVs, err, mx1, i + 1, numSteps, factor)
