@@ -34,7 +34,11 @@ abstract class SammonDimensionReducer[S <: VectorSpace, T <: VectorSpace](
     type DistanceMatrix = globalSpace.SquareMatrix
     lazy val initialVectors = init(originalVectors)
     lazy val maxNorm = 10 * initialVectors.map(Norm.l2(_)).max
-    val minDouble = 0.0//math.sqrt(Double.MinPositiveValue)
+    val minDouble = {
+      val d = 0.7
+      val s = originalVectors.length
+      d/s/s
+    }
     lazy val originalDistanceMatrix: DistanceMatrix = distanceMatrix(globalSpace, originalVectors).triangle
     lazy val summaryNorm = Norm.l2(originalDistanceMatrix) / 2
     val size = originalVectors.size
@@ -75,7 +79,7 @@ abstract class SammonDimensionReducer[S <: VectorSpace, T <: VectorSpace](
 
     private def vertexFor(i: Int): target.Vector = {
       val absNo = i % numberOfVerticesInUnitCube
-      val d = 0.00
+      val d = minDouble
       val coordinates = (for {
         bitNo <- 0 until target.dim
       } yield if (((1 << bitNo) & absNo) == 0) d else -d) toArray
@@ -93,12 +97,13 @@ abstract class SammonDimensionReducer[S <: VectorSpace, T <: VectorSpace](
         j <- 0 until size if j != p
       } {
         val dpj = m(p, j)
-        if (math.abs(dpj) > 1 / maxNorm) {
-          val dpj_ = originalDistanceMatrix(p, j)
-          val quotient: Double = (dpj - dpj_) / dpj
-          val delta: target.Vector = vectors(p) - vectors(j)
-          v += delta * quotient
-        }
+        val dpj_ = originalDistanceMatrix(p, j)
+
+        val delta: target.Vector = if (math.abs(dpj) > 1 / maxNorm) {
+          (vectors(p) - vectors(j)) / dpj
+        } else stepInDirectionOf(p)
+        
+        v += delta * (dpj - dpj_)
       }
       v
     }
@@ -129,15 +134,15 @@ abstract class SammonDimensionReducer[S <: VectorSpace, T <: VectorSpace](
 
     @tailrec private def recurse(vs: IndexedSeq[target.Vector], err0: Double, mx0: DistanceMatrix, i: Int, numSteps: Int, factor: Double): (IndexedSeq[target.Vector], Double, DistanceMatrix) = {
       if (i >= numSteps || factor < 0.00001) (vs, err0, mx0) else {
-        val t0 = System.currentTimeMillis
+//        val t0 = System.currentTimeMillis
 
         val step = shift(i, vs, mx0) map (_ * factor)
 
-        val t1 = System.currentTimeMillis
+//        val t1 = System.currentTimeMillis
 //        println(s"#$i.1: ${t1-t0}ms")
         val newVs = (vs zip step).map { case (v, d) => v - d }
         val mx1 = distanceMatrix(globalSpace, newVs)
-        val t2 = System.currentTimeMillis
+//        val t2 = System.currentTimeMillis
 //        println(s"#$i.2: ${t2-t1}ms")
         val err = error(mx1)
         Viz.visualize(s"Sammon, step $i, err $err", newVs map { v => ("*", v.apply(0), v.apply(1)) })
