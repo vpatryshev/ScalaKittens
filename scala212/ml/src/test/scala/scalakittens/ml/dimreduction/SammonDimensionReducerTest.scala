@@ -54,7 +54,7 @@ class SammonDimensionReducerTest extends Specification {
       ok
     }
 
-    "reduce cube withPCA" in {
+    "reduce an almost-cube withPCA" in {
       val pca = new PcaDimensionReducer[R3.type, R2.type](R3, R2, precision = 0.001, 50)
 
       val sammon: DimensionReducer[R3.Vector, R2.Vector] = SammonDimensionReducer.withPCA[R3.type, R2.type](R3, R2, 300)
@@ -68,6 +68,29 @@ class SammonDimensionReducerTest extends Specification {
         R3.Vector(1,0,0.9),
         R3.Vector(1,0.9,0),
         R3.Vector(1,0.9,0.9)
+      )
+      val vpca = pca.reduce(source).toList map {v => ("P", v.apply(0), v.apply(1))}
+      visualize("after pca", vpca)
+
+      val vsam = sammon.reduce(source).toList map {v => ("S", v.apply(0), v.apply(1))}
+      visualize("after sammon", vsam)
+      ok
+    }
+
+    "reduce an exact cube withPCA" in {
+      val pca = new PcaDimensionReducer[R3.type, R2.type](R3, R2, precision = 0.001, 50)
+
+      val sammon: DimensionReducer[R3.Vector, R2.Vector] = SammonDimensionReducer.withPCA[R3.type, R2.type](R3, R2, 300)
+
+      val source = Array(
+        R3.Vector(0,0,0),
+        R3.Vector(0,0,1),
+        R3.Vector(0,1,0),
+        R3.Vector(0,1,1),
+        R3.Vector(1,0,0),
+        R3.Vector(1,0,1),
+        R3.Vector(1,1,0),
+        R3.Vector(1,1,1)
       )
       val vpca = pca.reduce(source).toList map {v => ("P", v.apply(0), v.apply(1))}
       visualize("after pca", vpca)
