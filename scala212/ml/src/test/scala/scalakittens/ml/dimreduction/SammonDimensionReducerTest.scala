@@ -3,8 +3,6 @@ package scalakittens.ml.dimreduction
 import org.specs2.mutable.Specification
 
 import scalakittens.la.Spaces.{R2, R3}
-import math._
-import scalakittens.la.Norm
 import scalakittens.ml.TestTools._
 import scalakittens.ml.dimreduction.Viz._
 

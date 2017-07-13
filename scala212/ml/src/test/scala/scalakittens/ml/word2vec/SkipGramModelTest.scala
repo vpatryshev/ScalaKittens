@@ -9,7 +9,6 @@ import scalakittens.la.Spaces._
 import scalakittens._
 import scalakittens.la._
 import scalakittens.ml.dimreduction.{DimensionReducer, PcaDimensionReducer, SammonDimensionReducer}
-import scalakittens.ml.TestTools._
 import scalakittens.ml.dimreduction.Viz._
 
 // TODO: implement https://en.wikipedia.org/wiki/Nonlinear_dimensionality_reduction#Methods_based_on_proximity_matrices
@@ -76,6 +75,22 @@ class SkipGramModelTest extends Specification {
       ok
     }
 
+    "process 'War And Peace' with Sammon, slow" in {
+      val filename = "warandpeace.vecs.sammon.txt"
+
+      val sammonReducer: DimensionReducer[R7.Vector, R2.Vector] = SammonDimensionReducer.withPCA[R7.type, R2.type](R7, R2, 20)
+
+      doWarAndPeace[R7.type, R2.type](R7, R2, numEpoch = 50, filename, sammonReducer) match {
+        case Good(vs: List[(String, R2.Vector)]) =>
+          showWarAndPeace[R2.type](vs.iterator)
+          ok
+        case bad: Bad[_] => failure(bad.listErrors.toString + "\n" + bad.stackTrace)
+        case Empty => failure("No War, no Peace! /* Trotsky */")
+      }
+
+      ok
+    }
+
     "process 'War And Peace' with Sammon, fast" in {
       val filename = "warandpeace.vecs.sammon.txt"
 
@@ -134,10 +149,10 @@ class SkipGramModelTest extends Specification {
         val α = 0.9 / dim.dim
         val vectors: List[(String, newDim.Vector)] = buildW2vModel(dim, newDim, numEpoch, α, st, reducer, chunkSize)
         serialize(filename, dim, vectors)
-//        println("Rare words")
-//        println(vectors take 10 mkString "\n")
-//        println("Frequent words")
-//        println((vectors takeRight 10).reverse mkString "\n")
+        println("Rare words")
+        println(vectors take 10 mkString "\n")
+        println("Frequent words")
+        println((vectors takeRight 10).reverse mkString "\n")
 
         println(s"\nSEE ALL RESULTS IN $filename\n")
 //        vectors.length must_== 17355
@@ -147,7 +162,7 @@ class SkipGramModelTest extends Specification {
 
   private def buildW2vModel[S <: VectorSpace, T <: VectorSpace](dim: S, newDim: T, numEpochs:Int, α: Double, st: ScannedText, reducer: DimensionReducer[S#Vector, T#Vector], chunkSize: Int = 0) = {
     val allOriginalVectors: Array[S#MutableVector] = runSkipGram(dim, numEpochs, α, st)
-    val originalVectors = if (chunkSize == 0) allOriginalVectors else allOriginalVectors.take(chunkSize)
+    val originalVectors = if (chunkSize == 0) allOriginalVectors else allOriginalVectors.takeRight(chunkSize)
     val vs = reducer.reduce(originalVectors)
     val uvs = newDim.toUnitCube(vs map (_.asInstanceOf[newDim.Vector]))
     val vectors = st.withFrequencies zip uvs

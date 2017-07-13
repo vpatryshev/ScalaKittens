@@ -1,6 +1,6 @@
 package scalakittens.ml
 
-import language.postfixOps
+//import language.postfixOps
 import scala.math.{Pi, abs, cos, sin}
 import scalakittens.la.Norm
 import scalakittens.la.Spaces.R3
@@ -37,7 +37,7 @@ object TestTools {
       val z = from(2)
       val midPoint = (from + to) / 2
       val center = R3.Vector(midPoint(0) + (to(1)-from(1))/2, midPoint(1) - (to(0)-from(0))/2, z)
-      val r = Norm.l2(center - from)
+      val r = Norm.l2.distance(center, from)
       val size = (Pi/4/precision*r).toInt - 1
       val out = new Array[R3.Vector](size)
 

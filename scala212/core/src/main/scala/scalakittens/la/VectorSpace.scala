@@ -37,7 +37,7 @@ case class VectorSpace(dim: Int) { space =>
     *
     * Created by vpatryshev on 5/14/17.
     */
-  trait Vector extends Seq[Double] with PartialFunction[Int, Double] {
+  trait Vector extends IndexedSeq[Double] with PartialFunction[Int, Double] {
 //    def space = VectorSpace.this
     def length = dim
     
@@ -319,7 +319,7 @@ case class VectorSpace(dim: Int) { space =>
       */
     override def nudge(other: Vector, coeff: Double): Unit = {
       other match {
-        case o: OnArray => nudge(o, coeff)
+        case o: OnArray => ArrayOps.nudge(data, o.data, coeff)
         case _ =>
           for (i <- range) data(i) += other(i) * coeff
       }
@@ -566,20 +566,35 @@ case class VectorSpace(dim: Int) { space =>
 
   def diagonalMatrix(values: Double*): SquareMatrix = diagonalMatrix(values)
   
-  class TriangularMatrix(source: SquareMatrix) extends Matrix.OnArray[space.type, space.type](space, space, new Array[Double](dim*(dim+1)/2)) with SquareMatrix {
+  class TriangularMatrix(source: (Int, Int) => Double) extends Matrix.OnArray[space.type, space.type](space, space, new Array[Double](dim*(dim+1)/2)) with SquareMatrix {
 
     override def checkArray() = ()
 
-    override def index(i0: Int, j0: Int): Int = {
-      checkIndexes(i0, j0)
+    override protected def internalIndex(i0: Int, j0: Int): Int = {
       val (i, j) = if (i0 < j0) (j0, i0) else (i0, j0)
-      val idx = i*(i+1)/2 + j
-      idx
+      i*(i+1)/2 + j
     }
 
-    for { i <- rowRange
-          j <- 0 to i
-    } this(i, j) = source(i, j)
+    private def fillRow(i: Int): Unit = {
+      for { j <- 0 to i } {
+        val aij = source(i, j)
+        data(internalIndex(i, j)) = aij
+      }
+    }
+    
+    private def fillRangeOfRows(rangeNo: Int, rangeSize: Int): Unit = {
+      val range = (rangeNo*rangeSize) until math.min(nRows, (rangeNo+1)*rangeSize)
+      range foreach fillRow
+    }
+    
+    def instantiate(): Unit = {
+      val numCores = Runtime.getRuntime.availableProcessors
+      val stripeSize = (nRows + numCores-1) / numCores
+      val threads = (0 until numCores).par
+      threads foreach (t => fillRangeOfRows(t, stripeSize))
+    }
+
+    instantiate()
 
     /**
       * copy of this matrix

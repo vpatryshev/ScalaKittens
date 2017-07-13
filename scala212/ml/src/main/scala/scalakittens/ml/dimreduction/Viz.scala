@@ -1,5 +1,7 @@
 package scalakittens.ml.dimreduction
 
+import language.postfixOps
+
 /**
   * Created by vpatryshev on 7/10/17.
   */

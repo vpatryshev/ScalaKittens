@@ -11,7 +11,7 @@ object PCA {
       val vector: space.Vector = m * v
       val normalized: space.Vector = vector.normalize(Norm.l2)
       val v1: space.MutableVector = normalized.copy
-      val d = Norm.l2(v1 - v)
+      val d = Norm.l2.distance(v1, v)
       (v1, d)
     }
 
