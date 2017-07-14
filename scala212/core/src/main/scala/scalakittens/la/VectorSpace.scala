@@ -152,7 +152,7 @@ case class VectorSpace(dim: Int) { space =>
   /**
     * Mutable version of vector
     */
-  trait MutableVector extends Vector {
+  trait MutableVector extends Vector with Mutable {
 
     /**
       * sets the i-th component value of this vector
