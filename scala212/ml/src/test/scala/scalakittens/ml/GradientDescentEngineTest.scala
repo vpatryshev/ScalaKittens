@@ -36,9 +36,9 @@ class GradientDescentEngineTest extends Specification {
       val position = DoubleVar(0.0)
       val found = sut.find(position, 1.1)
       found match {
-        case Some((err, epoch)) =>
-          abs(err) < 0.15 must beTrue
-          abs(position() - -1.57) < 0.02 aka s"We are at $position, err=$err, epoch=$epoch" must beTrue
+        case Some((value, epoch)) =>
+          abs(value) < 0.15 must beTrue
+          abs(position() - -1.57) < 0.02 aka s"We are at $position, value=$value, epoch=$epoch" must beTrue
           epoch < 30 aka s"$epoch epochs" must beTrue
         case _ => failure("nothing found")
       }
@@ -52,10 +52,10 @@ class GradientDescentEngineTest extends Specification {
       val position = R2.Zero.copy
       val found = sut.find(position, 1.1)
       found match {
-        case Some((err, epoch)) =>
-          math.abs(err - 0.98) < 0.01 aka s"oops, err=$err" must beTrue
+        case Some((value, epoch)) =>
+          math.abs(value - 0.98) < 0.01 aka s"oops, value=$value" must beTrue
 
-          Norm.l2.distance(position, R2.Vector(-1.649, -1.649)) < 0.005 aka s"We are at $position, err=$err, epoch=$epoch" must beTrue
+          Norm.l2.distance(position, R2.Vector(-1.649, -1.649)) < 0.005 aka s"We are at $position, value=$value, epoch=$epoch" must beTrue
           epoch < 60 aka s"epochs: $epoch" must beTrue
         case _ => failure("nothing found")
       }
@@ -69,10 +69,10 @@ class GradientDescentEngineTest extends Specification {
       val position = R2.const(1.0).copy
       val found = sut.find(position, 1.1)
       found match {
-        case Some((err, epoch)) =>
-          math.abs(err - 0.98) < 0.05 aka s"oops, err=$err" must beTrue
+        case Some((value, epoch)) =>
+          math.abs(value - 0.98) < 0.05 aka s"oops, value=$value" must beTrue
 
-          Norm.l2.distance(position, R2.Vector(-1.6, -1.6)) < 0.2 aka s"We are at $position, err=$err, epoch=$epoch" must beTrue
+          Norm.l2.distance(position, R2.Vector(-1.6, -1.6)) < 0.2 aka s"We are at $position, value=$value, epoch=$epoch" must beTrue
           epoch < 50 aka s"epochs: $epoch" must beTrue
         case _ => failure("nothing found")
       }
@@ -85,10 +85,10 @@ class GradientDescentEngineTest extends Specification {
       val position = R2.Vector(1, 2).copy
       val found = sut.find(position, 1.1)
       found match {
-        case Some((err, epoch)) =>
-          math.abs(err - 0.98) < 0.03 aka s"oops, err=$err" must beTrue
+        case Some((value, epoch)) =>
+          math.abs(value - 0.98) < 0.03 aka s"oops, value=$value" must beTrue
 
-          Norm.l2.distance(position, R2.Vector(-1.4,4.8)) < 0.05 aka s"We are at $position, err=$err, epoch=$epoch" must beTrue
+          Norm.l2.distance(position, R2.Vector(-1.4,4.8)) < 0.05 aka s"We are at $position, value=$value, epoch=$epoch" must beTrue
           epoch < 50 aka s"epochs: $epoch" must beTrue
         case _ => failure("nothing found")
       }
@@ -99,9 +99,9 @@ class GradientDescentEngineTest extends Specification {
       val evaluator = GradientDescentEngine.numericEvaluator(x => 1 + math.sin(x), math.cos)
       val sut = GradientDescentEngine[DoubleVal, GradientDescentEngine.DoubleVar](evaluator, 100, 0.0001, 0.001)
       val position = DoubleVar(0.0)
-      val initError = evaluator.error(position)
-      val found = sut.findAlongGradient(position, evaluator.gradientAt(position), sut.State(initError, 1.1))
-      math.abs(found.error) < 0.15 must beTrue
+      val initValue = evaluator.targetFunction(position)
+      val found = sut.findAlongGradient(position, evaluator.gradientAt(position), sut.State(initValue, 1.1))
+      math.abs(found.functionValue) < 0.15 must beTrue
       math.abs(position() - -1.234) < 0.001 aka s"@$position" must beTrue
       found.counter < 5 must beTrue
     }
@@ -110,10 +110,10 @@ class GradientDescentEngineTest extends Specification {
       val evaluator = GradientDescentEngine.vectorEvaluator[R2.type](R2)(waves, wavesGradient)
       val sut = GradientDescentEngine[R2.Vector, R2.MutableVector](evaluator, 100, 0.0001, 0.001)
       val position = R2.Zero.copy
-      val initError = evaluator.error(position)
-      val found = sut.findAlongGradient(position, evaluator.gradientAt(position), sut.State(initError, 1.1))
-      val actualError = evaluator.error(position)
-      math.abs(actualError - 0.98) < 0.05 aka s"actually, $actualError" must beTrue
+      val initValue = evaluator.targetFunction(position)
+      val found = sut.findAlongGradient(position, evaluator.gradientAt(position), sut.State(initValue, 1.1))
+      val actualValue = evaluator.targetFunction(position)
+      math.abs(actualValue - 0.98) < 0.05 aka s"actually, $actualValue" must beTrue
       found.counter < 10 must beTrue
     }
 
@@ -121,10 +121,10 @@ class GradientDescentEngineTest extends Specification {
       val evaluator = GradientDescentEngine.vectorEvaluator[R2.type](R2)(waves, wavesGradient)
       val sut = GradientDescentEngine[R2.Vector, R2.MutableVector](evaluator, 100, 0.0001, 0.001)
       val position = R2.const(1.0).copy
-      val initError = evaluator.error(position)
-      val found = sut.findAlongGradient(position, evaluator.gradientAt(position), sut.State(initError, 0.1))
-      val actualError = evaluator.error(position)
-      math.abs(actualError - 4.5) < 0.05 aka s"actually, $actualError" must beTrue
+      val initValue = evaluator.targetFunction(position)
+      val found = sut.findAlongGradient(position, evaluator.gradientAt(position), sut.State(initValue, 0.1))
+      val actualValue = evaluator.targetFunction(position)
+      math.abs(actualValue - 4.5) < 0.05 aka s"actually, $actualValue" must beTrue
       found.counter < 10 must beTrue
     }
   }

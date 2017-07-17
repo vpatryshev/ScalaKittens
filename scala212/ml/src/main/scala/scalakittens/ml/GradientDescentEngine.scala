@@ -1,19 +1,19 @@
 package scalakittens.ml
 
-import scala.language.{postfixOps, reflectiveCalls}
+import scala.language.postfixOps
 import scalakittens.la.VectorSpace
 import scalakittens.ml.GradientDescentEngine.Evaluator
 
 /**
   * Pretty generic tool for gradient descent.
-  * It knows nothing about how to calculate error, or how to calculate gradient.
+  * It knows nothing about how to calculate target function, or how to calculate gradient.
   * It just does the search.
   * The fact that we are in a linear space is also irrelevant.
   * Created by vpatryshev on 7/13/17.
   */
-case class GradientDescentEngine[T <: {def copy : T}, MT <: T with Mutable](evaluator: Evaluator[T, MT], maxEpochs: Int, errorPrecision: Double, stepPrecision: Double) {
+case class GradientDescentEngine[T <: {def copy : T}, MT <: T with Mutable](evaluator: Evaluator[T, MT], maxEpochs: Int, valuePrecision: Double, stepPrecision: Double) {
 
-  val DEBUG = true
+  val DEBUG = false
   def debug(m: =>String): Unit = if (DEBUG) println(m)
 
   // TODO: move it into a config class or something
@@ -23,14 +23,14 @@ case class GradientDescentEngine[T <: {def copy : T}, MT <: T with Mutable](eval
   private val maxProgress = 1.0 / (1.0 + stepDecreaseQ)
   val maxJumpsAlongGradient = 2
 
-  case class State(error: Double, step: Double, progress: Option[Double] = None, counter: Int = 0) {
+  case class State(functionValue: Double, step: Double, progress: Option[Double] = None, counter: Int = 0) {
 
     def enough: Boolean = {
-      error < errorPrecision || step < stepPrecision
+      functionValue < valuePrecision || step < stepPrecision
     }
 
     def enoughProgress: Boolean = {
-      counter >= maxJumpsAlongGradient || (progress exists (p => math.abs(p) < 1 + errorPrecision))
+      counter >= maxJumpsAlongGradient || (progress exists (p => math.abs(p) < 1 + valuePrecision))
     }
   }
   
@@ -41,13 +41,13 @@ case class GradientDescentEngine[T <: {def copy : T}, MT <: T with Mutable](eval
         debug(s"@$s:\n  $position / $gradient ->")
         evaluator.nudge(position, gradient, -s.step)
         debug(s" $position")
-        val newError = evaluator.error(position, s.error)
-        val progress = newError / s.error
-        val next = if (progress > 1 + errorPrecision) {
+        val newValue = evaluator.targetFunction(position, s.functionValue)
+        val progress = newValue / s.functionValue
+        val next = if (progress > 1 + valuePrecision) {
           evaluator.nudge(position, gradient, s.step)
-          State(s.error, s.step * fastStepDecreaseQ, None, s.counter + 1)
+          State(s.functionValue, s.step * fastStepDecreaseQ, None, s.counter + 1)
         } else {
-          State(newError, s.step, Some(progress), s.counter + 1)
+          State(newValue, s.step, Some(progress), s.counter + 1)
         }
         next
     } find (_.enoughProgress) head
@@ -59,13 +59,13 @@ case class GradientDescentEngine[T <: {def copy : T}, MT <: T with Mutable](eval
         val maxP = math.min(p, maxProgress)
         val lastStep = result.step * maxP / (1.0 - maxP)
         evaluator.nudge(position, gradient, -lastStep)
-        val newError = evaluator.error(position, result.error)
-        debug(s"nudged with $lastStep, got $position with error $newError")
-        if (newError > result.error) {
+        val newValue = evaluator.targetFunction(position, result.functionValue)
+        debug(s"nudged with $lastStep, got $position with value $newValue")
+        if (newValue > result.functionValue) {
           evaluator.nudge(position, gradient, lastStep)
           result
         } else {
-          State(newError, lastStep, Some(p), result.counter + 1)
+          State(newValue, lastStep, Some(p), result.counter + 1)
         }
     } getOrElse result
 
@@ -75,10 +75,10 @@ case class GradientDescentEngine[T <: {def copy : T}, MT <: T with Mutable](eval
 
   def find(point: MT, initStep: Double): Option[(Double, Int)] = {
 
-    Stream.iterate((State(evaluator.error(point), initStep), None: Option[T], initStep, 0)) {
+    Stream.iterate((State(evaluator.targetFunction(point), initStep), None: Option[T], initStep, 0)) {
       case (s, previousGradient, step, epoch) =>
         val gradient = evaluator.gradientAt(point)
-        debug(s"---at $point (${evaluator.error(point)}), epoch $epoch, step $step, status $s")
+        debug(s"---at $point (${evaluator.targetFunction(point)}), epoch $epoch, step $step, status $s")
         val r0 = findAlongGradient(point, gradient, s).copy(step = s.step * stepDecreaseQ)
         val newEpoch = epoch + r0.counter
         val tentativeStep = previousGradient map ((g: T) => {
@@ -91,7 +91,7 @@ case class GradientDescentEngine[T <: {def copy : T}, MT <: T with Mutable](eval
         debug(s"===new state=$r")
 
         (r, Some(gradient), newStep, newEpoch)
-    } find { case (s, gradient, newStep, epoch) => epoch >= maxEpochs || s.enough } map { case (s, gradient, newStep, epoch) => (s.error, epoch) }
+    } find { case (s, gradient, newStep, epoch) => epoch >= maxEpochs || s.enough } map { case (s, gradient, newStep, epoch) => (s.functionValue, epoch) }
   }
 }
 
@@ -107,15 +107,15 @@ object GradientDescentEngine {
     def cos(previousGradient: T, gradient: T): Double
 
     /**
-      * Evaluates error at given position
+      * Evaluates target function at given position
       *
-      * @param position at which we evaluate the error
-      * @param maxValue maximum error value, after which calculation can stop
-      * @return error value
+      * @param position at which we evaluate the target function
+      * @param maxValue maximum target function value, after which calculation can stop
+      * @return target function value
       */
-    def error(position: T, maxValue: Double): Double
+    def targetFunction(position: T, maxValue: Double): Double
 
-    def error(position: T): Double = error(position, Double.MaxValue)
+    def targetFunction(position: T): Double = targetFunction(position, Double.MaxValue)
 
     /**
       * Calculates normalized gradient at a given position.
@@ -156,11 +156,11 @@ object GradientDescentEngine {
 
   def numericEvaluator(f: Double => Double, `f'`: Double => Double) = new Evaluator[DoubleVal, DoubleVar] {
 
-    override def error(position: DoubleVal, maxValue: Double) = f(position())
+    override def targetFunction(position: DoubleVal, maxValue: Double) = f(position())
 
     override def gradientAt(position: DoubleVal) = new DoubleVal(`f'`(position()))
 
-    def error(position: Double): Double = error(new DoubleVal(position))
+    def targetFunction(position: Double): Double = targetFunction(new DoubleVal(position))
 
     def gradientAt(position: Double): DoubleVal = gradientAt(new DoubleVal(position))
 
@@ -173,7 +173,7 @@ object GradientDescentEngine {
 
   def vectorEvaluator[Space <: VectorSpace](s: Space)(f: s.Vector => Double, `f'`: s.Vector => s.Vector): Evaluator[s.Vector, s.MutableVector] = new Evaluator[s.Vector, s.MutableVector] {
 
-    override def error(position: s.Vector, maxValue: Double) = {
+    override def targetFunction(position: s.Vector, maxValue: Double) = {
       val e = f(position)
       e
     }
