@@ -111,7 +111,7 @@ case class VectorSpace(dim: Int) { space =>
       */
     def /(scalar: Double): Vector = *(1.0 / scalar)
 
-    def /(components: Int => Double): Vector = new OnFunction(i => this(i) / components(i))
+    def /(components: Int => Double): Vector = new OnFunction(i => apply(i) / components(i))
 
     /**
       * Materialized copy of this vector
@@ -700,6 +700,8 @@ case class VectorSpace(dim: Int) { space =>
     * @return a projection of b to a
     */
   def project[V <: space.Vector](a: Vector, b: V) = a * ((a * b) / Norm.l2(a))
+  
+  def cos[V <: space.Vector](a: Vector, b: V) = (a * b) / Norm.l2(a) / Norm.l2(b)
 
   private[la] class ColumnMatrix[Domain <: VectorSpace](val domain: Domain, val cols: Seq[MutableVector]) extends Matrix[Domain, space.type] {
     override val nRows = dim
