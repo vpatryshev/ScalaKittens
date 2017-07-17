@@ -1,6 +1,6 @@
 package scalakittens.ml
 
-import scala.language.{postfixOps,reflectiveCalls}
+import scala.language.{postfixOps, reflectiveCalls}
 import scalakittens.la.VectorSpace
 import scalakittens.ml.GradientDescentEngine.Evaluator
 
@@ -12,34 +12,27 @@ import scalakittens.ml.GradientDescentEngine.Evaluator
   * Created by vpatryshev on 7/13/17.
   */
 case class GradientDescentEngine[T <: {def copy : T}, MT <: T with Mutable](evaluator: Evaluator[T, MT], maxEpochs: Int, errorPrecision: Double, stepPrecision: Double) {
-  val stepIncreaseQ = math.sqrt(2.0)
-  private val maxProgress = stepIncreaseQ / (1 + stepIncreaseQ)
 
-  def goodProgress(progress: Option[Double]): Boolean = progress exists (1 - errorPrecision >)
+  val DEBUG = true
+  def debug(m: =>String): Unit = if (DEBUG) println(m)
 
-  val maxEpochAlongGradient = 3
+  // TODO: move it into a config class or something
+  // the rate at which step decreases on success
+  val fastStepDecreaseQ = 1.0 / math.E
+  val stepDecreaseQ = math.sqrt(0.5)
+  private val maxProgress = 1.0 / (1.0 + stepDecreaseQ)
+  val maxJumpsAlongGradient = 2
 
-  case class State(error: Double, step: Double, progress: Option[Double] = None, epoch: Int = 0, lastAction: String = "forward") {
-    if (step > 100) {
-      println(s"what? step=$step")
-    }
+  case class State(error: Double, step: Double, progress: Option[Double] = None, counter: Int = 0) {
 
     def enough: Boolean = {
-      val yes = error < errorPrecision || step < stepPrecision
-      yes
+      error < errorPrecision || step < stepPrecision
     }
 
     def enoughProgress: Boolean = {
-      val yes = epoch >= maxEpochAlongGradient || (progress exists (p => math.abs(p) < 1 + errorPrecision))
-      yes
+      counter >= maxJumpsAlongGradient || (progress exists (p => math.abs(p) < 1 + errorPrecision))
     }
-
-    override def toString = s"State(error=$error, step=$step, progress=$progress, $lastAction)"
   }
-  
-  val DEBUG = true
-
-  def debug(m: =>String): Unit = if (DEBUG) println(m)
   
   def findAlongGradient(position: MT, gradient: T, initState: State): State = {
     debug(s"===fAG at $position, is=$initState")
@@ -52,9 +45,9 @@ case class GradientDescentEngine[T <: {def copy : T}, MT <: T with Mutable](eval
         val progress = newError / s.error
         val next = if (progress > 1 + errorPrecision) {
           evaluator.nudge(position, gradient, s.step)
-          State(s.error, s.step / math.E, None, s.epoch + 1)
+          State(s.error, s.step * fastStepDecreaseQ, None, s.counter + 1)
         } else {
-          State(newError, s.step, Some(progress), s.epoch + 1)
+          State(newError, s.step, Some(progress), s.counter + 1)
         }
         next
     } find (_.enoughProgress) head
@@ -70,9 +63,9 @@ case class GradientDescentEngine[T <: {def copy : T}, MT <: T with Mutable](eval
         debug(s"nudged with $lastStep, got $position with error $newError")
         if (newError > result.error) {
           evaluator.nudge(position, gradient, lastStep)
-          result.copy(lastAction = "back")
+          result
         } else {
-          State(newError, lastStep, Some(p), result.epoch + 1)
+          State(newError, lastStep, Some(p), result.counter + 1)
         }
     } getOrElse result
 
@@ -86,17 +79,16 @@ case class GradientDescentEngine[T <: {def copy : T}, MT <: T with Mutable](eval
       case (s, previousGradient, step, epoch) =>
         val gradient = evaluator.gradientAt(point)
         debug(s"---at $point (${evaluator.error(point)}), epoch $epoch, step $step, status $s")
-        val r0 = findAlongGradient(point, gradient, s).copy(step = s.step / stepIncreaseQ)
-        val newEpoch = epoch + r0.epoch
+        val r0 = findAlongGradient(point, gradient, s).copy(step = s.step * stepDecreaseQ)
+        val newEpoch = epoch + r0.counter
         val tentativeStep = previousGradient map ((g: T) => {
           val cos = evaluator.cos(g, gradient)
           (1 + 0.3 * cos) * step
         }) getOrElse step
         val newStep = s.progress map (_ => tentativeStep) getOrElse r0.step
 
-        val r = r0.copy(progress = None, epoch = 0, step = newStep)
+        val r = r0.copy(progress = None, counter = 0, step = newStep)
         debug(s"===new state=$r")
-        val newEntry: (State, T, T, Double, Int) = (r, point.copy, gradient, newStep, epoch)
 
         (r, Some(gradient), newStep, newEpoch)
     } find { case (s, gradient, newStep, epoch) => epoch >= maxEpochs || s.enough } map { case (s, gradient, newStep, epoch) => (s.error, epoch) }
