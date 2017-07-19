@@ -32,7 +32,7 @@ class GradientDescentEngineTest extends Specification {
   "GradientDescentEngineTest" should {
     "find in 1d" in {
       val evaluator = GradientDescentEngine.numericEvaluator(x => 1 + sin(x), x => signum(cos(x)))
-      val sut = GradientDescentEngine[DoubleVal, GradientDescentEngine.DoubleVar](evaluator, 100, 0.0001, 0.001)
+      val sut = GradientDescentEngine[DoubleVar, DoubleVal](evaluator, 100, 0.0001, 0.001)
       val position = DoubleVar(0.0)
       val found = sut.find(position, 1.1)
       found match {
@@ -48,7 +48,7 @@ class GradientDescentEngineTest extends Specification {
 
     "find in 2d starting at 0" in {
       val evaluator = GradientDescentEngine.vectorEvaluator[R2.type](R2)(waves, wavesGradient)
-      val sut = GradientDescentEngine[R2.Vector, R2.MutableVector](evaluator, 50, 0.0001, 0.001)
+      val sut = GradientDescentEngine[R2.MutableVector, R2.Vector](evaluator, 50, 0.0001, 0.001)
       val position = R2.Zero.copy
       val found = sut.find(position, 1.1)
       found match {
@@ -65,7 +65,7 @@ class GradientDescentEngineTest extends Specification {
 
     "find in 2d starting at 1" in {
       val evaluator = GradientDescentEngine.vectorEvaluator[R2.type](R2)(waves, wavesGradient)
-      val sut = GradientDescentEngine[R2.Vector, R2.MutableVector](evaluator, 200, 0.0001, 0.001)
+      val sut = GradientDescentEngine[R2.MutableVector, R2.Vector](evaluator, 200, 0.0001, 0.001)
       val position = R2.const(1.0).copy
       val found = sut.find(position, 1.1)
       found match {
@@ -81,7 +81,7 @@ class GradientDescentEngineTest extends Specification {
 
     "find in 2d starting at (1,2)" in {
       val evaluator = GradientDescentEngine.vectorEvaluator[R2.type](R2)(waves, wavesGradient)
-      val sut = GradientDescentEngine[R2.Vector, R2.MutableVector](evaluator, 100, 0.0001, 0.001)
+      val sut = GradientDescentEngine[R2.MutableVector, R2.Vector](evaluator, 100, 0.0001, 0.001)
       val position = R2.Vector(1, 2).copy
       val found = sut.find(position, 1.1)
       found match {
@@ -97,10 +97,10 @@ class GradientDescentEngineTest extends Specification {
 
     "findAlongGradient 1d starting at 0" in {
       val evaluator = GradientDescentEngine.numericEvaluator(x => 1 + math.sin(x), math.cos)
-      val sut = GradientDescentEngine[DoubleVal, GradientDescentEngine.DoubleVar](evaluator, 100, 0.0001, 0.001)
+      val sut = GradientDescentEngine[DoubleVar, DoubleVal](evaluator, 100, 0.0001, 0.001)
       val position = DoubleVar(0.0)
       val initValue = evaluator.targetFunction(position)
-      val found = sut.findAlongGradient(position, evaluator.gradientAt(position), sut.State(initValue, 1.1))
+      val found = sut.findAlongGradient(position, evaluator.gradientAt(position), sut.Cursor(initValue, 1.1))
       math.abs(found.functionValue) < 0.15 must beTrue
       math.abs(position() - -1.234) < 0.001 aka s"@$position" must beTrue
       found.counter < 5 must beTrue
@@ -108,10 +108,10 @@ class GradientDescentEngineTest extends Specification {
 
     "findAlongGradient 2d starting at 0" in {
       val evaluator = GradientDescentEngine.vectorEvaluator[R2.type](R2)(waves, wavesGradient)
-      val sut = GradientDescentEngine[R2.Vector, R2.MutableVector](evaluator, 100, 0.0001, 0.001)
+      val sut = GradientDescentEngine[R2.MutableVector, R2.Vector](evaluator, 100, 0.0001, 0.001)
       val position = R2.Zero.copy
       val initValue = evaluator.targetFunction(position)
-      val found = sut.findAlongGradient(position, evaluator.gradientAt(position), sut.State(initValue, 1.1))
+      val found = sut.findAlongGradient(position, evaluator.gradientAt(position), sut.Cursor(initValue, 1.1))
       val actualValue = evaluator.targetFunction(position)
       math.abs(actualValue - 0.98) < 0.05 aka s"actually, $actualValue" must beTrue
       found.counter < 10 must beTrue
@@ -119,10 +119,10 @@ class GradientDescentEngineTest extends Specification {
 
     "findAlongGradient 2d starting at 1" in {
       val evaluator = GradientDescentEngine.vectorEvaluator[R2.type](R2)(waves, wavesGradient)
-      val sut = GradientDescentEngine[R2.Vector, R2.MutableVector](evaluator, 100, 0.0001, 0.001)
+      val sut = GradientDescentEngine[R2.MutableVector, R2.Vector](evaluator, 100, 0.0001, 0.001)
       val position = R2.const(1.0).copy
       val initValue = evaluator.targetFunction(position)
-      val found = sut.findAlongGradient(position, evaluator.gradientAt(position), sut.State(initValue, 0.1))
+      val found = sut.findAlongGradient(position, evaluator.gradientAt(position), sut.Cursor(initValue, 0.1))
       val actualValue = evaluator.targetFunction(position)
       math.abs(actualValue - 4.5) < 0.05 aka s"actually, $actualValue" must beTrue
       found.counter < 10 must beTrue
