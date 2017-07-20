@@ -147,7 +147,7 @@ class SkipGramModelTest extends Specification {
     source map scanner.scan map {
       st =>
         val α = 0.9 / dim.dim
-        val vectors: List[(String, newDim.Vector)] = buildW2vModel(dim, newDim, numEpoch, α, st, reducer, chunkSize)
+        val vectors: List[(String, newDim.Vector)] = buildModel(dim, newDim, numEpoch, α, st, reducer, chunkSize)
         serialize(filename, dim, vectors)
         println("Rare words")
         println(vectors take 10 mkString "\n")
@@ -160,8 +160,8 @@ class SkipGramModelTest extends Specification {
     }
   }
 
-  private def buildW2vModel[S <: VectorSpace, T <: VectorSpace](dim: S, newDim: T, numEpochs:Int, α: Double, st: ScannedText, reducer: DimensionReducer[S#Vector, T#Vector], chunkSize: Int = 0) = {
-    val allOriginalVectors: Array[S#MutableVector] = runSkipGram(dim, numEpochs, α, st)
+  private def buildModel[S <: VectorSpace, T <: VectorSpace](dim: S, newDim: T, numEpochs:Int, α: Double, st: ScannedText, reducer: DimensionReducer[S#Vector, T#Vector], chunkSize: Int = 0): List[(String, newDim.Vector)] = {
+    val allOriginalVectors: Array[dim.Vector] = runSkipGram(dim, numEpochs, α, st)
     val originalVectors = if (chunkSize == 0) allOriginalVectors else allOriginalVectors.takeRight(chunkSize)
     val vs = reducer.reduce(originalVectors)
     val uvs = newDim.toUnitCube(vs map (_.asInstanceOf[newDim.Vector]))
@@ -169,12 +169,13 @@ class SkipGramModelTest extends Specification {
     vectors
   }
 
-  private def runSkipGram[Space <: VectorSpace](dim: Space, numEpochs: Int, α: Double, st: ScannedText) = {
+  private def runSkipGram[Space <: VectorSpace](dim: Space, numEpochs: Int, α: Double, st: ScannedText): Array[dim.Vector] = {
     val model = SkipGramModel(st, dim, α, window = 3, numEpochs, seed = 123456789L)
     model.run()
     val originalVectors = model.in
-    originalVectors.foreach { v => v.isValid must beTrue; () }
-    originalVectors
+    originalVectors.zipWithIndex foreach { 
+      case(v,i) => v.isValid aka s"@$i: $v" must beTrue; () }
+    originalVectors.asInstanceOf[Array[dim.Vector]] // TODO: get rid of casting
   }
 
 //  private def applyPCA(originalVectors: IndexedSeq[Vector], newDim: VectorSpace, precision: Double, numIterations: Int) = {

@@ -1,7 +1,5 @@
 package scalakittens.ml
 
-import com.sun.prism.paint.Gradient
-
 import scala.language.postfixOps
 import scalakittens.la.VectorSpace
 import scalakittens.ml.GradientDescentEngine.Evaluator
@@ -12,8 +10,12 @@ import scalakittens.ml.GradientDescentEngine.Evaluator
   * It just does the search.
   * The fact that we are in a linear space is also irrelevant.
   * Created by vpatryshev on 7/13/17.
+  * 
+  * Type parameters: 
+  *   State, which represents current search positions
+  *   Tangent, which represent search directions @see https://en.wikipedia.org/wiki/Tangent_space
   */
-sealed case class GradientDescentEngine[State <: Mutable, Gradient](evaluator: Evaluator[State, Gradient], maxEpochs: Int, valuePrecision: Double, stepPrecision: Double) {
+sealed case class GradientDescentEngine[State <: Mutable, Tangent](evaluator: Evaluator[State, Tangent], maxEpochs: Int, valuePrecision: Double, stepPrecision: Double) {
 
   val DEBUG = false
   def debug(m: =>String): Unit = if (DEBUG) println(m)
@@ -36,7 +38,7 @@ sealed case class GradientDescentEngine[State <: Mutable, Gradient](evaluator: E
     }
   }
   
-  def findAlongGradient(position: State, gradient: Gradient, initState: Cursor): Cursor = {
+  def findAlongGradient(position: State, gradient: Tangent, initState: Cursor): Cursor = {
     debug(s"===fAG at $position, is=$initState")
     val result = Stream.iterate(initState) {
       s =>
@@ -77,13 +79,13 @@ sealed case class GradientDescentEngine[State <: Mutable, Gradient](evaluator: E
 
   def find(point: State, initStep: Double): Option[(Double, Int)] = {
 
-    Stream.iterate((Cursor(evaluator.targetFunction(point), initStep), None: Option[Gradient], initStep, 0)) {
+    Stream.iterate((Cursor(evaluator.targetFunction(point), initStep), None: Option[Tangent], initStep, 0)) {
       case (s, previousGradient, step, epoch) =>
         val gradient = evaluator.gradientAt(point)
         debug(s"---at $point (${evaluator.targetFunction(point)}), epoch $epoch, step $step, status $s")
         val r0 = findAlongGradient(point, gradient, s).copy(step = s.step * stepDecreaseQ)
         val newEpoch = epoch + r0.counter
-        val tentativeStep = previousGradient map ((g: Gradient) => {
+        val tentativeStep = previousGradient map ((g: Tangent) => {
           val cos = evaluator.cos(g, gradient)
           (1 + 0.3 * cos) * step
         }) getOrElse step
@@ -102,11 +104,11 @@ object GradientDescentEngine {
   /**
     * Evaluator for gradient descent, must implement all the abstractions
     *
-    * @tparam Gradient  the type of space elements
+    * @tparam Tangent  the type of space elements
     * @tparam State the type of mutable space elements
     */
-  trait Evaluator[State <: Mutable, Gradient] {
-    def cos(previousGradient: Gradient, gradient: Gradient): Double
+  trait Evaluator[State <: Mutable, Tangent] {
+    def cos(gradient1: Tangent, gradient2: Tangent): Double
 
     /**
       * Evaluates target function at given position
@@ -122,22 +124,22 @@ object GradientDescentEngine {
     /**
       * Calculates normalized gradient at a given position.
       * We assume we are in a linear space, so the gradient
-      * is the same type Gradient
+      * is the same type Tangent
       *
       * @param position at which we calculate the gradient
       * @return gradient value
       */
-    def gradientAt(position: State): Gradient
+    def gradientAt(position: State): Tangent
 
     /**
-      * Nudges the current position, in place (so it's mutable somewhere inside)
-      * <code>position += direction * step</code>
+      * Nudges the current position
+      * <code>position + direction * step</code>
       *
       * @param position  current position; will change after nudging
       * @param direction aka gradient, the direction in which the position should be nudged
       * @param step      how far we should go.
       */
-    def nudge(position: State, direction: Gradient, step: Double): Unit
+    def nudge(position: State, direction: Tangent, step: Double): Unit
   }
 
   implicit class DoubleVal(x0: Double) {
