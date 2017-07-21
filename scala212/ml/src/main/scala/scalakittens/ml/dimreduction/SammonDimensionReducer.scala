@@ -1,9 +1,10 @@
 package scalakittens.ml.dimreduction
 
-import scala.annotation.tailrec
 import scala.language.postfixOps
 import scalakittens.la._
 import ArrayOps._
+import scalakittens.ml.GradientDescentEngine
+import scalakittens.ml.GradientDescentEngine.Evaluator
 
 /**
   * Sammon algorithm for dimension reduction
@@ -14,11 +15,14 @@ import ArrayOps._
   *
   *      Created by vpatryshev on 6/11/17.
   */
-abstract class SammonDimensionReducer[S <: VectorSpace, T <: VectorSpace](
-                                                                           val source: S,
-                                                                           val target: T,
-                                                                           val numSteps: Int
-                                                                         ) extends DimensionReducer[S#Vector, T#Vector] {
+abstract class SammonDimensionReducer
+    [S <: VectorSpace, T <: VectorSpace]
+    (val source: S,
+     val target: T,
+     val numSteps: Int,
+     val errorPrecision: Double = 0.001) 
+  extends DimensionReducer[S#Vector, T#Vector] {
+  
   type Target = T
   type MatrixLike = (Int, Int) => Double
   
@@ -27,12 +31,15 @@ abstract class SammonDimensionReducer[S <: VectorSpace, T <: VectorSpace](
   protected val init: IndexedSeq[S#Vector] => IndexedSeq[target.Vector]
 
   def reduce(originalVectors: IndexedSeq[S#Vector]) = {
-    val iterations = new Iterations(originalVectors)
-    //    println(s"Will run on ${originalVectors.length} vectors")
+    val iterations = new Engine(originalVectors)
     iterations.run()
   }
 
-  class Iterations(originalVectors: IndexedSeq[S#Vector], magicFactor: Double = 0.01) {
+  class Tangent(val vectors: IndexedSeq[target.Vector])
+  
+  class State(val vectors:IndexedSeq[target.MutableVector], var  matrix: MatrixLike) extends Mutable
+  
+  class Engine(originalVectors: IndexedSeq[S#Vector], magicFactor: Double = 0.01) {
     type DistanceMatrix = globalSpace.TriangularMatrix
     lazy val initialVectors = init(originalVectors)
     lazy val maxNorm = 10 * initialVectors.map(Norm.l2(_)).max
@@ -41,6 +48,7 @@ abstract class SammonDimensionReducer[S <: VectorSpace, T <: VectorSpace](
       val s = originalVectors.length
       d/s/s
     }
+    
     lazy val originalDistanceMatrix: MatrixLike = distanceMatrix(globalSpace, originalVectors)
     
     def elementsOf(matrix: MatrixLike) = {
@@ -55,12 +63,42 @@ abstract class SammonDimensionReducer[S <: VectorSpace, T <: VectorSpace](
     }
     
     lazy val originalDistanceMatrixData = elementsOf(originalDistanceMatrix)
-
-
-    lazy val summaryNorm = Norm.l2(originalDistanceMatrixData) / 2
     val size = originalVectors.size
     val globalSpace = VectorSpace(size)
 
+    val evaluator = new Evaluator[State, Tangent] {
+      override def cos(gradient1: Tangent, gradient2: Tangent) = {
+        val moments = ((0.0, 0.0, 0.0) /: (gradient1.vectors zip gradient2.vectors)) {
+          case ((prod, norm1, norm2), (v1, v2)) => 
+            val n1 = Norm.l2(v1)
+            val n2 = Norm.l2(v2)
+            (prod + v1 * v2, norm1 + n1*n1, norm2 + n2*n2)
+        }
+
+        moments._1 / math.sqrt(moments._2 * moments._3)
+      }
+
+
+      override def targetFunction(position: State, maxValue: Double) = {
+        error(position.matrix)
+      }
+
+      override def gradientAt(position: State) = {
+        val vs = position.vectors
+        val tangentVectors: IndexedSeq[target.Vector] = vs.indices map (p => `dE/dy`(vs, position.matrix, p))
+
+        new Tangent(tangentVectors)
+      }
+
+      override def nudge(position: State, direction: Tangent, step: Double) = {
+        val vectors = position.vectors
+        vectors zip direction.vectors foreach {
+          case (a:target.MutableVector,b: target.Vector) => a.nudge(b, step)
+        }
+        position.matrix = distanceMatrix(globalSpace, vectors)
+      }
+    }
+    
     def distanceMatrix[Space <: VectorSpace](space: Space, vs: IndexedSeq[Space#Vector]): MatrixLike = {
       
       val elementEvaluator: ((Int, Int) => Double) = 
@@ -81,7 +119,7 @@ abstract class SammonDimensionReducer[S <: VectorSpace, T <: VectorSpace](
 
     lazy val numberOfVerticesInUnitCube = 1 << target.dim
 
-    private def vertexFor(i: Int): target.Vector = {
+    private def stepInDirectionOf(i: Int): target.Vector = {
       val absNo = i % numberOfVerticesInUnitCube
       val d = minDouble
       val coordinates = (for {
@@ -89,10 +127,6 @@ abstract class SammonDimensionReducer[S <: VectorSpace, T <: VectorSpace](
       } yield if (((1 << bitNo) & absNo) == 0) d else -d) toArray
       
       new target.OnArray(coordinates)
-    }
-    
-    private def stepInDirectionOf(i: Int) = {
-      vertexFor(i)
     }
 
     def `dE/dy`(vectors: IndexedSeq[target.Vector], m: MatrixLike, p: Int): target.Vector = {
@@ -112,63 +146,13 @@ abstract class SammonDimensionReducer[S <: VectorSpace, T <: VectorSpace](
       v
     }
 
-    def Δ(vs: IndexedSeq[target.Vector], m: MatrixLike, p: Int): target.Vector = {
-      val gradient = `dE/dy`(vs, m, p)
-      if (!gradient.isValid) throw new IllegalStateException(s"Bad gradient: $gradient, for p=$p")
-      val stepSize = Norm.l2(gradient)
-      if (stepSize > maxNorm) gradient * (maxNorm / stepSize) else gradient
-    }
-
-    def shift(i: Int, vectors: IndexedSeq[target.Vector], matrix: MatrixLike): IndexedSeq[target.Vector] = {
-      vectors.indices map {
-        p => {
-          val d = Δ(vectors, matrix, p)
-          if (!d.isValid) throw new IllegalStateException(s"Bad vector$p in step $i: $d, where original is ${vectors(p)} and d=$d")
-          d
-        }
-      }
-    }
-
     def run(): IndexedSeq[target.Vector] = {
+      val finder = GradientDescentEngine[State, Tangent](evaluator, numSteps, errorPrecision, errorPrecision)
       val m0: MatrixLike = distanceMatrix(globalSpace, initialVectors)
-      val err0 = error(m0)
-      val result = recurse(initialVectors, err0, m0, 0, numSteps, magicFactor)
-      result._1
-    }
-
-    @tailrec private def recurse(vs: IndexedSeq[target.Vector], err0: Double, mx0: MatrixLike, i: Int, numSteps: Int, factor: Double): (IndexedSeq[target.Vector], Double, MatrixLike) = {
-      if (i >= numSteps || factor < 0.00001) (vs, err0, mx0) else {
-        val t0 = System.currentTimeMillis
-
-        val step = shift(i, vs, mx0)
-
-        case class State(stepSize: Double) {
-          lazy val newVectors = vs.indices map { i => vs(i) - step(i)*factor }
-        }
-        
-        val t1 = System.currentTimeMillis
-        println(s"#$i.1: ${t1-t0}ms")
-
-        
-        
-        val newVs = vs.indices map { i => vs(i) - step(i)*factor } // !!! Use nudge
-        val mx1 = distanceMatrix(globalSpace, newVs)
-        val t2 = System.currentTimeMillis
-        println(s"#$i.2: ${t2-t1}ms")
-        val err = error(mx1)
-        Viz.visualize(s"Sammon, step $i, err $err", newVs map { v => ("*", v.apply(0), v.apply(1)) })
-
-        val t3 = System.currentTimeMillis
-        val delta = step map (Norm.l2(_)) sum
-        
-        println(s"Step $i, factor=$factor, error = $err; delta = $delta; t1=${t1 - t0}, t2=${t2 - t1}, , t3=${t3 - t2}")
-
-        if (err < err0 * 0.999) {
-          recurse(newVs, err, mx1, i + 1, numSteps, factor)
-        } else {
-          recurse(vs, err0, mx0, i + 1, numSteps, factor * 0.7)
-        }
-      }
+      val state = new State(initialVectors.map(_.copy), m0)
+      val found1 = finder.find(state, 1.0)
+      println(s"Found: $found1")
+      state.vectors
     }
   }
 
