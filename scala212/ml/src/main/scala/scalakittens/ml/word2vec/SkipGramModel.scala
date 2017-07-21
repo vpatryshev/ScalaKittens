@@ -78,7 +78,7 @@ case class SkipGramModel[Space <: VectorSpace](text: ScannedText, space: Space, 
   
   def doOneEpoch(numEpoch: Int): Unit = {
     val numCores = Runtime.getRuntime.availableProcessors
-    val oneRange = text.length / numCores
+    val oneRange = (text.length + numCores-1) / numCores
     val threads = (0 until numCores).par
     threads.foreach((t:Int) => {
       val range = (t*oneRange) until min(text.length, (t+1)*oneRange)

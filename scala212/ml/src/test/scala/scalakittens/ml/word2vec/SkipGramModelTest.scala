@@ -9,6 +9,7 @@ import scalakittens.la.Spaces._
 import scalakittens._
 import scalakittens.la._
 import scalakittens.ml.dimreduction.{DimensionReducer, PcaDimensionReducer, SammonDimensionReducer}
+import scalakittens.ml.dimreduction.Viz._
 
 // TODO: implement https://en.wikipedia.org/wiki/Nonlinear_dimensionality_reduction#Methods_based_on_proximity_matrices
 
@@ -74,13 +75,26 @@ class SkipGramModelTest extends Specification {
       ok
     }
 
+    "process 'War And Peace' with Sammon, slow" in {
+      val filename = "warandpeace.vecs.sammon.txt"
+
+      val sammonReducer: DimensionReducer[R7.Vector, R2.Vector] = SammonDimensionReducer.withPCA[R7.type, R2.type](R7, R2, 20)
+
+      doWarAndPeace[R7.type, R2.type](R7, R2, numEpoch = 50, filename, sammonReducer) match {
+        case Good(vs: List[(String, R2.Vector)]) =>
+          showWarAndPeace[R2.type](vs.iterator)
+          ok
+        case bad: Bad[_] => failure(bad.listErrors.toString + "\n" + bad.stackTrace)
+        case Empty => failure("No War, no Peace! /* Trotsky */")
+      }
+
+      ok
+    }
+
     "process 'War And Peace' with Sammon, fast" in {
       val filename = "warandpeace.vecs.sammon.txt"
 
-      val pca = pcaReducer(R10, R3, 30)
-      val sammonReducer: DimensionReducer[R10.Vector, R3.Vector] = new SammonDimensionReducer[R10.type, R3.type](R10, R3, 30) {
-        val init: IndexedSeq[R10.Vector] => IndexedSeq[R3.Vector] = v => pca.reduce(v).map(_.asInstanceOf[R3.Vector])
-      }
+      val sammonReducer: DimensionReducer[R10.Vector, R3.Vector] = SammonDimensionReducer.withPCA[R10.type, R3.type](R10, R3, 30)
 
       doWarAndPeace[R10.type, R3.type](R10, R3, numEpoch = 50, filename, sammonReducer, 1000) match {
         case Good(vs: List[(String, R3.Vector)]) =>
@@ -133,12 +147,12 @@ class SkipGramModelTest extends Specification {
     source map scanner.scan map {
       st =>
         val α = 0.9 / dim.dim
-        val vectors: List[(String, newDim.Vector)] = buildW2vModel(dim, newDim, numEpoch, α, st, reducer, chunkSize)
+        val vectors: List[(String, newDim.Vector)] = buildModel(dim, newDim, numEpoch, α, st, reducer, chunkSize)
         serialize(filename, dim, vectors)
-//        println("Rare words")
-//        println(vectors take 10 mkString "\n")
-//        println("Frequent words")
-//        println((vectors takeRight 10).reverse mkString "\n")
+        println("Rare words")
+        println(vectors take 10 mkString "\n")
+        println("Frequent words")
+        println((vectors takeRight 10).reverse mkString "\n")
 
         println(s"\nSEE ALL RESULTS IN $filename\n")
 //        vectors.length must_== 17355
@@ -146,21 +160,22 @@ class SkipGramModelTest extends Specification {
     }
   }
 
-  private def buildW2vModel[S <: VectorSpace, T <: VectorSpace](dim: S, newDim: T, numEpochs:Int, α: Double, st: ScannedText, reducer: DimensionReducer[S#Vector, T#Vector], chunkSize: Int = 0) = {
-    val allOriginalVectors: Array[S#MutableVector] = runSkipGram(dim, numEpochs, α, st)
-    val originalVectors = if (chunkSize == 0) allOriginalVectors else allOriginalVectors.take(chunkSize)
+  private def buildModel[S <: VectorSpace, T <: VectorSpace](dim: S, newDim: T, numEpochs:Int, α: Double, st: ScannedText, reducer: DimensionReducer[S#Vector, T#Vector], chunkSize: Int = 0): List[(String, newDim.Vector)] = {
+    val allOriginalVectors: Array[dim.Vector] = runSkipGram(dim, numEpochs, α, st)
+    val originalVectors = if (chunkSize == 0) allOriginalVectors else allOriginalVectors.takeRight(chunkSize)
     val vs = reducer.reduce(originalVectors)
     val uvs = newDim.toUnitCube(vs map (_.asInstanceOf[newDim.Vector]))
     val vectors = st.withFrequencies zip uvs
     vectors
   }
 
-  private def runSkipGram[Space <: VectorSpace](dim: Space, numEpochs: Int, α: Double, st: ScannedText) = {
+  private def runSkipGram[Space <: VectorSpace](dim: Space, numEpochs: Int, α: Double, st: ScannedText): Array[dim.Vector] = {
     val model = SkipGramModel(st, dim, α, window = 3, numEpochs, seed = 123456789L)
     model.run()
     val originalVectors = model.in
-    originalVectors.foreach { v => v.isValid must beTrue; () }
-    originalVectors
+    originalVectors.zipWithIndex foreach { 
+      case(v,i) => v.isValid aka s"@$i: $v" must beTrue; () }
+    originalVectors.asInstanceOf[Array[dim.Vector]] // TODO: get rid of casting
   }
 
 //  private def applyPCA(originalVectors: IndexedSeq[Vector], newDim: VectorSpace, precision: Double, numIterations: Int) = {
@@ -192,47 +207,4 @@ class SkipGramModelTest extends Specification {
     ok
   }
 
-  def visualize(title: String, projections: List[(String, Double, Double)]): Unit = {
-    println
-    println
-    println("=" * 150)
-    println(s"                                    $title\n")
-    println("-" * 150)
-    val xs = projections.map(_._2)
-    val ys = projections.map(_._3)
-
-    val (xmin, xmax) = (xs.min, xs.max)
-    val (ymin, ymax) = (ys.min, ys.max)
-
-    val N = 120
-    val M = 60
-    val xScale = (xmax - xmin) / N
-    val yScale = (ymax - ymin) / M
-
-    val sample = projections map {
-      case (w, x, y) => (w, ((x - xmin) / xScale).toInt + 1, ((y - ymin) / yScale).toInt)
-    }
-
-    val samplesByLine = sample.groupBy(_._3)
-
-    0 to M foreach {
-      j =>
-        val row = samplesByLine.getOrElse(j, Nil) map (t => t._1 -> t._2)
-
-        val layout = (Map[Int, Char]() /: row) {
-          case (charMap, (w, pos)) =>
-            val wordRange = math.max(pos - 1, 0) until math.min(N, pos + w.length + 1)
-            if (wordRange exists charMap.contains) charMap else {
-              val m1 = 0 until w.length map (i => i + pos -> w.charAt(i)) toMap
-
-              charMap ++ m1
-            }
-        }
-
-        val chars = 0 until N map (layout.getOrElse(_, ' '))
-
-        print(chars mkString)
-        println
-    }
-  }
 }

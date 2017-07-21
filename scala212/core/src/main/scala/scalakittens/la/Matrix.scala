@@ -42,6 +42,10 @@ trait Matrix[Domain <: VectorSpace, Codomain <: VectorSpace] extends ((Int, Int)
 
   lazy val columnRange = 0 until nCols
 
+  override lazy val size = nRows * nCols
+  
+  override lazy val isEmpty = size == 0
+
   /**
     * Checks row and column indexes
  *
@@ -84,7 +88,7 @@ trait Matrix[Domain <: VectorSpace, Codomain <: VectorSpace] extends ((Int, Int)
     codomain.Vector(col)
   }
 
-  def allElements: Seq[Double] = for {
+  def allElements: IndexedSeq[Double] = for {
     i <- rowRange
     j <- columnRange
   } yield this(i, j)
@@ -274,19 +278,30 @@ object Matrix {
     apply(domain, codomain, storage = new Array[Double](domain.dim * codomain.dim))
   }
     
-  class OnArray[Domain <: VectorSpace, Codomain <: VectorSpace](val domain: Domain, val codomain: Codomain, protected val data: Array[Double]) extends MutableMatrix[Domain, Codomain] {
+  class OnArray[Domain <: VectorSpace, Codomain <: VectorSpace](val domain: Domain, val codomain: Codomain, val data: Array[Double]) extends MutableMatrix[Domain, Codomain] {
+    
+    override def iterator: Iterator[Double] = data.iterator
     
     protected def checkArray() =  require(data.length == domain.dim*codomain.dim)
 
     checkArray()
     
-    protected def index(i: Int, j: Int) = {
-      checkIndexes(i, j)
+    protected def internalIndex(i: Int, j: Int) = {
       i*nCols+j
     }
 
+    protected def index(i: Int, j: Int) = {
+      checkIndexes(i, j)
+      internalIndex(i, j)
+    }
+
     override def update(i: Int, j: Int, value: Double): Unit = {
-      data(index(i,j)) = value
+      val idx = index(i, j)
+      data(idx) = value
+    }
+
+    protected def internalUpdate(i: Int, j: Int, value: Double): Unit = {
+      data(internalIndex(i,j)) = value
     }
 
     override def apply(i: Int, j: Int): Double = {
@@ -311,6 +326,10 @@ object Matrix {
   class OnFunction[Domain <: VectorSpace, Codomain <: VectorSpace]
     (val domain: Domain, val codomain: Codomain, f: (Int, Int) => Double) extends Matrix[Domain, Codomain] {
 
+    override lazy val size = domain.dim * codomain.dim
+
+    override lazy val isEmpty = size == 0
+    
     override def apply(i: Int, j: Int): Double = {
       checkIndexes(i, j)
       f(i, j)
