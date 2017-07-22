@@ -111,21 +111,29 @@ trait Strings {
   }
 
   val isStop = Set(
-    "", "a", "about", "after", "again", "all", "already", "am", "an", "and", "another", "any", "are", "as", "at",
-    "be", "because", "been", "before", "but", "by", "can", "could",
+    "", "a", "about", "after", "again", "against", "all", "along", "already", "am", "an", "and", "another", "any", "are", "as", "ask", "asked", "asks", "at", "away",
+    "back", "be", "became", "because", "become", "been", "before", "began", "begin", "being", "but", "by", 
+    "came", "can", "come", "could",
     "das", "did", "do", "does", "doing", "don't", "done", "down", 
     "en", "even", "every",
-    "for", "from", "go",
-    "had", "has", "have", "he", "her", "here", "here", "him", "him", "himself", "his", "how",
+    "for", "from",
+    "gave", "get", "give", "gives", "go", "goes", "going", "good", "got", "great",
+    "had", "has", "have", "having", "he", "her", "here", "here", "herself", "him", "him", "himself", "his", "how",
     "i", "if", "in", "into", "is", "it", "its", "je", "just",
-    "less", "me", "mine", "more", "more", "my",
-    "no", "not", "nous", "now", 
-    "of", "off", "oh", "on", "one", "only", "or", "other", "our", "out", "over",
-    "s'en", "said", "she", "should", "so", "some", "still", "such",
-    "t", "than", "that", "the", "their", "theirs", "them", "then", "there", "these", "they", "this", "those", "to", "too", "together",
+    "knew", "know",
+    "left", "less", "let", "like", "little", "long", "look", "looked", 
+    "made", "make", "many", "may", "me", "mine", "more", "most", "much", "must", "my",
+    "never", "new", "no", "not", "nous", "now", 
+    "of", "off", "oh", "old", "on", "one", "only", "or", "other", "our", "out", "over", "own",
+    "put",
+    "quite",
+    "ran", "reply", "replied", "replies", "run", "runs",
+    "s'en", "said", "same", "sat", "say", "see", "seemed", "seems", "she", "should", "sit", "so", "some", "something", "speak", "speaks", "spoke", "stand", "stands", "stood", "still", "such", "suddenly",
+    "t", "take", "tell", "than", "that", "the", "their", "theirs", "them", "then", "there", "these", "they", "think", "this", "those", "though", "thought", "three", 
+      "to", "together", "too", "took", "toward", "turn", "turned",  "turns", "two",
     "under", "up", "us", "very",
-    "was", "we", "went", "were", "what", "when", "which", "who", "whom", "why", "will", "with", "without", "won't", "would",
-    "yes", "you", "your")
+    "want", "wanted", "wants", "was", "we", "well", "went", "were", "what", "when", "where", "whether", "which", "who", "whom", "why", "will", "with", "without", "won't", "would",
+    "yes", "yet", "you", "your")
 }
 
 object Strings extends Strings
