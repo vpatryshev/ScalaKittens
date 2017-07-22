@@ -1,0 +1,2 @@
+cd core && sbt clean test && cd ../ml && sbt clean test && cd ../experiments && sbt clean test
+

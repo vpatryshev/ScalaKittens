@@ -1,1 +1,6 @@
 **/.idea/*
+*/project/project
+scala21*/project/target
+**/target
+**/tmp
+
