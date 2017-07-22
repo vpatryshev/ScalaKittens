@@ -37,6 +37,14 @@ public class ArrayOps {
       }
       return s;
     }
+
+    public double foldUpTo(double[] first, double[] second, double limit) {
+      double s = 0.0;
+      for (int i = 0; i < first.length && s < limit; i++) {
+        s += op(first[i], second[i]);
+      }
+      return s;
+    }
   }
 
   static private final Folding2 product = new Folding2() {
