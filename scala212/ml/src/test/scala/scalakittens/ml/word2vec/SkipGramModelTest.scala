@@ -43,6 +43,8 @@ class SkipGramModelTest extends Specification {
   def pcaReducer(source: VectorSpace, target: VectorSpace, numIterations: Int) =
     new PcaDimensionReducer[source.type, target.type](source, target, precision = 0.001, numIterations)
 
+  sequential
+  
   "SkipGramModel" should {
 
 //    "process 'War And Peace' slowly with PCA" in {
@@ -77,14 +79,17 @@ class SkipGramModelTest extends Specification {
 
     "process 'War And Peace' with Sammon, slow" in {
       val filename = "warandpeace.vecs.sammon.txt"
-
+      val t = new Tracker
       val sammonReducer: DimensionReducer[R7.Vector, R2.Vector] = SammonDimensionReducer.withPCA[R7.type, R2.type](R7, R2, 20)
-
+      t << "instantiated sammon reducer"
       doWarAndPeace[R7.type, R2.type](R7, R2, numEpoch = 50, filename, sammonReducer) match {
         case Good(vs: List[(String, R2.Vector)]) =>
+          t << s"did war and peace, good (${vs.length} words"
           showWarAndPeace[R2.type](vs.iterator)
           ok
-        case bad: Bad[_] => failure(bad.listErrors.toString + "\n" + bad.stackTrace)
+        case bad: Bad[_] =>
+          t << s"did not do war and peace"
+          failure(bad.listErrors.toString + "\n" + bad.stackTrace)
         case Empty => failure("No War, no Peace! /* Trotsky */")
       }
 

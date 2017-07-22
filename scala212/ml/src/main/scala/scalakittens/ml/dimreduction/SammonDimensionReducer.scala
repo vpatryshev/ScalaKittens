@@ -3,6 +3,7 @@ package scalakittens.ml.dimreduction
 import scala.language.postfixOps
 import scalakittens.la._
 import ArrayOps._
+import scalakittens.Tracker
 import scalakittens.ml.GradientDescentEngine
 import scalakittens.ml.GradientDescentEngine.Evaluator
 
@@ -78,9 +79,13 @@ abstract class SammonDimensionReducer
         moments._1 / math.sqrt(moments._2 * moments._3)
       }
 
-
       override def targetFunction(position: State, maxValue: Double) = {
-        error(position.matrix)
+        val erfTracker = new Tracker
+        val thisData = elementsOf(position.matrix)
+        val orgData = originalDistanceMatrixData
+        val e = sammonErrorMeasure.foldUpTo(thisData, orgData, maxValue * 5)
+        erfTracker << (s" calculating error = $e")
+        e
       }
 
       override def gradientAt(position: State) = {
@@ -108,14 +113,6 @@ abstract class SammonDimensionReducer
       elementEvaluator
     }
     
-    def error(matrix: MatrixLike) = {
-      val thisData = elementsOf(matrix)
-      val orgData = originalDistanceMatrixData
-      val t0 = System.currentTimeMillis
-      val e = sammonErrorMeasure.fold(thisData, orgData)
-      println(s"Spent ${System.currentTimeMillis - t0} ms calculating error = $e")
-      e
-    }
 
     lazy val numberOfVerticesInUnitCube = 1 << target.dim
 

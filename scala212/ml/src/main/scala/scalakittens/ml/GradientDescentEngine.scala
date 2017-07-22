@@ -1,6 +1,7 @@
 package scalakittens.ml
 
 import scala.language.postfixOps
+import scalakittens.Tracker
 import scalakittens.la.VectorSpace
 import scalakittens.ml.GradientDescentEngine.Evaluator
 
@@ -39,6 +40,7 @@ sealed case class GradientDescentEngine[State <: Mutable, Tangent](evaluator: Ev
   }
   
   def findAlongGradient(position: State, gradient: Tangent, initState: Cursor): Cursor = {
+    val tracker = new Tracker
     debug(s"===fAG at $position, is=$initState")
     val result = Stream.iterate(initState) {
       s =>
@@ -74,6 +76,7 @@ sealed case class GradientDescentEngine[State <: Mutable, Tangent](evaluator: Ev
     } getOrElse result
 
     debug(s"2. $finalResult:\n $position")
+    tracker << s"gde along predicate: $finalResult"
     finalResult
   }
 
