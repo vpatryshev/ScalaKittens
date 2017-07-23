@@ -38,7 +38,7 @@ abstract class SammonDimensionReducer
 
   class Tangent(val vectors: IndexedSeq[target.Vector])
   
-  class State(val vectors:IndexedSeq[target.MutableVector], var  matrix: MatrixLike) extends Mutable
+  case class State(val vectors:IndexedSeq[target.MutableVector], var  matrix: MatrixLike) extends Mutable
   
   class Engine(originalVectors: IndexedSeq[S#Vector], magicFactor: Double = 0.01) {
     type DistanceMatrix = globalSpace.TriangularMatrix
@@ -50,7 +50,7 @@ abstract class SammonDimensionReducer
       d/s/s
     }
     
-    lazy val originalDistanceMatrix: MatrixLike = distanceMatrix(globalSpace, originalVectors)
+    lazy val originalDistanceMatrix: MatrixLike = distanceMatrix(originalVectors)
     
     def elementsOf(matrix: MatrixLike) = {
       val data = new Array[Double](globalSpace.dim * (globalSpace.dim - 1) / 2)
@@ -63,7 +63,8 @@ abstract class SammonDimensionReducer
       data
     }
     
-    lazy val originalDistanceMatrixData = elementsOf(originalDistanceMatrix)
+    lazy val originalDistanceMatrixData = elementsOf(originalDistanceMatrix) 
+    
     val size = originalVectors.size
     val globalSpace = VectorSpace(size)
 
@@ -78,14 +79,18 @@ abstract class SammonDimensionReducer
 
         moments._1 / math.sqrt(moments._2 * moments._3)
       }
-
+      
       override def targetFunction(position: State, maxValue: Double) = {
         val erfTracker = new Tracker
-        val thisData = elementsOf(position.matrix)
-        val orgData = originalDistanceMatrixData
-        val e = sammonErrorMeasure.foldUpTo(thisData, orgData, maxValue * 5)
-        erfTracker << (s" calculating error = $e")
-        e
+        var s = 0.0
+        for {
+          i <- 0 until globalSpace.dim if s < maxValue * 2.5
+          j <- 0 until i if s < maxValue * 2.5
+        } {
+          s += sammonErrorMeasure.op(originalDistanceMatrix(i, j), position.matrix(i, j))
+        }
+        erfTracker << s"calculating error = $s"
+        s
       }
 
       override def gradientAt(position: State) = {
@@ -100,17 +105,12 @@ abstract class SammonDimensionReducer
         vectors zip direction.vectors foreach {
           case (a:target.MutableVector,b: target.Vector) => a.nudge(b, step)
         }
-        position.matrix = distanceMatrix(globalSpace, vectors)
+        position.matrix = distanceMatrix(vectors)
       }
     }
-    
-    def distanceMatrix[Space <: VectorSpace](space: Space, vs: IndexedSeq[Space#Vector]): MatrixLike = {
-      
-      val elementEvaluator: ((Int, Int) => Double) = 
-          (i, j) => {
-            Norm.l2.distance(vs(i), vs(j))
-          }
-      elementEvaluator
+
+    def distanceMatrix[Space <: VectorSpace](vs: IndexedSeq[Space#Vector]): MatrixLike = {
+      (i, j) => Norm.l2.distance(vs(i), vs(j))
     }
     
 
@@ -145,9 +145,9 @@ abstract class SammonDimensionReducer
 
     def run(): IndexedSeq[target.Vector] = {
       val finder = GradientDescentEngine[State, Tangent](evaluator, numSteps, errorPrecision, errorPrecision)
-      val m0: MatrixLike = distanceMatrix(globalSpace, initialVectors)
+      val m0: MatrixLike = distanceMatrix(initialVectors)
       val state = new State(initialVectors.map(_.copy), m0)
-      val found1 = finder.find(state, 1.0)
+      val found1 = finder.find(state, 10.0)
       println(s"Found: $found1")
       state.vectors
     }

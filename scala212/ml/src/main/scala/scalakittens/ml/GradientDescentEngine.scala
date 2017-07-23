@@ -58,7 +58,7 @@ sealed case class GradientDescentEngine[State <: Mutable, Tangent](evaluator: Ev
         next
     } find (_.enoughProgress) head
 
-    debug(s"1. $result:\n $position")
+    debug(s"1. $result")
 
     val finalResult = result.progress map {
       p =>
@@ -69,36 +69,42 @@ sealed case class GradientDescentEngine[State <: Mutable, Tangent](evaluator: Ev
         debug(s"nudged with $lastStep, got $position with value $newValue")
         if (newValue > result.functionValue) {
           evaluator.nudge(position, gradient, lastStep)
+          debug("nudged back")
           result
         } else {
+          debug("some progress")
           Cursor(newValue, lastStep, Some(p), result.counter + 1)
         }
-    } getOrElse result
+    } getOrElse {
+      debug("no progress")
+      result
+    }
 
-    debug(s"2. $finalResult:\n $position")
-    tracker << s"gde along predicate: $finalResult"
+    debug(s"2. $finalResult")
+    tracker << s"gde along gradient: ${finalResult.functionValue}, ${finalResult.step}"
     finalResult
   }
 
   def find(point: State, initStep: Double): Option[(Double, Int)] = {
 
-    Stream.iterate((Cursor(evaluator.targetFunction(point), initStep), None: Option[Tangent], initStep, 0)) {
-      case (s, previousGradient, step, epoch) =>
-        val gradient = evaluator.gradientAt(point)
-        debug(s"---at $point (${evaluator.targetFunction(point)}), epoch $epoch, step $step, status $s")
+    Stream.iterate((Cursor(evaluator.targetFunction(point), initStep), None: Option[Tangent], false, initStep, 0)) {
+      case (s, previousGradient, sameGradient, step, epoch) =>
+        val gradient = previousGradient filter (_ => sameGradient) getOrElse evaluator.gradientAt(point)
+        debug(s"---at $point (${evaluator.targetFunction(point)}), grad=$gradient, epoch $epoch, step $step, status $s")
         val r0 = findAlongGradient(point, gradient, s).copy(step = s.step * stepDecreaseQ)
         val newEpoch = epoch + r0.counter
-        val tentativeStep = previousGradient map ((g: Tangent) => {
+        def tentativeStep = previousGradient map ((g: Tangent) => {
           val cos = evaluator.cos(g, gradient)
+          debug(s"cos = $cos, prog=${s.progress}")
           (1 + 0.3 * cos) * step
         }) getOrElse step
         val newStep = s.progress map (_ => tentativeStep) getOrElse r0.step
 
         val r = r0.copy(progress = None, counter = 0, step = newStep)
-        debug(s"===new state=$r")
+        debug(s"===new state=$r @$point")
 
-        (r, Some(gradient), newStep, newEpoch)
-    } find { case (s, gradient, newStep, epoch) => epoch >= maxEpochs || s.enough } map { case (s, gradient, newStep, epoch) => (s.functionValue, epoch) }
+        (r, Some(gradient), r0.progress.isEmpty, newStep, newEpoch)
+    } find { case (s, gradient, sameGrad, newStep, epoch) => epoch >= maxEpochs || s.enough } map { case (s, gradient, sameGrad, newStep, epoch) => (s.functionValue, epoch) }
   }
 }
 

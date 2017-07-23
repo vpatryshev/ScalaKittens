@@ -28,7 +28,7 @@ public class ArrayOps {
   }
 
   public abstract static class Folding2 {
-    abstract double op(double x, double y);
+    abstract public double op(double x, double y);
 
     public double fold(double[] first, double[] second) {
       double s = 0.0;
@@ -48,7 +48,7 @@ public class ArrayOps {
   }
 
   static private final Folding2 product = new Folding2() {
-    double op(double x, double y) { return x*y; }
+    public double op(double x, double y) { return x*y; }
   };
 
   public static double scalarProduct(double[] xs, double[] ys) {
@@ -56,7 +56,7 @@ public class ArrayOps {
   }
   
   static private final Folding2 l2distance = new Folding2() {
-    double op(double x, double y) {
+    public double op(double x, double y) {
       double d = x - y;
       return d * d;
     }
@@ -72,7 +72,7 @@ public class ArrayOps {
   }
   
   public static final Folding2 sammonErrorMeasure = new Folding2() {
-    double op(double x, double y) {
+    public double op(double x, double y) {
       double d = x - y;
       return y == 0.0 ? 0.0 : d * d / y; // zeroes are on diagonal
     }

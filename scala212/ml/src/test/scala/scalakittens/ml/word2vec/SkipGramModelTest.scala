@@ -138,10 +138,10 @@ class SkipGramModelTest extends Specification {
     }.toList
 
 //    allProjections.size must_== 17355
-
-    val projections = allProjections.takeRight(150).reverse
-    visualize("150 MOST FREQUENT WORDS", projections)
-    visualize("150 MOST RARE WORDS", allProjections take 150)
+    val nWords = 120
+    val projections = allProjections.takeRight(nWords).reverse
+    visualize(s"$nWords MOST FREQUENT WORDS", projections)
+    visualize(s"$nWords MOST RARE WORDS", allProjections take nWords)
   }
 
   private def doWarAndPeace[S <: VectorSpace, T <: VectorSpace](dim: S, newDim: T, numEpoch: Int, filename: String, reducer: DimensionReducer[S#Vector, T#Vector], chunkSize: Int = 0): Result[List[(String, T#Vector)]] = {

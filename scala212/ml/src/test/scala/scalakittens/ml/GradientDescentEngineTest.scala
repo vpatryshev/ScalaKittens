@@ -12,7 +12,7 @@ import scalakittens.ml.GradientDescentEngine.{DoubleVal, DoubleVar}
   * Created by vpatryshev on 7/13/17.
   */
 class GradientDescentEngineTest extends Specification {
-
+  sequential
   val waves = (vec: R2.Vector) => {
     val x = vec.apply(0)
     val y = vec.apply(1)
@@ -30,6 +30,23 @@ class GradientDescentEngineTest extends Specification {
   }
 
   "GradientDescentEngineTest" should {
+
+    "find in 2d starting at (1,2)" in {
+      val evaluator = GradientDescentEngine.vectorEvaluator[R2.type](R2)(waves, wavesGradient)
+      val sut = GradientDescentEngine[R2.MutableVector, R2.Vector](evaluator, 100, 0.0001, 0.001)
+      val position = R2.Vector(1, 2).copy
+      val found = sut.find(position, 1.1)
+      found match {
+        case Some((value, epoch)) =>
+          math.abs(value - 0.98) < 0.03 aka s"oops, value=$value" must beTrue
+
+          Norm.l2.distance(position, R2.Vector(-1.4,4.8)) < 0.05 aka s"We are at $position, value=$value, epoch=$epoch" must beTrue
+          epoch < 50 aka s"epochs: $epoch" must beTrue
+        case _ => failure("nothing found")
+      }
+      ok
+    }
+
     "find in 1d" in {
       val evaluator = GradientDescentEngine.numericEvaluator(x => 1 + sin(x), x => signum(cos(x)))
       val sut = GradientDescentEngine[DoubleVar, DoubleVal](evaluator, 100, 0.0001, 0.001)
@@ -38,8 +55,8 @@ class GradientDescentEngineTest extends Specification {
       found match {
         case Some((value, epoch)) =>
           abs(value) < 0.15 must beTrue
-          abs(position() - -1.57) < 0.02 aka s"We are at $position, value=$value, epoch=$epoch" must beTrue
-          epoch < 30 aka s"$epoch epochs" must beTrue
+          abs(position() - -1.58) < 0.02 aka s"We are at $position, value=$value, epoch=$epoch" must beTrue
+          epoch < 50 aka s"$epoch epochs" must beTrue
         case _ => failure("nothing found")
       }
 
@@ -73,22 +90,6 @@ class GradientDescentEngineTest extends Specification {
           math.abs(value - 0.98) < 0.05 aka s"oops, value=$value" must beTrue
 
           Norm.l2.distance(position, R2.Vector(-1.6, -1.6)) < 0.2 aka s"We are at $position, value=$value, epoch=$epoch" must beTrue
-          epoch < 50 aka s"epochs: $epoch" must beTrue
-        case _ => failure("nothing found")
-      }
-      ok
-    }
-
-    "find in 2d starting at (1,2)" in {
-      val evaluator = GradientDescentEngine.vectorEvaluator[R2.type](R2)(waves, wavesGradient)
-      val sut = GradientDescentEngine[R2.MutableVector, R2.Vector](evaluator, 100, 0.0001, 0.001)
-      val position = R2.Vector(1, 2).copy
-      val found = sut.find(position, 1.1)
-      found match {
-        case Some((value, epoch)) =>
-          math.abs(value - 0.98) < 0.03 aka s"oops, value=$value" must beTrue
-
-          Norm.l2.distance(position, R2.Vector(-1.4,4.8)) < 0.05 aka s"We are at $position, value=$value, epoch=$epoch" must beTrue
           epoch < 50 aka s"epochs: $epoch" must beTrue
         case _ => failure("nothing found")
       }
