@@ -117,7 +117,7 @@ trait Strings {
       "ask", "asked", "asks", "at", "away",
     "back", "be", "became", "because", "become", "been", "before", "began", "begin", "behind", 
       "being", "beside", "between", "both", "bring", "brings", "brought", "but", "by", 
-    "call", "called", "calls", "came", "can", "can't", "come", "continue", "continues, "continued", "could",
+    "call", "called", "calls", "came", "can", "can't", "come", "continue", "continues", "continued", "could",
     "das", "de", "did", "do", "does", "doing", "don't", "done", "down", 
     "each", "en", "enter", "entered", "enters", "even", "every",
     "feel", "feels", "felt", "for", "from",
