@@ -67,8 +67,7 @@ public class ArrayOps {
   }
   
   public static double l2(double[] xs, double[] ys) {
-    final double squareDistance = l2distance.fold(xs, ys);
-    return Math.sqrt(squareDistance);
+    final double squareDistance = l2distance.fold(xs, ys);return Math.sqrt(squareDistance);
   }
   
   public static final Folding2 sammonErrorMeasure = new Folding2() {
