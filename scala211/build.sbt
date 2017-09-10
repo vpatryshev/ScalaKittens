@@ -4,7 +4,7 @@ organization := "org.scalakittens"
 
 name := "Scala Kittens Library"
 
-version := "0.1.3"
+version := "1.0.0"
 
 val WhichScala = "2.11.8"
 
@@ -25,6 +25,10 @@ javacOptions ++= Seq("-Xlint:deprecation", "-Xlint:unchecked", "-source", "1.8",
 resolvers ++= Seq(
   "Lightbend Releases" at "http://repo.typesafe.com/typesafe/releases"
 )
+
+artifactName := { (sv: ScalaVersion, module: ModuleID, artifact: Artifact) =>
+  artifact.name + "-" + module.revision + "." + artifact.extension
+}
 
 enablePlugins(JmhPlugin)
 

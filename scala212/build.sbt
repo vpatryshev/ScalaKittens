@@ -1,7 +1,7 @@
 
 organization := "org.scalakittens"
 
-val WhichScala = "2.12.2"
+val WhichScala = "2.12.3"
 
 name := s"Scala Kittens Library, Scala $WhichScala"
 
@@ -18,18 +18,15 @@ val main = Project(id = "all", base = file(".")).dependsOn(core, ml, experiments
 scalacOptions ++= Seq("-feature", "-deprecation", "-encoding", "UTF-8", "-feature", "-target:jvm-1.8", "-unchecked",
     "-Ywarn-adapted-args", "-Ywarn-value-discard", "-Xlint")
 
-scalacOptions in (Compile, doc) <++= baseDirectory.map {
-  (bd: File) ⇒ Seq[String](
-     "-sourcepath", bd.getAbsolutePath,
-     "-doc-source-url", "https://github.com/mslinn/changeMe/tree/master€{FILE_PATH}.scala"
-  )
-}
-
 javacOptions ++= Seq("-Xlint:deprecation", "-Xlint:unchecked", "-source", "1.8", "-target", "1.8", "-g:vars")
 
 resolvers ++= Seq(
   "Lightbend Releases" at "http://repo.typesafe.com/typesafe/releases"
 )
+
+artifactName := { (sv: ScalaVersion, module: ModuleID, artifact: Artifact) =>
+  artifact.name + "-" + module.revision + "." + artifact.extension
+}
 
 enablePlugins(JmhPlugin)
 
