@@ -63,14 +63,25 @@ class HuffmanTreeTest extends Specification {
           val tree = new HuffmanTree(freqs)
           tree.path(1000).length > 15 must beTrue
           tree.path(1000).length < 25 must beTrue
-        //      println(cc.size)
-        //      println(tree.path(1000))
-        //      println(tree.toGraph)
-
-        //      failure(cc.toString)
         case bad => failure(bad.listErrors.toString)
       }
       
+      ok
+    }
+
+    "process Gone With The Wind" in {
+
+      val novel = GoneWithTheWind("/gonewiththewind.txt")
+
+      novel.scannedText match {
+        case Good(ScannedText(index, words, freqs)) =>
+
+          val tree = new HuffmanTree(freqs)
+          tree.path(1000).length > 15 must beTrue
+          tree.path(1000).length < 25 must beTrue
+        case bad => failure(bad.listErrors.toString)
+      }
+
       ok
     }
   }

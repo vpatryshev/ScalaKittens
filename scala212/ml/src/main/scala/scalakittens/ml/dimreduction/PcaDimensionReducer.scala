@@ -6,7 +6,12 @@ import scalakittens.stats.AccumulatingMoments
 /**
   * Created by vpatryshev on 6/11/17.
   */
-class PcaDimensionReducer[Source <: VectorSpace, Target <: VectorSpace](val source: Source, val target: Target, precision: Double, numIterations: Int) extends DimensionReducer[Source#Vector, Target#Vector] {
+class PcaDimensionReducer[Source <: VectorSpace, Target <: VectorSpace](
+  val source: Source,
+  val target: Target, 
+  precision: Double, 
+  numIterations: Int) 
+  extends DimensionReducer[Source, Target] {
 
   def reduce(originalVectors: IndexedSeq[Source#Vector]) = {
     val acc = new AccumulatingMoments[Source](source).collect(originalVectors)

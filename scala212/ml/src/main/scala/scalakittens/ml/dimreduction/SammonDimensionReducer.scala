@@ -22,7 +22,7 @@ abstract class SammonDimensionReducer
      val target: T,
      val numSteps: Int,
      val errorPrecision: Double = 0.001) 
-  extends DimensionReducer[S#Vector, T#Vector] {
+  extends DimensionReducer[S, T] {
   
   type Target = T
   type MatrixLike = (Int, Int) => Double
@@ -158,7 +158,7 @@ abstract class SammonDimensionReducer
 object SammonDimensionReducer {
   def withPCA[S <: VectorSpace, T <: VectorSpace](source: S, target: T, numIterations: Int) = {
     val pca = pcaReducer(source, target, numIterations)
-    val reducer: DimensionReducer[S#Vector, T#Vector] = new SammonDimensionReducer[S, T](source, target, numIterations) {
+    val reducer: DimensionReducer[S, T] = new SammonDimensionReducer[S, T](source, target, numIterations) {
       protected val init: IndexedSeq[S#Vector] => IndexedSeq[target.Vector] = v => pca.reduce(v).map(_.asInstanceOf[target.Vector])
     }
 

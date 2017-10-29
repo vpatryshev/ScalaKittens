@@ -15,7 +15,13 @@ import scalakittens.ml.word2vec.Sigmoid.σ
   *               
   * Created by vpatryshev on 5/11/17.
   */
-case class SkipGramModel[Space <: VectorSpace](text: ScannedText, space: Space, α: Double, window: Int, numEpochs: Int, seed: Long = System.nanoTime()) {
+case class SkipGramModel[Space <: VectorSpace](
+    text: ScannedText, 
+    space: Space, 
+    numEpochs: Int,
+    window: Int,
+    α: Double,
+    seed: Long = System.nanoTime()) {
   
   require (0 < α && α < 1.0/space.dim, s"α=$α should be between 0 and ${1.0/space.dim}")
   
@@ -111,9 +117,8 @@ case class SkipGramModel[Space <: VectorSpace](text: ScannedText, space: Space, 
 object SkipGramModel {
 
   def run(dim: VectorSpace, numEpochs: Int, α: Double, st: ScannedText) = {
-    val model = SkipGramModel(st, dim, α, window = 3, numEpochs, seed = 123456789L)
+    val model = SkipGramModel(st, dim, numEpochs, window = 3,  α, seed = 123456789L)
     model.run()
-    val originalVectors = model.in
-    originalVectors
+    model.in
   }
 }

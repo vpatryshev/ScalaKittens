@@ -1,7 +1,7 @@
 package scalakittens.ml.word2vec
 
 import scala.collection.mutable
-import scalakittens.Strings
+import scalakittens.{Result, IO, Strings}
 
 /**
   * Formalized representation of source of words
@@ -16,6 +16,9 @@ import scalakittens.Strings
   * TODO: use Lucene for tokenization
   */
 trait TextScanner {
+  def source:Result[Iterator[String]]
+
+  def scannedText = source map scan
 
   def isBeginning(line: String): Boolean
 

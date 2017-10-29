@@ -64,9 +64,9 @@ class SkipGramModelTest extends Specification {
 
     "process 'War And Peace' with PCA, fast" in {
       val filename = "warandpeace.vecs.fast.txt"
-      val reducer: DimensionReducer[R10.Vector, R3.Vector] = new PcaDimensionReducer[R10.type, R3.type](R10, R3, precision = 0.001, 30)//pcaReducer(dim, newDim, 30)
+      val reducer: DimensionReducer[R10.type, R3.type] = new PcaDimensionReducer[R10.type, R3.type](R10, R3, precision = 0.001, 30)//pcaReducer(dim, newDim, 30)
       
-      doWarAndPeace[R10.type, R3.type](R10, R3, numEpoch = 50, filename, reducer) match {
+      doWarAndPeace[R10.type, R3.type](reducer, filename, numEpoch = 50) match {
         case Good(vs) =>
           showWarAndPeace[R3.type](vs.iterator)
           ok
@@ -80,9 +80,9 @@ class SkipGramModelTest extends Specification {
     "process 'War And Peace' with Sammon, slow" in {
       val filename = "warandpeace.vecs.sammon.txt"
       val t = new Tracker
-      val sammonReducer: DimensionReducer[R7.Vector, R2.Vector] = SammonDimensionReducer.withPCA[R7.type, R2.type](R7, R2, 20)
+      val sammonReducer: DimensionReducer[R7.type, R2.type] = SammonDimensionReducer.withPCA[R7.type, R2.type](R7, R2, 20)
       t << "instantiated sammon reducer"
-      doWarAndPeace[R7.type, R2.type](R7, R2, numEpoch = 50, filename, sammonReducer) match {
+      doWarAndPeace[R7.type, R2.type](sammonReducer, filename, numEpoch = 50) match {
         case Good(vs: List[(String, R2.Vector)]) =>
           t << s"did war and peace, good (${vs.length} words"
           showWarAndPeace[R2.type](vs.iterator)
@@ -99,9 +99,9 @@ class SkipGramModelTest extends Specification {
     "process 'War And Peace' with Sammon, fast" in {
       val filename = "warandpeace.vecs.sammon.txt"
 
-      val sammonReducer: DimensionReducer[R10.Vector, R3.Vector] = SammonDimensionReducer.withPCA[R10.type, R3.type](R10, R3, 30)
+      val sammonReducer = SammonDimensionReducer.withPCA[R10.type, R3.type](R10, R3, 30)
 
-      doWarAndPeace[R10.type, R3.type](R10, R3, numEpoch = 50, filename, sammonReducer, 1000) match {
+      doWarAndPeace[R10.type, R3.type](sammonReducer, filename, numEpoch = 50, 1000) match {
         case Good(vs: List[(String, R3.Vector)]) =>
           showWarAndPeace[R3.type](vs.iterator)
           ok
@@ -144,37 +144,53 @@ class SkipGramModelTest extends Specification {
     visualize(s"$nWords MOST RARE WORDS", allProjections take nWords)
   }
 
-  private def doWarAndPeace[S <: VectorSpace, T <: VectorSpace](dim: S, newDim: T, numEpoch: Int, filename: String, reducer: DimensionReducer[S#Vector, T#Vector], chunkSize: Int = 0): Result[List[(String, T#Vector)]] = {
+  private def doWarAndPeace[S <: VectorSpace, T <: VectorSpace](
+      reducer: DimensionReducer[S, T],
+      filename: String,
+      numEpoch: Int, 
+      chunkSize: Int = 0): Result[List[(String, T#Vector)]] =
+    doNovel(WarAndPeace("/warandpeace.txt"), reducer, filename, numEpoch, chunkSize)
 
-    val scanner = WarAndPeace("/warandpeace.txt")
+  private def doNovel[S <: VectorSpace, T <: VectorSpace](
+      scanner: TextScanner,
+      reducer: DimensionReducer[S, T],
+      filename: String,
+      numEpoch: Int,
+      chunkSize: Int = 0): Result[List[(String, T#Vector)]] = {
 
     scanner.scannedText map {
       st =>
-        val α = 0.9 / dim.dim
-        val vectors: List[(String, newDim.Vector)] = buildModel(dim, newDim, numEpoch, α, st, reducer, chunkSize)
-        serialize(filename, dim, vectors)
+        val α = 0.9 / reducer.source.dim
+        val vectors: List[(String, reducer.target.Vector)] = 
+          buildModel[S, T](st, reducer, numEpoch, α, chunkSize)
+        serialize(filename, reducer.target, vectors)
         println("Rare words")
         println(vectors take 10 mkString "\n")
         println("Frequent words")
         println((vectors takeRight 10).reverse mkString "\n")
 
         println(s"\nSEE ALL RESULTS IN $filename\n")
-//        vectors.length must_== 17355
+        //        vectors.length must_== 17355
         vectors
     }
   }
 
-  private def buildModel[S <: VectorSpace, T <: VectorSpace](dim: S, newDim: T, numEpochs:Int, α: Double, st: ScannedText, reducer: DimensionReducer[S#Vector, T#Vector], chunkSize: Int = 0): List[(String, newDim.Vector)] = {
-    val allOriginalVectors: Array[dim.Vector] = runSkipGram(dim, numEpochs, α, st)
+  private def buildModel[S <: VectorSpace, T <: VectorSpace](
+      st: ScannedText, 
+      reducer: DimensionReducer[S, T],
+      numEpochs:Int, 
+      α: Double, 
+      chunkSize: Int = 0): List[(String, reducer.target.Vector)] = {
+    val allOriginalVectors: Array[reducer.source.Vector] = runSkipGram(reducer.source, numEpochs, α, st)
     val originalVectors = if (chunkSize == 0) allOriginalVectors else allOriginalVectors.takeRight(chunkSize)
     val vs = reducer.reduce(originalVectors)
-    val uvs = newDim.toUnitCube(vs map (_.asInstanceOf[newDim.Vector]))
+    val uvs = reducer.target.toUnitCube(vs map (_.asInstanceOf[reducer.target.Vector]))
     val vectors = st.withFrequencies zip uvs
     vectors
   }
 
   private def runSkipGram[Space <: VectorSpace](dim: Space, numEpochs: Int, α: Double, st: ScannedText): Array[dim.Vector] = {
-    val model = SkipGramModel(st, dim, α, window = 3, numEpochs, seed = 123456789L)
+    val model = SkipGramModel(st, dim, numEpochs, window = 3, α, seed = 123456789L)
     model.run()
     val originalVectors = model.in
     originalVectors.zipWithIndex foreach { 
