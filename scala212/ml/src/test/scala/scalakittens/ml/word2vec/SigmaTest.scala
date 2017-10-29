@@ -13,7 +13,7 @@ class SigmaTest extends Specification {
     "provide precision" in {
 
       def checkOn(dy: Double, size: Int): Unit = {
-        val sut = new Sigma { def ε = dy }
+        val sut = new Sigmoid { def ε = dy }
         sut.size < size aka s"?? ${sut.size} vs $size" must beTrue
         sut.table.length < size aka s"?? ${sut.table.length}" must beTrue
         sut.σ(0.0) aka ("oops: " + (sut.table mkString ",")) must_== 0.5

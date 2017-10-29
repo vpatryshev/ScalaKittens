@@ -9,7 +9,7 @@ package scalakittens.ml.word2vec
   * Created by vpatryshev on 5/8/17 (I kind of remember this date).
   */
 
-trait Sigma {
+trait Sigmoid {
   // result precision
   def ε: Double
   require(ε > 0, s"ε=$ε must be positive")
@@ -44,6 +44,6 @@ trait Sigma {
   }
 }
 
-object Sigma extends Sigma {
+object Sigmoid extends Sigmoid {
   def ε = 0.01
 }

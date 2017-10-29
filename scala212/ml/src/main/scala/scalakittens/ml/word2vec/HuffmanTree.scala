@@ -23,8 +23,9 @@ class HuffmanTree(source: List[Int]) {
 
   {
     val queue = new mutable.PriorityQueue[(Int, Int)]()(ordering)
+    source foreach (frequencies enqueue _)
 
-    source.zipWithIndex foreach(p => {frequencies.enqueue(p._1); queue.enqueue(p)})
+    source.zipWithIndex foreach (queue enqueue _)
 
     while (queue.length > 1) {
       val p = queue.dequeue()
@@ -111,23 +112,3 @@ class HuffmanTree(source: List[Int]) {
     dump(parentRef.length - 1).content mkString "\n"
   }
 }
-
-/* please ignore this comment
-def p(tree: Node) {
-  val pq = Queue[(Node, Int)]()
-  pq.enqueue((tree, 0))
-
-  var curLevel = 0 
-
-  while (!pq.isEmpty) {
-    val (node, level) = pq.dequeue
-    if (level > curLevel) {
-      println
-      curLevel += 1
-    }
-    print(node.value)
-    node.left.foreach(n => pq.enqueue((n, level+1)))
-    node.right.foreach(n => pq.enqueue((n, level+1)))
-  }
-}
- */

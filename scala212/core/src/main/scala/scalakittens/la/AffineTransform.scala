@@ -14,8 +14,8 @@ class AffineTransform[Dom <: VectorSpace, Codom <: VectorSpace](val domainSpace:
       * @return the result of transformation
       */
     def apply(v: Dom#Vector): Codom#Vector = {
-//      val vector = v - shift - did not compile for some reason
-      val shifted: Dom#Vector = new domainSpace.OnFunction(i => v(i) - shift(i))
+//      val vector:Dom#Vector = v - shift // does not compile for some reason
+      val shifted: Dom#Vector = domainSpace.OnFunction(i => v(i) - shift(i))
       matrix * shifted
     }
     

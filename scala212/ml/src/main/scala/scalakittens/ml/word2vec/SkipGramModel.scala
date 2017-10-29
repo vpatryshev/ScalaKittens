@@ -1,7 +1,7 @@
 package scalakittens.ml.word2vec
   
 import scalakittens.la._
-import scalakittens.ml.word2vec.Sigma._
+import scalakittens.ml.word2vec.Sigmoid._
 
 /**
   * Created by vpatryshev on 5/11/17.

@@ -103,7 +103,7 @@ class MatrixTest extends Specification {
 
     "multiply by an immutable vector" in {
       val sut = TestMatrix(R4, R3, i => j => i * 10 + j)
-      (sut * new R4.OnFunction(i => 1.0*i)) === R3.Vector(14, 74, 134)
+      (sut * R4.OnFunction(i => 1.0*i)) === R3.Vector(14, 74, 134)
     }
     
     "not compare with garbage" in {
