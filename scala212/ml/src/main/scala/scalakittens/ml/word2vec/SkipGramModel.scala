@@ -18,10 +18,11 @@ import scalakittens.ml.word2vec.Sigmoid.σ
 case class SkipGramModel[Space <: VectorSpace](text: ScannedText, space: Space, α: Double, window: Int, numEpochs: Int, seed: Long = System.nanoTime()) {
   
   require (0 < α && α < 1.0/space.dim, s"α=$α should be between 0 and ${1.0/space.dim}")
+  
   lazy val vecFactory = space.RandomSphere(seed)
 
-  lazy val in: Array[Space#MutableVector] = {
-    val in = new Array[Space#MutableVector](text.dictionarySize)
+  lazy val in: Array[space.MutableVector] = {
+    val in = new Array[space.MutableVector](text.dictionarySize)
 
     for {i <- in.indices} in(i) = vecFactory().copy
     
@@ -34,10 +35,7 @@ case class SkipGramModel[Space <: VectorSpace](text: ScannedText, space: Space, 
 
   for {i <- out.indices} out(i) = vecFactory().copy
 
-  // TODO: get rid of casting
-  def product(i: Int, j: Int) = {
-    out(j) * in(i).asInstanceOf[space.Vector]
-  }
+  def product(i: Int, j: Int) = out(j) * in(i)
   
   def proximity(i: Int, o: Int) = σ(product(i, o))
 
@@ -55,7 +53,7 @@ case class SkipGramModel[Space <: VectorSpace](text: ScannedText, space: Space, 
     * @param o second word number
     */
   def update(i: Int, o: Int): Unit = {
-    val v = in(i).asInstanceOf[space.MutableVector] // TODO: get rid of casting
+    val v = in(i)
     val neu: space.MutableVector = space.Zero.copy
   
     for {j <- huffman.path(o)} {
