@@ -13,22 +13,23 @@ import scalakittens.la.Norm.l2
   * Created by vpatryshev on 6/8/17.
   */
 case class VectorSpace(dim: Int) { space =>
+
+  require(dim >= 0, s"Space dimension $dim makes no sense")
+
   lazy val hyperplane: VectorSpace = {
     require(dim >= 0, "0-dimensional space does not have a hyperplane")
     VectorSpace(dim-1)
   }
 
   def projectToHyperplane(v: Vector): hyperplane.Vector = {
-    new hyperplane.OnFunction(i => v(i+1)).asInstanceOf[hyperplane.Vector]
+    hyperplane.OnFunction(i => v(i+1)).asInstanceOf[hyperplane.Vector]
   }
 
   def injectFromHyperplane(v: VectorSpace#Vector): Vector = {
     // the following check runs in runtime, who knows where is Hyperplane coming from
     require(v.length + 1 == dim)
-    new OnFunction(i => if (i == 0) 0.0 else v(i-1))
+    OnFunction(i => if (i == 0) 0.0 else v(i-1))
   }
-  
-  require(dim >= 0, s"Space dimension $dim makes no sense")
 
   /**
     * real-valued vector with usual operations
@@ -38,32 +39,30 @@ case class VectorSpace(dim: Int) { space =>
     * Created by vpatryshev on 5/14/17.
     */
   trait Vector extends IndexedSeq[Double] with PartialFunction[Int, Double] {
-//    def space = VectorSpace.this
+    //    def space = VectorSpace.this
     def length = dim
-    
+
     lazy val range = 0 until dim
 
     override def isDefinedAt(i: Int) = range contains i
 
     def isValid: Boolean = forall(x => !x.isNaN && !x.isInfinite)
 
-    /**
-      * Infimum of two vectors
-      * @param other vector
-      * @return a vector whose components are minimum of the two
-      */
-    def inf(other: Vector) = {
-      new OnFunction(i => math.min(apply(i), other(i)))
+    def binOp(op: (Double, Double) => Double)(other: Vector) = {
+      OnFunction(i => op(apply(i), other(i)))
     }
 
     /**
+      * Infimum of two vectors
+      * @return a vector whose components are minimum of the two
+      */
+    val inf = binOp(math.min) _
+
+    /**
       * Supremum of two vectors
-      * @param other vector
       * @return a vector whose components are maximum of the two
       */
-    def sup(other: Vector) = {
-      new OnFunction(i => math.max(apply(i), other(i)))
-    }
+    val sup = binOp(math.max) _
 
     /**
       * scalar product of this vector with another
@@ -78,22 +77,16 @@ case class VectorSpace(dim: Int) { space =>
     /**
       * sum of this vector with another
       *
-      * @param other another vector
       * @return a new vector, the sum of the two
       */
-    def +(other: Vector): Vector = {
-      new OnFunction(i => apply(i) + other(i))
-    }
+    val + = binOp(_+_) _
 
     /**
       * difference between this vector and another
       *
-      * @param other another vector
       * @return a new vector, this minus other
       */
-    def -(other: Vector): Vector = {
-      new OnFunction(i => apply(i) - other(i))
-    }
+    val - = binOp(_-_) _
 
     /**
       * this vector multiplied by a scalar
@@ -101,7 +94,7 @@ case class VectorSpace(dim: Int) { space =>
       * @param scalar the value by which to multiply 
       * @return a virtual vector
       */
-    def *(scalar: Double): Vector = new OnFunction(i => apply(i) * scalar)
+    def *(scalar: Double): Vector = OnFunction(i => apply(i) * scalar)
 
     /**
       * this vector divided by a scalar
@@ -111,7 +104,7 @@ case class VectorSpace(dim: Int) { space =>
       */
     def /(scalar: Double): Vector = *(1.0 / scalar)
 
-    def /(components: Int => Double): Vector = new OnFunction(i => apply(i) / components(i))
+    val / = binOp(_/_) _
 
     /**
       * Materialized copy of this vector
@@ -135,13 +128,13 @@ case class VectorSpace(dim: Int) { space =>
       val n = norm(this)
       if (n > Double.MinPositiveValue) this / n else this
     }
-    
+
     override def equals(other: Any): Boolean = {
       other match {
-        case v: VectorSpace#Vector => 
-          length == v.length && 
+        case v: VectorSpace#Vector =>
+          length == v.length &&
             range.forall(i => {this(i) == v(i)
-        })
+            })
         case _ => false
       }
     }
@@ -348,7 +341,7 @@ case class VectorSpace(dim: Int) { space =>
     }
   }
 
-  class OnFunction(val f: Int => Double) extends Vector {
+  case class OnFunction(val f: Int => Double) extends Vector {
     override def apply(i: Int) = f(i)
   }
 
@@ -396,7 +389,7 @@ case class VectorSpace(dim: Int) { space =>
     *
     * @return vector with the same value at each component
     */
-  def const(value: Double) = new OnFunction(_ => value)
+  def const(value: Double) = OnFunction(_ => value)
 
   /**
     * zero vector
@@ -441,7 +434,7 @@ case class VectorSpace(dim: Int) { space =>
 
   def unit(at: Int): Vector = {
     require(at < dim && at >= 0)
-    new OnFunction(i => if (i == at) 1.0 else 0.0)
+    OnFunction(i => if (i == at) 1.0 else 0.0)
   }
 
   /**
@@ -468,31 +461,31 @@ case class VectorSpace(dim: Int) { space =>
 
   private lazy val Regex = "Vec\\(\\[?([\\d\\.,\\-E ]+)\\]?\\)".r
 
-  def readVector(s: String): Option[Vector] = 
+  def readVector(s: String): Option[Vector] =
     s match {
-    case Regex(xs) =>
-      Try {
-        Vector(xs split ", ?" map (_.toDouble))
-      } toOption
-    case garbage => None
-  }
-  
+      case Regex(xs) =>
+        Try {
+          Vector(xs split ", ?" map (_.toDouble))
+        } toOption
+      case garbage => None
+    }
+
   type LocalMatrix = Matrix[space.type, space.type]
-  
+
   def squareMatrix(f: (Int, Int) => Double): SquareMatrix =
     new Matrix.OnFunction[space.type, space.type](space, space, f) with SquareMatrix
 
-//  private def squareMatrix(f: PartialFunction[(Int, Int), Double]): SquareMatrix =
-//    new Matrix.OnPartialFunction[space.type, space.type](space, space, f) with SquareMatrix
+  //  private def squareMatrix(f: PartialFunction[(Int, Int), Double]): SquareMatrix =
+  //    new Matrix.OnPartialFunction[space.type, space.type](space, space, f) with SquareMatrix
 
   def squareMatrix(data: Array[Double]): SquareMatrix = squareMatrix((i, j) => data(i*dim+j))
-  
+
   trait SquareMatrix extends LocalMatrix {
     override val domain = space
     override val codomain = space
-    
+
     def triangle = new TriangularMatrix(this)
-    
+
     def rotate(u: UnitaryMatrix): SquareMatrix = {
       val half = u * this
       val transposed = u.transpose
@@ -524,7 +517,7 @@ case class VectorSpace(dim: Int) { space =>
   trait UnitaryMatrix extends SquareMatrix {
     def isUnitary(precision: Double) = l2(this * transpose - UnitMatrix) <= precision
 
-    override def *[V <: space.Vector](v: V): space.Vector = new OnFunction(i => row(i)*v).copy
+    override def *[V <: space.Vector](v: V): space.Vector = OnFunction(i => row(i)*v).copy
 
     override def transpose: UnitaryMatrix =
       new Matrix.OnFunction[space.type, space.type](space, space, (i, j) => this(j, i)) with UnitaryMatrix
@@ -540,7 +533,7 @@ case class VectorSpace(dim: Int) { space =>
     * @param basis vectors of this basis
     * @return the matrix
     */
-  def unitaryMatrix(basis: Seq[Vector]): UnitaryMatrix = 
+  def unitaryMatrix(basis: Seq[Vector]): UnitaryMatrix =
     new ColumnMatrix[space.type](space, basis map (_.copy)) with UnitaryMatrix {
       require(basis.length == dim)
     }
@@ -565,7 +558,7 @@ case class VectorSpace(dim: Int) { space =>
   def diagonalMatrix(source: Int => Double): SquareMatrix = new DiagonalMatrix(source)
 
   def diagonalMatrix(values: Double*): SquareMatrix = diagonalMatrix(values)
-  
+
   class TriangularMatrix(source: (Int, Int) => Double) extends Matrix.OnArray[space.type, space.type](space, space, new Array[Double](dim*(dim+1)/2)) with SquareMatrix {
 
     override def checkArray() = ()
@@ -581,12 +574,12 @@ case class VectorSpace(dim: Int) { space =>
         data(internalIndex(i, j)) = aij
       }
     }
-    
+
     private def fillRangeOfRows(rangeNo: Int, rangeSize: Int): Unit = {
       val range = (rangeNo*rangeSize) until math.min(nRows, (rangeNo+1)*rangeSize)
       range foreach fillRow
     }
-    
+
     def instantiate(): Unit = {
       val numCores = Runtime.getRuntime.availableProcessors
       val stripeSize = (nRows + numCores-1) / numCores
@@ -641,9 +634,9 @@ case class VectorSpace(dim: Int) { space =>
     */
   case class Basis(center: Vector, rotation: UnitaryMatrix) extends (Vector => Vector) {
     val transform = new AffineTransform[space.type, space.type](space, space)(rotation, center)
-    
+
     def apply(v: Vector) = transform(v)
-    
+
     /**
       * converts a vector from this basis to the original one
       *
@@ -652,9 +645,9 @@ case class VectorSpace(dim: Int) { space =>
       */
     def unapply(v: Vector): Vector = rotation.transpose * v + center
   }
-  
+
   object Basis {
-    
+
     def apply(center: Vector, basisVectors: Array[MutableVector]): Basis = {
       require(basisVectors.length == dim, s"Expected $dim basis vectors, got ${basisVectors.length}")
       val matrix: UnitaryMatrix = unitaryMatrix(basisVectors)
@@ -700,7 +693,7 @@ case class VectorSpace(dim: Int) { space =>
     * @return a projection of b to a
     */
   def project[V <: space.Vector](a: Vector, b: V) = a * ((a * b) / Norm.l2(a))
-  
+
   def cos[V <: space.Vector](a: Vector, b: V) = (a * b) / Norm.l2(a) / Norm.l2(b)
 
   private[la] class ColumnMatrix[Domain <: VectorSpace](val domain: Domain, val cols: Seq[MutableVector]) extends Matrix[Domain, space.type] {

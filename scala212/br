@@ -9,7 +9,7 @@ or
 ../branch base_branch_name new_branch_name"
   exit 1
 elif [ -z $2 ]; then
-  export fromb=dev
+  export fromb=master
   export newb=$1
 else
   export fromb=$1
