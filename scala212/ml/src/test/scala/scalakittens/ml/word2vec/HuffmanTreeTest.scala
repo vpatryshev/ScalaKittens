@@ -2,7 +2,7 @@ package scalakittens.ml.word2vec
 
 import org.specs2.mutable.Specification
 
-import scalakittens.{Good, IO}
+import scalakittens.Good
 
 class HuffmanTreeTest extends Specification {
 

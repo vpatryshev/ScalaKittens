@@ -145,11 +145,10 @@ class SkipGramModelTest extends Specification {
   }
 
   private def doWarAndPeace[S <: VectorSpace, T <: VectorSpace](dim: S, newDim: T, numEpoch: Int, filename: String, reducer: DimensionReducer[S#Vector, T#Vector], chunkSize: Int = 0): Result[List[(String, T#Vector)]] = {
-    val source = IO.linesFromResource("/warandpeace.txt")
 
-    val scanner = TextScanner.WarAndPeace
+    val scanner = WarAndPeace("/warandpeace.txt")
 
-    source map scanner.scan map {
+    scanner.scannedText map {
       st =>
         val α = 0.9 / dim.dim
         val vectors: List[(String, newDim.Vector)] = buildModel(dim, newDim, numEpoch, α, st, reducer, chunkSize)

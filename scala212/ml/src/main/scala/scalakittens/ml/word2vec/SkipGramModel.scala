@@ -1,9 +1,18 @@
 package scalakittens.ml.word2vec
   
 import scalakittens.la._
-import scalakittens.ml.word2vec.Sigmoid._
+import scalakittens.ml.word2vec.Sigmoid.σ
 
 /**
+  * 
+  * @param text Scanned text that is undergoing SkipGram model processing
+  * @param space the instance of space in which the vectors are
+  * @param numEpochs number of iterations
+  * @param α gradient descent speed parameter, must be positive and less than 1/space.dim
+  * @param window
+  * @param seed
+  * @tparam Space the type of space in which the vectors are
+  *               
   * Created by vpatryshev on 5/11/17.
   */
 case class SkipGramModel[Space <: VectorSpace](text: ScannedText, space: Space, α: Double, window: Int, numEpochs: Int, seed: Long = System.nanoTime()) {
@@ -19,20 +28,6 @@ case class SkipGramModel[Space <: VectorSpace](text: ScannedText, space: Space, 
     in
   }
 
-  def checkme(msg: String = "", which: Int = -1): Unit = {
-    in.indices.foreach(i => {
-      val v: Space#Vector = in(i)
-
-      if (which < 0 || i == which)
-      v.foreach(
-        xi => {
-          require(!xi.isNaN, s"Vector at $i; $msg")
-          ()
-        })})
-      
-    require(in.length == 17694, s"Actually ${in.length}")
-  }
-  
   val huffman = new HuffmanTree(text.frequencies)
   
   val out: Array[space.MutableVector] = new Array[space.MutableVector](huffman.size)
@@ -48,6 +43,17 @@ case class SkipGramModel[Space <: VectorSpace](text: ScannedText, space: Space, 
 
   import math._
 
+  /**
+    * Update a vector representation of word numbers i and o (and its relatives)
+    *
+    * As a result, vector i is nudged towards vector o and its parents in the hierarchy;
+    * vector o, together with its parents in the hierarchy are also nudged.
+    * The degree at which vectors are nudged depend on their proximity; the closer, the more 
+    * they are nudged towards each other.
+    * 
+    * @param i first word number 
+    * @param o second word number
+    */
   def update(i: Int, o: Int): Unit = {
     val v = in(i).asInstanceOf[space.MutableVector] // TODO: get rid of casting
     val neu: space.MutableVector = space.Zero.copy
@@ -67,6 +73,11 @@ case class SkipGramModel[Space <: VectorSpace](text: ScannedText, space: Space, 
     ()
   }
   
+  /**
+    * Update vector representations of words (within a window) surrounding a word at position i.
+    * 
+    * @param i word position in text
+    */
   def updateWindow(i: Int): Unit = {
     val idx = text.index(i)
 
