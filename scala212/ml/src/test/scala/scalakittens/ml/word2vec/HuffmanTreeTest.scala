@@ -55,11 +55,9 @@ class HuffmanTreeTest extends Specification {
 
     "process War And Peace" in {
 
-      val scanner = TextScanner.WarAndPeace
+      val novel = WarAndPeace("/warandpeace.txt")
       
-      def source() = IO.linesFromResource("/warandpeace.txt")
-
-      source map scanner.scan match {
+      novel.scannedText match {
         case Good(ScannedText(index, words, freqs)) =>
 
           val tree = new HuffmanTree(freqs)
