@@ -8,7 +8,7 @@ class TextScannerTest extends Specification {
 
   "TextScanner" should {
     "process 'War And Peace'" in {
-      val novel = WarAndPeace("/warandpeace.txt")
+      val novel = WarAndPeace
       val line1 = "“Well, Prince, so Genoa and Lucca are now just family estates of the..."
       val annaPavlovna = novel.isBeginning(line1)
       annaPavlovna aka "Anna Pavlovna" must beTrue
@@ -37,7 +37,7 @@ class TextScannerTest extends Specification {
     }
 
     "process 'Gone With The Wind'" in {
-      val novel = GoneWithTheWind("/gonewiththewind.txt")
+      val novel = GoneWithTheWind
       val line1 = "Scarlett O'Hara was not beautiful, but men seldom realized it when"
       val scarlett = novel.isBeginning(line1)
       scarlett aka "Scarlett O'Hara" must beTrue

@@ -55,9 +55,7 @@ class HuffmanTreeTest extends Specification {
 
     "process War And Peace" in {
 
-      val novel = WarAndPeace("/warandpeace.txt")
-      
-      novel.scannedText match {
+      WarAndPeace.scannedText match {
         case Good(ScannedText(index, words, freqs)) =>
 
           val tree = new HuffmanTree(freqs)
@@ -71,9 +69,7 @@ class HuffmanTreeTest extends Specification {
 
     "process Gone With The Wind" in {
 
-      val novel = GoneWithTheWind("/gonewiththewind.txt")
-
-      novel.scannedText match {
+      GoneWithTheWind.scannedText match {
         case Good(ScannedText(index, words, freqs)) =>
 
           val tree = new HuffmanTree(freqs)

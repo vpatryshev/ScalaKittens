@@ -16,7 +16,8 @@ import scalakittens.{Result, IO, Strings}
   * TODO: use Lucene for tokenization
   */
 trait TextScanner {
-  def source:Result[Iterator[String]]
+  val name: String = this.getClass.getSimpleName.toLowerCase.replaceAll("\\$", "")
+  def source = IO.linesFromResource(s"/$name.txt")
 
   def scannedText = source map scan
 
