@@ -5,20 +5,18 @@ import scala.util.matching.Regex
 
 trait Strings {
 
-  def isEmpty(s: String) = s == null || s.trim.isEmpty
+  def isEmpty(s: String): Boolean = s == null || s.trim.isEmpty
 
   def commonPrefix(s1: String, s2: String): String = {
     if (s1.isEmpty || s2.isEmpty || s1(0) != s2(0)) "" else s1.head + commonPrefix(s1.tail, s2.tail)
   }
 
   implicit class powerString(s: String) {
-    def containsIgnoreCase(other: String) = s.toUpperCase.contains(other.toUpperCase)
+    def containsIgnoreCase(other: String): Boolean = s.toUpperCase.contains(other.toUpperCase)
 
-    def strictContainsIgnoreCase(t: String) = !t.isEmpty && containsIgnoreCase(t)
+    def |(alt: String): String = if (s.isEmpty) alt else s
 
-    def |(alt: String) = if (s.isEmpty) alt else s
-
-    def js = {
+    def js: String = {
       require(s != null, "Illegal value: null")
       val s1 = s.trim
       val src = if (s1.startsWith("'") && s1.endsWith("'")) s1.tail.dropRight(1) else s1
@@ -30,16 +28,13 @@ trait Strings {
       s.replaceAll("[^0-9A-Fa-f]", "").sliding(2, 2).toArray.map(Integer.parseInt(_, 16).toByte)
     }
 
-    def quote = {
+    def quote: String = {
       val r = "\"" + s.replaceAll("\\\"", "\\\\\"").replaceAll("\n", "\\n") + "\""
       r
     }
   }
 
-  def oneOf(cases: String*) = cases find (!_.isEmpty) getOrElse ""
-
-  // Do the short string show up in the long one? (case in-sensitive)
-  def isInStrStrict(sLong: String, sShort: String): Boolean = sLong strictContainsIgnoreCase sShort
+  def oneOf(cases: String*): String = cases find (!_.isEmpty) getOrElse ""
 
   // 000123 → 123
   def trimLeftLeading0(s: String): String = s.trim.dropWhile('0' ==).trim
@@ -58,7 +53,7 @@ trait Strings {
     * @param chars the characters to remove
     * @return string trimmer
     */
-  def dropLeading(chars: String) = (s: String) ⇒ s dropWhile (chars contains _)
+  def dropLeading(chars: String): String => String = (s: String) ⇒ s dropWhile (chars contains _)
 
   /**
     * I could not figure out how to do multiline match in scala; so had to write this.
@@ -77,15 +72,16 @@ trait Strings {
     * @param prefix what precedes the value
     * @return the value; if not found, an empty string (missing value, right?)
     */
-  def valueOf(prefix: String) = {
+  def valueOf(prefix: String): String => String = {
     (text: String) ⇒ prefixSearch(prefix)(text).getOrElse("")
   }
 
-  def prefixSearch(prefix: String) = multilineMatch((".*" + prefix.replaceAll("\\.", "\\\\.") + " *([^\\n]*)").r)
+  def prefixSearch(prefix: String): String => Option[String]
+  = multilineMatch((".*" + prefix.replaceAll("\\.", "\\\\.") + " *([^\\n]*)").r)
 
-  val DIGITS = "^(\\d+)$".r
+  private val DIGITS = "^(\\d+)$".r
 
-  def digits(s: String) = s match {
+  def digits(s: String): Option[String] = s match {
     case DIGITS(value) ⇒ Some(value)
     case _ ⇒ None
   }
@@ -97,9 +93,9 @@ trait Strings {
          variant <- entry.tail} yield variant -> entry.head
   } toMap
 
-  def eliminateAccent(c: Char) = accentCharMap.getOrElse(c, c)
+  def eliminateAccent(c: Char): Char = accentCharMap.getOrElse(c, c)
 
-  def normalize(s: String) = {
+  def normalize(s: String): String = {
     val s1: String = s.toLowerCase
     val s2: String = s1 map eliminateAccent
     val s3 = s2.replaceAll("[\\'’]s", "")
@@ -112,36 +108,35 @@ trait Strings {
 
   val isStop = Set(
     "", 
-    "a", "about", "add", "adds", "added", "after", "again", "against", "ah", "all", "along", 
+    "a", "about", "add", "adds", "added", "after", "against", "ah", "all", "along", 
       "already", "also", "always", "am", "among", "an", "and", "another", "any", "are", "as", 
       "ask", "asked", "asks", "at", "away",
     "back", "be", "became", "because", "become", "been", "before", "began", "begin", "behind", 
       "being", "beside", "between", "both", "bring", "brings", "brought", "but", "by", 
-    "call", "called", "calls", "came", "can", "can't", "come", "continue", "continues", "continued", "could",
+    "came", "can", "can't", "come", "continue", "continues", "continued", "could", "couldn't",
     "das", "de", "did", "do", "does", "doing", "don't", "done", "down", 
     "each", "en", "enter", "entered", "enters", "even", "every",
     "feel", "feels", "felt", "for", "from",
     "gave", "get", "give", "given", "gives", "go", "goes", "going", "good", "got", "great",
-    "had", "has", "have", "having", "he", "hear", "heard", "hears", "her", "here", "here", 
+    "had", "has", "have", "having", "he", "her", "here", "here", 
       "herself", "him", "him", "himself", "his", "how",
-    "i", "if", "in", "into", "is", "it", "its", "je", "just",
+    "i", "i'll", "i'm", "if", "in", "into", "is", "it", "its", "je", "just",
     "knew", "know",
     "lay", "left", "less", "let", "like", "little", "long", "look", "looked", "looking", "looks",
     "made", "make", "many", "may", "me", "might", "mine", "more", "most", "much", "must", "my",
-    "near", "never", "new", "no", "nor", "not", "nous", "now", 
+    "near", "new", "no", "nor", "not", "nous", "now", 
     "of", "off", "oh", "old", "on", "one", "only", "or", "other", "others", "our", "out", "over", "own",
     "put",
     "quite",
-    "ran", "receive", "received", "receives", "reply", "replied", "replies", "run", "runs",
     "s'en", "said", "same", "sat", "saw", "say", "see", "seemed", "seems", "seen", "sent", "several", 
       "shall", "she", "should", "since", "sit", "so", "some", "something", "soon", "speak", "speaks", 
       "spoke", "stand", "stands", "stood", "still", "such", "suddenly",
     "t", "take", "talk", "tell", "tells", "than", "that", "the", "their", "theirs", "them", "then", 
-      "there", "these", "they", "think", "this", "those", "though", "thought", "three", "through",
+      "there", "these", "they", "this", "those", "though", "thought", "three", "through",
       "to", "together", "told", "too", "took", "toward", "try", "tries", "tried", "turn", "turned",
       "turns", "two",
-    "under", "understand", "understands", "understood", "up", "us", "very",
-    "want", "wanted", "wants", "was", "we", "well", "went", "were", "what", "when", "where", 
+    "under", "up", "us", "very",
+    "was", "we", "well", "went", "were", "what", "when", "where", 
       "whether", "which", "while", "who", "whole", "whom", "why", "will", "with", "without", "won't", "would",
     "yes", "yet", "you", "your")
 }

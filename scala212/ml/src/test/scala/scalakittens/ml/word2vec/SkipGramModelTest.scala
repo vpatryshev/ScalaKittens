@@ -70,7 +70,7 @@ class SkipGramModelTest extends Specification {
       
       doNovel[R10.type, R3.type](WarAndPeace, reducer, ext, numEpoch = 50) match {
         case Good(vs) =>
-          showNovel[R3.type](vs.iterator)
+          showNovel[R3.type]("War and Peace", vs.iterator)
           ok
         case bad: Bad[_] => failure(bad.listErrors.toString + "\n" + bad.stackTrace)
         case Empty => failure("No War, no Peace! /* Trotsky */")
@@ -85,7 +85,7 @@ class SkipGramModelTest extends Specification {
 
       doNovel[R10.type, R3.type](GoneWithTheWind, reducer, ext, numEpoch = 50) match {
         case Good(vs) =>
-          showNovel[R3.type](vs.iterator)
+          showNovel[R3.type]("Gone with the Wind", vs.iterator)
           ok
         case bad: Bad[_] => failure(bad.listErrors.toString + "\n" + bad.stackTrace)
         case Empty => failure("No War, no Peace! /* Trotsky */")
@@ -102,7 +102,7 @@ class SkipGramModelTest extends Specification {
       doNovel[R7.type, R2.type](WarAndPeace, sammonReducer, ext, numEpoch = 50) match {
         case Good(vs: List[(String, R2.Vector)]) =>
           t << s"did war and peace, good (${vs.length} words"
-          showNovel[R2.type](vs.iterator)
+          showNovel[R2.type]("War And Peace", vs.iterator)
           ok
         case bad: Bad[_] =>
           t << s"did not do war and peace"
@@ -120,7 +120,7 @@ class SkipGramModelTest extends Specification {
 
       doNovel[R10.type, R3.type](WarAndPeace, sammonReducer, ext, numEpoch = 50, 1000) match {
         case Good(vs: List[(String, R3.Vector)]) =>
-          showNovel[R3.type](vs.iterator)
+          showNovel[R3.type]("War And Peace", vs.iterator)
           ok
         case bad: Bad[_] => failure(bad.listErrors.toString + "\n" + bad.stackTrace)
         case Empty => failure("No War, no Peace! /* Trotsky */")
@@ -143,13 +143,13 @@ class SkipGramModelTest extends Specification {
       } yield (parts.head.split(":").head, vec)
 
 
-      showNovel[space.type](found)
+      showNovel[space.type]("War And Peace", found)
 
       ok
     }
   }
 
-  private def showNovel[Space <: VectorSpace](found: Iterator[(String, Space#Vector)]) = {
+  private def showNovel[Space <: VectorSpace](name: String, found: Iterator[(String, Space#Vector)]): Unit = {
     val allProjections = found.map {
       case (word, vec) => (word, vec(0), vec(1))
     }.toList
@@ -157,8 +157,8 @@ class SkipGramModelTest extends Specification {
 //    allProjections.size must_== 17355
     val nWords = 120
     val projections = allProjections.takeRight(nWords).reverse
-    visualize(s"$nWords MOST FREQUENT WORDS", projections)
-    visualize(s"$nWords MOST RARE WORDS", allProjections take nWords)
+    visualize(s"$nWords MOST FREQUENT WORDS in <<$name>>", projections)
+    visualize(s"$nWords MOST RARE WORDS in <<$name>>", allProjections take nWords)
   }
 
   private def doNovel[S <: VectorSpace, T <: VectorSpace](
