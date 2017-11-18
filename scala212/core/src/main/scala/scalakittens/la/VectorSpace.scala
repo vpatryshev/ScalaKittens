@@ -2,6 +2,7 @@ package scalakittens.la
 
 import language.{implicitConversions, postfixOps}
 import java.util
+import ArrayOps._
 
 import scala.math.abs
 import scala.util.{Random, Try}
@@ -17,7 +18,7 @@ case class VectorSpace(dim: Int) { space =>
   require(dim >= 0, s"Space dimension $dim makes no sense")
 
   lazy val hyperplane: VectorSpace = {
-    require(dim >= 0, "0-dimensional space does not have a hyperplane")
+    require(dim > 0, "0-dimensional space does not have a hyperplane")
     VectorSpace(dim-1)
   }
 
@@ -248,7 +249,7 @@ case class VectorSpace(dim: Int) { space =>
       */
     override def *[V <: space.Vector](other: V): Double = {
       other match {
-        case o: OnArray => ArrayOps.scalarProduct(data, o.data)
+        case o: OnArray => scalarProduct(data, o.data)
         case _ =>
           (0.0 /: range) ((s, i) => s + data(i) * other(i))
       }
@@ -261,7 +262,7 @@ case class VectorSpace(dim: Int) { space =>
       * @return this, now all its values are multiplied by scalar
       */
     override def *=(scalar: Double): Unit = {
-      ArrayOps.multBy(data, scalar)
+      multBy(data, scalar)
     }
 
     /**
@@ -271,7 +272,7 @@ case class VectorSpace(dim: Int) { space =>
       * @return this, now all its values are divided by scalar
       */
     override def /=(scalar: Double): Unit = {
-      for (i <- range) data(i) /= scalar
+      multBy(data, 1/scalar)
     }
 
     /**
@@ -313,8 +314,9 @@ case class VectorSpace(dim: Int) { space =>
     override def nudge(other: Vector, coeff: Double): Unit = {
       other match {
         case o: OnArray => ArrayOps.nudge(data, o.data, coeff)
-        case _ =>
-          for (i <- range) data(i) += other(i) * coeff
+        case _ => for (i <- range) {
+            data(i) += other(i) * coeff
+          }
       }
     }
 
@@ -323,11 +325,11 @@ case class VectorSpace(dim: Int) { space =>
       * @param other another OnArray vector
       */
     def +=(other: OnArray): Unit = {
-      ArrayOps.addTo(data, other.data)
+      addTo(data, other.data)
     }
 
     def -=(other: OnArray): Unit = {
-      ArrayOps.subtractFrom(data, other.data)
+      subtractFrom(data, other.data)
     }
 
     def nudge(other: OnArray, coeff: Double): Unit = {
@@ -341,7 +343,7 @@ case class VectorSpace(dim: Int) { space =>
     }
   }
 
-  case class OnFunction(val f: Int => Double) extends Vector {
+  case class OnFunction(f: Int => Double) extends Vector {
     override def apply(i: Int) = f(i)
   }
 

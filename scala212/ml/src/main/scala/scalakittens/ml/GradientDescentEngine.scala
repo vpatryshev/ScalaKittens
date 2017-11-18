@@ -4,6 +4,7 @@ import scala.language.postfixOps
 import scalakittens.Tracker
 import scalakittens.la.VectorSpace
 import scalakittens.ml.GradientDescentEngine.Evaluator
+import scalaz.Alpha.S
 
 /**
   * Pretty generic tool for gradient descent.
@@ -23,8 +24,8 @@ sealed case class GradientDescentEngine[State <: Mutable, Tangent](evaluator: Ev
 
   // TODO: move it into a config class or something
   // the rate at which step decreases on success
-  val fastStepDecreaseQ = 1.0 / math.E
-  val stepDecreaseQ = math.sqrt(0.5)
+  private val fastStepDecreaseQ = 1.0 / math.E
+  private val stepDecreaseQ = math.sqrt(0.5)
   private val maxProgress = 1.0 / (1.0 + stepDecreaseQ)
   val maxJumpsAlongGradient = 2
 
@@ -81,7 +82,7 @@ sealed case class GradientDescentEngine[State <: Mutable, Tangent](evaluator: Ev
     }
 
     debug(s"2. $finalResult")
-    tracker << s"gde along gradient: ${finalResult.functionValue}, ${finalResult.step}"
+    if (DEBUG) tracker << s"gde along gradient: ${finalResult.functionValue}, ${finalResult.step}"
     finalResult
   }
 
@@ -102,9 +103,10 @@ sealed case class GradientDescentEngine[State <: Mutable, Tangent](evaluator: Ev
 
         val r = r0.copy(progress = None, counter = 0, step = newStep)
         debug(s"===new state=$r @$point")
-
         (r, Some(gradient), r0.progress.isEmpty, newStep, newEpoch)
-    } find { case (s, gradient, sameGrad, newStep, epoch) => epoch >= maxEpochs || s.enough } map { case (s, gradient, sameGrad, newStep, epoch) => (s.functionValue, epoch) }
+    }. 
+    find { case (s, gradient, sameGrad, newStep, epoch) => epoch >= maxEpochs || s.enough }. 
+    map  { case (s, gradient, sameGrad, newStep, epoch) => (s.functionValue, epoch) }
   }
 }
 
@@ -152,22 +154,23 @@ object GradientDescentEngine {
   }
 
   implicit class DoubleVal(x0: Double) {
-    def apply() = x0
+    def apply(): Double = x0
 
     def copy = new DoubleVal(x0)
 
-    override def toString = "" + x0
+    override def toString: String = "" + x0
   }
 
   implicit class DoubleVar(var x: Double) extends DoubleVal(Double.NaN) with Mutable {
-    override def apply() = x
+    override def apply(): Double = x
 
     override def copy = new DoubleVal(x)
 
-    override def toString = "" + x
+    override def toString: String = "" + x
   }
 
-  def numericEvaluator(f: Double => Double, `f'`: Double => Double) = new Evaluator[DoubleVar, DoubleVal] {
+ def numericEvaluator(f: Double => Double, `f'`: Double => Double): Evaluator[DoubleVar, DoubleVal] 
+ = new Evaluator[DoubleVar, DoubleVal] {
 
     override def targetFunction(position: DoubleVar, maxValue: Double) = f(position())
 
@@ -177,26 +180,25 @@ object GradientDescentEngine {
 
     def gradientAt(position: Double): DoubleVal = gradientAt(new DoubleVar(position))
 
-    override def nudge(position: DoubleVar, direction: DoubleVal, step: Double) = {
+    override def nudge(position: DoubleVar, direction: DoubleVal, step: Double): Unit
+    = {
       position.x += direction() * step
     }
 
-    override def cos(previousGradient: DoubleVal, gradient: DoubleVal) = math.signum(previousGradient() * gradient())
+    override def cos(previousGradient: DoubleVal, gradient: DoubleVal): Double
+    = math.signum(previousGradient() * gradient())
   }
 
   def vectorEvaluator[Space <: VectorSpace](s: Space)(f: s.MutableVector => Double, `f'`: s.MutableVector => s.Vector): Evaluator[s.MutableVector, s.Vector] = new Evaluator[s.MutableVector, s.Vector] {
 
-    override def targetFunction(position: s.MutableVector, maxValue: Double) = {
-      val e = f(position)
-      e
-    }
+    override def targetFunction(position: s.MutableVector, maxValue: Double): Double
+    = f(position)
 
-    override def gradientAt(position: s.MutableVector) = `f'`(position)
+    override def gradientAt(position: s.MutableVector): s.Vector = `f'`(position)
 
-    override def nudge(position: s.MutableVector, direction: s.Vector, step: Double) = {
-      position.nudge(direction, step)
-    }
+    override def nudge(position: s.MutableVector, direction: s.Vector, step: Double): Unit 
+    = position.nudge(direction, step)
 
-    override def cos(previousGradient: s.Vector, gradient: s.Vector) = s.cos(previousGradient, gradient)
+    override def cos(previousGradient: s.Vector, gradient: s.Vector): Double = s.cos(previousGradient, gradient)
   }
 }

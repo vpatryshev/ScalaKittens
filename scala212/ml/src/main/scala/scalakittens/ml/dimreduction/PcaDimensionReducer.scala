@@ -13,15 +13,15 @@ class PcaDimensionReducer[Source <: VectorSpace, Target <: VectorSpace](
   numIterations: Int) 
   extends DimensionReducer[Source, Target] {
 
-  def reduce(originalVectors: IndexedSeq[Source#Vector]) = {
+  def reduce(originalVectors: IndexedSeq[Source#Vector]): IndexedSeq[Target#Vector] = {
     val acc = new AccumulatingMoments[Source](source).collect(originalVectors)
     val avg = acc.avg
     val cov = acc.covariance
     //    println(s"avg=$avg")
     //    println(s"covariance=\n$cov\n\n")
     val eigens = PCA.Iterations(precision, numIterations).buildEigenVectors(source)(cov, target.dim)
-        println("\nEIGENVALUES:\n")
-        println(eigens map (_._1))
+//        println("\nEIGENVALUES:\n")
+//        println(eigens map (_._1))
     val vectors = eigens map (_._2.copy)
     val transformBase:AffineTransform[Source, Target] = AffineTransform(source, target)
 
