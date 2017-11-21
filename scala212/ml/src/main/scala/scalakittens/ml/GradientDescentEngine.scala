@@ -4,7 +4,6 @@ import scala.language.postfixOps
 import scalakittens.Tracker
 import scalakittens.la.VectorSpace
 import scalakittens.ml.GradientDescentEngine.Evaluator
-import scalaz.Alpha.S
 
 /**
   * Pretty generic tool for gradient descent.
@@ -176,9 +175,9 @@ object GradientDescentEngine {
 
     override def gradientAt(position: DoubleVar) = new DoubleVal(`f'`(position()))
 
-    def targetFunction(position: Double): Double = targetFunction(new DoubleVar(position))
+//    def targetFunction(position: Double): Double = targetFunction(new DoubleVar(position))
 
-    def gradientAt(position: Double): DoubleVal = gradientAt(new DoubleVar(position))
+//    def gradientAt(position: Double): DoubleVal = gradientAt(new DoubleVar(position))
 
     override def nudge(position: DoubleVar, direction: DoubleVal, step: Double): Unit
     = {

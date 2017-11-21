@@ -1,5 +1,6 @@
 package scalakittens.ml.word2vec
   
+import language.existentials
 import scalakittens.la._
 import scalakittens.ml.word2vec.Sigmoid.σ
 
@@ -9,8 +10,8 @@ import scalakittens.ml.word2vec.Sigmoid.σ
   * @param space the instance of space in which the vectors are
   * @param numEpochs number of iterations
   * @param α gradient descent speed parameter, must be positive and less than 1/space.dim
-  * @param window
-  * @param seed
+  * @param window the sliding window size 
+  * @param seed rng seed
   * @tparam Space the type of space in which the vectors are
   *               
   * Created by vpatryshev on 5/11/17.
@@ -41,9 +42,9 @@ case class SkipGramModel[Space <: VectorSpace](
 
   for {i <- out.indices} out(i) = vecFactory().copy
 
-  def product(i: Int, j: Int) = out(j) * in(i)
+  def product(i: Int, j: Int): Double = out(j) * in(i)
   
-  def proximity(i: Int, o: Int) = σ(product(i, o))
+  def proximity(i: Int, o: Int): Double = σ(product(i, o))
 
   import math._
 
@@ -116,8 +117,8 @@ case class SkipGramModel[Space <: VectorSpace](
 
 object SkipGramModel {
 
-  def run(dim: VectorSpace, numEpochs: Int, α: Double, st: ScannedText) = {
-    val model = SkipGramModel(st, dim, numEpochs, window = 3,  α, seed = 123456789L)
+  def run(space: VectorSpace, numEpochs: Int, α: Double, st: ScannedText) = {
+    val model = SkipGramModel(st, space, numEpochs, window = 3,  α, seed = 123456789L)
     model.run()
     model.in
   }

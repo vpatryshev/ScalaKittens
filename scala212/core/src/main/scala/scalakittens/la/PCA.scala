@@ -7,27 +7,27 @@ import language.existentials
 object PCA {
   case class Iterations(precision: Double, maxRepeats: Int) {
 
-    private def oneStep(space: VectorSpace)(m: space.SquareMatrix)(v: space.MutableVector): (space.MutableVector, Double) = {
-      val vector: space.Vector = m * v
+    private def oneStep(space: VectorSpace)(m: space.SquareMatrix)(v: space.Vector): (space.Vector, Double) = {
+      val vector = m * v
       val normalized: space.Vector = vector.normalize(Norm.l2)
       val v1: space.MutableVector = normalized.copy
       val d = Norm.l2.distance(v1, v)
       (v1, d)
     }
 
-    def maxEigenValue(space: VectorSpace)(m: space.SquareMatrix): Option[(Double, space.MutableVector, Int)] = {
+    def maxEigenValue(space: VectorSpace)(m: space.SquareMatrix): Option[(Double, space.Vector, Int)] = {
       require(m.domain == m.codomain, s"Expected a square matrix, have ${m.nRows}⨯${m.nCols}")
       if (m.nCols == 0) None else if (m.nCols == 1) Some((m(0, 0), space.Vector(1.0), 0)) else {
-        val iterator = Iterator.iterate((space.unit(0).copy, Double.MaxValue, 0)) {
+        val iterator = Iterator.iterate((space.unit(0), Double.MaxValue, 0)) {
           case (v, d, i) =>
-            val vectorToTuple = oneStep(space)(m)(_: space.MutableVector)
-            val (m1, d1) = vectorToTuple(v)
-            (m1, d1, i + 1)
+            val vectorToTuple = oneStep(space)(m)(_: space.Vector)
+            val (v1, d1) = vectorToTuple(v)
+            (v1, d1, i + 1)
         }
 
         val goodData = iterator find (p => p._2 <= precision || p._3 > maxRepeats)
 
-        val maybeTuple: Option[(Double, space.MutableVector, Int)] = goodData map {
+        val maybeTuple: Option[(Double, space.Vector, Int)] = goodData map {
           case (vector, delta, nSteps) =>
             val vector1: space.Vector = m * vector
             (vector1.sum / vector.sum, vector, nSteps)

@@ -2,7 +2,6 @@ package scalakittens.ml
 
 //import language.postfixOps
 import scala.math.{Pi, abs, cos, sin}
-import scalakittens.la.Norm
 import scalakittens.la.Spaces.R3
 
 /**

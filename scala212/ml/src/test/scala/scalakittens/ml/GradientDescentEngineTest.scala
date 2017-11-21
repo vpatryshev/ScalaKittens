@@ -2,7 +2,6 @@ package scalakittens.ml
 
 import org.specs2.mutable.Specification
 
-import scala.language.reflectiveCalls
 import scala.math._
 import scalakittens.la.Norm
 import scalakittens.la.Spaces.R2
@@ -13,15 +12,15 @@ import scalakittens.ml.GradientDescentEngine.{DoubleVal, DoubleVar}
   */
 class GradientDescentEngineTest extends Specification {
   sequential
-  val waves = (vec: R2.Vector) => {
+  def waves(vec: R2.Vector): Double = {
     val x = vec.apply(0)
     val y = vec.apply(1)
     val f = sin(x) + 0.01 * sin(x * 100) + sin(y) + 0.01 * sin(y) + 3
     f
   }
 
-  val wavesGradient = (vec: R2.Vector) => {
-    val g0 = new R2.OnFunction(i => {
+  def wavesGradient(vec: R2.Vector): R2.Vector = {
+    val g0 = R2.OnFunction(i => {
       val x = vec.apply(i)
       cos(x) + cos(100 * x)
     })

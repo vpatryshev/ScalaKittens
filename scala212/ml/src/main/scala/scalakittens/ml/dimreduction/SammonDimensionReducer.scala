@@ -43,7 +43,7 @@ abstract class SammonDimensionReducer
   class Engine(originalVectors: IndexedSeq[S#Vector], magicFactor: Double = 0.01) {
     type DistanceMatrix = globalSpace.TriangularMatrix
     lazy val initialVectors = init(originalVectors)
-    private lazy val maxNorm = 10 * initialVectors.map(Norm.l2(_)).max
+
     private lazy val minDouble = {
       val d = 0.7
       val s = originalVectors.length
@@ -51,19 +51,6 @@ abstract class SammonDimensionReducer
     }
     
     lazy val originalDistanceMatrix: MatrixLike = distanceMatrix(originalVectors)
-    
-    private def elementsOf(matrix: MatrixLike) = {
-      val data = new Array[Double](globalSpace.dim * (globalSpace.dim - 1) / 2)
-      for {
-        i <- 0 until globalSpace.dim
-        j <- 0 until i
-      } {
-        data(i*(i-1)/2 + j) = matrix(i, j)
-      }
-      data
-    }
-    
-    private lazy val originalDistanceMatrixData = elementsOf(originalDistanceMatrix) 
     
     val size: Int = originalVectors.size
     val globalSpace = VectorSpace(size)

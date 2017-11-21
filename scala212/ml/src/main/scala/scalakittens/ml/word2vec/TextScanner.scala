@@ -17,9 +17,9 @@ import scalakittens.{Result, IO, Strings}
   */
 trait TextScanner {
   val name: String = this.getClass.getSimpleName.toLowerCase.replaceAll("\\$", "")
-  def source = IO.linesFromResource(s"/$name.txt")
+  def source: Result[Iterator[String]] = IO.linesFromResource(s"/$name.txt")
 
-  def scannedText = source map scan
+  def scannedText: Result[ScannedText] = source map scan
 
   def isBeginning(line: String): Boolean
 

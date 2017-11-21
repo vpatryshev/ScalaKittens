@@ -118,7 +118,7 @@ class SkipGramModelTest extends Specification {
 
       val sammonReducer = SammonDimensionReducer.withPCA[R10.type, R3.type](R10, R3, 30)
 
-      doNovel[R10.type, R3.type](WarAndPeace, sammonReducer, ext, numEpoch = 50, 1000) match {
+      doNovel[R10.type, R3.type](WarAndPeace, sammonReducer, ext, numEpoch = 50, Some(1000)) match {
         case Good(vs: List[(String, R3.Vector)]) =>
           showNovel[R3.type]("War And Peace", vs.iterator)
           ok
@@ -166,7 +166,7 @@ class SkipGramModelTest extends Specification {
       reducer: DimensionReducer[S, T],
       ext: String,
       numEpoch: Int,
-      chunkSize: Int = 0): Result[List[(String, T#Vector)]] = {
+      chunkSize: Option[Int] = None): Result[List[(String, T#Vector)]] = {
 
     val filename = scanner.name + "." + ext
     scanner.scannedText map {
@@ -191,9 +191,9 @@ class SkipGramModelTest extends Specification {
       reducer: DimensionReducer[S, T],
       numEpochs:Int, 
       α: Double, 
-      chunkSize: Int = 0): List[(String, reducer.target.Vector)] = {
+      chunkSize: Option[Int] = None): List[(String, reducer.target.Vector)] = {
     val allOriginalVectors: Array[reducer.source.Vector] = runSkipGram(reducer.source, numEpochs, α, st)
-    val originalVectors = if (chunkSize == 0) allOriginalVectors else allOriginalVectors.takeRight(chunkSize)
+    val originalVectors = chunkSize map (allOriginalVectors takeRight _) getOrElse allOriginalVectors
     val vs = reducer.reduce(originalVectors)
     val uvs = reducer.target.toUnitCube(vs map (_.asInstanceOf[reducer.target.Vector]))
     val vectors = st.withFrequencies zip uvs
