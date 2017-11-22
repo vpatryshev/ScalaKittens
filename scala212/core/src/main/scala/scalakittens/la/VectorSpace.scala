@@ -49,7 +49,7 @@ case class VectorSpace(dim: Int) { space =>
 
     def isValid: Boolean = forall(x => !x.isNaN && !x.isInfinite)
 
-    def binOp(op: (Double, Double) => Double)(other: Vector) = {
+    def binOp(op: (Double, Double) => Double)(other: space.type#Vector) = {
       OnFunction(i => op(apply(i), other(i)))
     }
 
@@ -71,7 +71,7 @@ case class VectorSpace(dim: Int) { space =>
       * @param other another vector of the same length
       * @return the product value
       */
-    def *[V <: space.Vector](other: V): Double = {
+    def *(other: Vector): Double = {
       (0.0 /: range) ((s, i) => s + apply(i) * other(i))
     }
 
@@ -129,6 +129,13 @@ case class VectorSpace(dim: Int) { space =>
       val n = norm(this)
       if (n > Double.MinPositiveValue) this / n else this
     }
+
+    /**
+      * Project vector b to this vector
+      * @param v vector to project
+      * @return a projection of b to a
+      */
+    def project(v: Vector): Vector = this * ((this * v) / Norm.l2(this))
 
     override def equals(other: Any): Boolean = {
       other match {
@@ -247,7 +254,7 @@ case class VectorSpace(dim: Int) { space =>
       * @param other another vector of the same length
       * @return the product value
       */
-    override def *[V <: space.Vector](other: V): Double = {
+    override def *(other: Vector): Double = {
       other match {
         case o: OnArray => scalarProduct(data, o.data)
         case _ =>
@@ -501,7 +508,7 @@ case class VectorSpace(dim: Int) { space =>
       newMatrix.asInstanceOf[hyperplane.SquareMatrix]
     }
 
-    override def *[V <: space.Vector](v: V): space.Vector = {
+    override def *[S <: space.type](v: S#Vector): space.Vector = {
       require(nCols == v.length, s"To apply a matrix to a vector we need that number of columns ($nCols) is equal to the vector's length (${v.length})")
 
       v match {
@@ -517,9 +524,9 @@ case class VectorSpace(dim: Int) { space =>
   }
 
   trait UnitaryMatrix extends SquareMatrix {
-    def isUnitary(precision: Double) = l2(this * transpose - UnitMatrix) <= precision
+    def isUnitary(precision: Double): Boolean = l2(this * transpose - UnitMatrix) <= precision
 
-    override def *[V <: space.Vector](v: V): space.Vector = OnFunction(i => row(i)*v).copy
+    override def *[S <: space.type](v: S#Vector): space.Vector = OnFunction(i => row(i)*v).copy
 
     override def transpose: UnitaryMatrix =
       new Matrix.OnFunction[space.type, space.type](space, space, (i, j) => this(j, i)) with UnitaryMatrix
@@ -645,7 +652,7 @@ case class VectorSpace(dim: Int) { space =>
       * @param v vector in this basis
       * @return the same vector in the old basis
       */
-    def unapply(v: Vector): Vector = rotation.transpose * v + center
+    def unapply(v: Vector): Vector = rotation.transpose *[space.type] v + center
   }
 
   object Basis {
@@ -680,7 +687,7 @@ case class VectorSpace(dim: Int) { space =>
     } {
       val v1: MutableVector = unit(if (i < whereMax) i-1 else i).copy
       for (j <- 0 until i) {
-        v1 -= project(vs(j), v1)
+        v1 -= vs(j).project(v1)
       }
       vs(i) = v1.normalize(Norm.l2).copy
     }
@@ -694,7 +701,7 @@ case class VectorSpace(dim: Int) { space =>
     * @param b vector to project
     * @return a projection of b to a
     */
-  def project[V <: space.Vector](a: Vector, b: V) = a * ((a * b) / Norm.l2(a))
+  def project[S <: space.type](a: Vector, b: S#Vector) = a * ((a * b) / Norm.l2(a))
 
   def cos[V <: space.Vector](a: Vector, b: V) = (a * b) / Norm.l2(a) / Norm.l2(b)
 

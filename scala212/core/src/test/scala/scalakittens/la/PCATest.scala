@@ -34,7 +34,7 @@ class PCATest extends Specification {
       
       vec === R3.Vector(0.7528109532832238,0.431249716162522,0.4972920177587291)
       l2(vec) === 1.0
-      val delta: Double = l2(m * vec / value - vec)
+      val delta: Double = l2(m *[R3.type] vec / value - vec)
       delta < 0.0005 aka s"error=$delta" must beTrue
     }
     
@@ -75,8 +75,8 @@ class PCATest extends Specification {
       vector2 === expected2
 
       val vector3 = R3.injectFromHyperplane(vector2)
-      val vector3InOurBasis = newBasis * vector3
-      val vector3AfterM = m * vector3InOurBasis
+      val vector3InOurBasis = newBasis *[R3.type] vector3
+      val vector3AfterM = m *[R3.type] vector3InOurBasis
       val diff = vector3AfterM - vector3InOurBasis * value2
       l2(diff) < 0.0003 aka diff.toString must beTrue
     }
@@ -103,7 +103,7 @@ class PCATest extends Specification {
       
       for {
         (value, vector) <- allThree
-      } l2(m * vector - vector * value) < 0.001 must beTrue
+      } l2(m *[R3.type] vector - vector * value) < 0.001 must beTrue
       
       val eigenBasis = R3.unitaryMatrix(allThree map (_._2.asInstanceOf[R3.MutableVector]))
       eigenBasis.isUnitary(0.001) must beTrue

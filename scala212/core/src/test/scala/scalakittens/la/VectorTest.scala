@@ -353,8 +353,8 @@ class VectorTest extends Specification {
     }
 
     "project" in {
-      R2.project(R2.Vector(1, 1), R2.Vector(2, -2)) === R2.Vector(0.0, 0.0)
-      R2.project(R2.Vector(1, 1), R2.Vector(0, -2)) === R2.Vector(-1.414213562373095, -1.414213562373095)
+      R2.Vector(1, 1).project(R2.Vector(2, -2)) === R2.Vector(0.0, 0.0)
+      R2.Vector(1, 1).project(R2.Vector(0, -2)) === R2.Vector(-1.414213562373095, -1.414213562373095)
     }
 
     "produce infimum" in {

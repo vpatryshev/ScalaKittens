@@ -187,26 +187,32 @@ class SkipGramModelTest extends Specification {
   }
 
   private def buildModel[S <: VectorSpace, T <: VectorSpace](
-      st: ScannedText, 
+      text: ScannedText, 
       reducer: DimensionReducer[S, T],
       numEpochs:Int, 
       α: Double, 
       chunkSize: Option[Int] = None): List[(String, reducer.target.Vector)] = {
-    val allOriginalVectors: Array[reducer.source.Vector] = runSkipGram(reducer.source, numEpochs, α, st)
+    val allOriginalVectors = runSkipGram(text, reducer.source, numEpochs, α)
+    
     val originalVectors = chunkSize map (allOriginalVectors takeRight _) getOrElse allOriginalVectors
-    val vs = reducer.reduce(originalVectors)
-    val uvs = reducer.target.toUnitCube(vs map (_.asInstanceOf[reducer.target.Vector]))
-    val vectors = st.withFrequencies zip uvs
-    vectors
+    val vs = reducer reduce originalVectors
+    val unitVectors = reducer.target.toUnitCube(vs map (_.asInstanceOf[reducer.target.Vector]))
+    val wordsWithVectors = text.withFrequencies zip unitVectors
+    wordsWithVectors
   }
 
-  private def runSkipGram[Space <: VectorSpace](dim: Space, numEpochs: Int, α: Double, st: ScannedText): Array[dim.Vector] = {
-    val model = SkipGramModel(st, dim, numEpochs, window = 3, α, seed = 123456789L)
+  private def runSkipGram[Space <: VectorSpace](
+      text: ScannedText,
+      space: Space,
+      numEpochs: Int,
+      α: Double
+      ): Array[Space#Vector] = {
+    val model = SkipGramModel(text, space, numEpochs, window = 3, α, seed = 123456789L)
     model.run()
     val originalVectors = model.in
     originalVectors.zipWithIndex foreach { 
       case(v,i) => v.isValid aka s"@$i: $v" must beTrue; () }
-    originalVectors.asInstanceOf[Array[dim.Vector]] // TODO: get rid of casting
+    originalVectors.asInstanceOf[Array[Space#Vector]] // TODO: get rid of casting
   }
 
 //  private def applyPCA(originalVectors: IndexedSeq[Vector], newDim: VectorSpace, precision: Double, numIterations: Int) = {

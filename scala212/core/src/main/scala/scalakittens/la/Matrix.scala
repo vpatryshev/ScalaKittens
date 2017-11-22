@@ -176,7 +176,7 @@ trait Matrix[Domain <: VectorSpace, Codomain <: VectorSpace] extends ((Int, Int)
     * @param v the vector
     * @return another vector, this * v; it so happens that it is mutable
     */
-  def *[V <: Domain#Vector](v: V): Codomain#Vector = {
+  def *[S <: Domain](v: S#Vector): Codomain#Vector = {
     
     v match {
       case va: domain.OnArray => byArray(va).asInstanceOf[codomain.Vector] // todo: fixit
