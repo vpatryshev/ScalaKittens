@@ -8,7 +8,7 @@ object PCA {
   case class Iterations(precision: Double, maxRepeats: Int) {
 
     private def oneStep(space: VectorSpace)(m: space.SquareMatrix)(v: space.Vector): (space.Vector, Double) = {
-      val vector = m *[space.type] v
+      val vector = m * v
       val normalized: space.Vector = vector.normalize(Norm.l2)
       val v1: space.MutableVector = normalized.copy
       val d = Norm.l2.distance(v1, v)
@@ -29,7 +29,7 @@ object PCA {
 
         val maybeTuple: Option[(Double, space.Vector, Int)] = goodData map {
           case (vector, delta, nSteps) =>
-            val vector1: space.Vector = m *[space.type] vector
+            val vector1: space.Vector = m * vector
             (vector1.sum / vector.sum, vector, nSteps)
         }
         maybeTuple
@@ -63,7 +63,7 @@ object PCA {
               val tail = eigenVectorFinder(s.hyperplane).runOn(submatrix, numberRequested - 1)
               val newTail: List[(Double, s.Vector)] = tail map { case (value, vector) =>
                 val vector1: s.Vector = s.injectFromHyperplane(vector)
-                (value, basis *[s.type] vector1)
+                (value, basis * vector1)
               }
               val v: s.Vector = basis.column(0).asInstanceOf[s.Vector]
               ((eigenValue, v) :: newTail) map { case (value, vector) => (value, vector) }

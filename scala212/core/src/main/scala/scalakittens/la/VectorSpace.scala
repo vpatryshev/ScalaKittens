@@ -508,8 +508,7 @@ case class VectorSpace(dim: Int) { space =>
       newMatrix.asInstanceOf[hyperplane.SquareMatrix]
     }
 
-    override def *[S <: space.type](v: S#Vector): space.Vector = {
-      require(nCols == v.length, s"To apply a matrix to a vector we need that number of columns ($nCols) is equal to the vector's length (${v.length})")
+    override def *(v: Vector): space.Vector = {
 
       v match {
         case va: OnArray => byArray(va).asInstanceOf[MutableVector]
@@ -526,7 +525,7 @@ case class VectorSpace(dim: Int) { space =>
   trait UnitaryMatrix extends SquareMatrix {
     def isUnitary(precision: Double): Boolean = l2(this * transpose - UnitMatrix) <= precision
 
-    override def *[S <: space.type](v: S#Vector): space.Vector = OnFunction(i => row(i)*v).copy
+    override def *(v: Vector): Vector = OnFunction(i => row(i)*v).copy
 
     override def transpose: UnitaryMatrix =
       new Matrix.OnFunction[space.type, space.type](space, space, (i, j) => this(j, i)) with UnitaryMatrix
@@ -652,7 +651,7 @@ case class VectorSpace(dim: Int) { space =>
       * @param v vector in this basis
       * @return the same vector in the old basis
       */
-    def unapply(v: Vector): Vector = rotation.transpose *[space.type] v + center
+    def unapply(v: Vector): Vector = rotation.transpose * v + center
   }
 
   object Basis {
