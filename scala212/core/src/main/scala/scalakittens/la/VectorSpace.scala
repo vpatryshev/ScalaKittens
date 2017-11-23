@@ -49,7 +49,7 @@ case class VectorSpace(dim: Int) { space =>
 
     def isValid: Boolean = forall(x => !x.isNaN && !x.isInfinite)
 
-    def binOp(op: (Double, Double) => Double)(other: space.type#Vector) = {
+    private def binOp(op: (Double, Double) => Double)(other: space.type#Vector) = {
       OnFunction(i => op(apply(i), other(i)))
     }
 
@@ -57,13 +57,13 @@ case class VectorSpace(dim: Int) { space =>
       * Infimum of two vectors
       * @return a vector whose components are minimum of the two
       */
-    val inf = binOp(math.min) _
+    val inf: Vector => Vector = binOp(math.min)
 
     /**
       * Supremum of two vectors
       * @return a vector whose components are maximum of the two
       */
-    val sup = binOp(math.max) _
+    val sup: Vector => Vector = binOp(math.max)
 
     /**
       * scalar product of this vector with another
@@ -71,25 +71,23 @@ case class VectorSpace(dim: Int) { space =>
       * @param other another vector of the same length
       * @return the product value
       */
-    def *(other: Vector): Double = {
+    def *(other: space.Vector): Double = {
       (0.0 /: range) ((s, i) => s + apply(i) * other(i))
     }
-
-    def mult(other: Vector): Double = this * other
     
     /**
       * sum of this vector with another
       *
       * @return a new vector, the sum of the two
       */
-    val + = binOp(_+_) _
+    val + : Vector => Vector = binOp(_+_)
 
     /**
       * difference between this vector and another
       *
       * @return a new vector, this minus other
       */
-    val - = binOp(_-_) _
+    val - : Vector => Vector = binOp(_-_) 
 
     /**
       * this vector multiplied by a scalar
@@ -107,7 +105,7 @@ case class VectorSpace(dim: Int) { space =>
       */
     def /(scalar: Double): Vector = *(1.0 / scalar)
 
-    val / = binOp(_/_) _
+    val / : Vector => Vector = binOp(_/_)
 
     /**
       * Materialized copy of this vector
@@ -120,7 +118,7 @@ case class VectorSpace(dim: Int) { space =>
       new OnArray(data)
     }
 
-    override def iterator = range.iterator map this
+    override def iterator: Iterator[Double] = range.iterator map this
 
     /**
       * converts a vector into a vector of norm=1 (if possible)
@@ -486,9 +484,6 @@ case class VectorSpace(dim: Int) { space =>
   def squareMatrix(f: (Int, Int) => Double): SquareMatrix =
     new Matrix.OnFunction[space.type, space.type](space, space, f) with SquareMatrix
 
-  //  private def squareMatrix(f: PartialFunction[(Int, Int), Double]): SquareMatrix =
-  //    new Matrix.OnPartialFunction[space.type, space.type](space, space, f) with SquareMatrix
-
   def squareMatrix(data: Array[Double]): SquareMatrix = squareMatrix((i, j) => data(i*dim+j))
 
   trait SquareMatrix extends LocalMatrix {
@@ -507,7 +502,7 @@ case class VectorSpace(dim: Int) { space =>
     def projectToHyperplane(basis: UnitaryMatrix = UnitMatrix): hyperplane.SquareMatrix = {
       val rotatedMatrix:LocalMatrix = rotate(basis.transpose)
       val newMatrix = hyperplane.squareMatrix((i, j) => rotatedMatrix(i + 1, j + 1))
-      newMatrix.asInstanceOf[hyperplane.SquareMatrix]
+      newMatrix.asInstanceOf[hyperplane.SquareMatrix] // TODO: figure out the type problem
     }
 
     override def *(v: Vector): space.Vector = {
@@ -707,10 +702,10 @@ case class VectorSpace(dim: Int) { space =>
   def cos[V <: space.Vector](a: Vector, b: V) = (a * b) / Norm.l2(a) / Norm.l2(b)
 
   private[la] class ColumnMatrix[Domain <: VectorSpace](val domain: Domain, val cols: Seq[MutableVector]) extends Matrix[Domain, space.type] {
-    override val nRows = dim
+    override val nRows: Int = dim
     require (domain.dim == cols.length)
-    override val nCols = cols.length
-    val codomain = space
+    override val nCols: Int = cols.length
+    val codomain: space.type = space
 
     def apply(i: Int, j: Int): Double = {
       checkIndexes(i, j)

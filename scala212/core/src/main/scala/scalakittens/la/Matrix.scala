@@ -174,13 +174,6 @@ trait Matrix[Domain <: VectorSpace, Codomain <: VectorSpace] extends ((Int, Int)
       case va: domain.OnArray => byArray(va)
       case _ =>
         val data = rowRange map {
-//          i => 
-//          {
-//            val r: domain.Vector = row(i)
-//            val v1: domain.Vector = v
-//            r.mult(v1)
-//          }
-
           i => (0.0 /: v.indices)((s, j) => s + this(i, j) * v(j))
         } toArray
         

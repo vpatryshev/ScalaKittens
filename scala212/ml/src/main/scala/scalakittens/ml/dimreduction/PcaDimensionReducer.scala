@@ -16,12 +16,12 @@ class PcaDimensionReducer[Source <: VectorSpace, Target <: VectorSpace](
   def reduce(originalVectors: IndexedSeq[Source#Vector]): IndexedSeq[Target#Vector] = {
     val acc = new AccumulatingMoments[Source](source).collect(originalVectors)
     val avg = acc.avg
-    val cov = acc.covariance
-    //    println(s"avg=$avg")
-    //    println(s"covariance=\n$cov\n\n")
-    val eigens = PCA.Iterations(precision, numIterations).buildEigenVectors(source)(cov, target.dim)
-//        println("\nEIGENVALUES:\n")
-//        println(eigens map (_._1))
+    val cov: Source#SquareMatrix = acc.covariance
+    val iterations = PCA.Iterations(precision, numIterations)
+    val buildEigenVectors = iterations.buildEigenVectors(source) _
+    // TODO: get rid of casting
+    val eigens = buildEigenVectors(cov.asInstanceOf[source.SquareMatrix], target.dim)
+
     val vectors = eigens map (_._2.copy)
     val transformBase:AffineTransform[Source, Target] = AffineTransform(source, target)
 

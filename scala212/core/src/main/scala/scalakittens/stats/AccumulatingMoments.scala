@@ -27,7 +27,6 @@ class AccumulatingMoments[Space <: VectorSpace](val space: Space) {
   def covariance[S <: Space]: space.SquareMatrix = {
     require (_n > 1, s"Can't produce covariance matrix for $n vector(s)")
     space.squareMatrix((i, j) => (matrix(i, j) - sum(i) * sum(j) / n) / (n-1)) 
-//.asInstanceOf[S#SquareMatrix]
   }
   
   /**
