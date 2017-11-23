@@ -26,6 +26,8 @@ case class VectorSpace(dim: Int) { space =>
     hyperplane.OnFunction(i => v(i+1))
   }
 
+  def projectToHyperplane(m: SquareMatrix): hyperplane.SquareMatrix = hyperplane.squareMatrix((i, j) => m(i + 1, j + 1))
+
   def injectFromHyperplane(v: VectorSpace#Vector): Vector = {
     // the following check runs in runtime, who knows where is Hyperplane coming from
     require(v.length + 1 == dim)
@@ -71,9 +73,7 @@ case class VectorSpace(dim: Int) { space =>
       * @param other another vector of the same length
       * @return the product value
       */
-    def *(other: space.Vector): Double = {
-      (0.0 /: range) ((s, i) => s + apply(i) * other(i))
-    }
+    def *(other: space.Vector): Double = Spaces.mult[space.type](this, other)
     
     /**
       * sum of this vector with another
@@ -500,9 +500,7 @@ case class VectorSpace(dim: Int) { space =>
     }
 
     def projectToHyperplane(basis: UnitaryMatrix = UnitMatrix): hyperplane.SquareMatrix = {
-      val rotatedMatrix:LocalMatrix = rotate(basis.transpose)
-      val newMatrix = hyperplane.squareMatrix((i, j) => rotatedMatrix(i + 1, j + 1))
-      newMatrix.asInstanceOf[hyperplane.SquareMatrix] // TODO: figure out the type problem
+      space.projectToHyperplane(rotate(basis.transpose))
     }
 
     override def *(v: Vector): space.Vector = {
@@ -735,6 +733,10 @@ case class VectorSpace(dim: Int) { space =>
 }
 
 object Spaces {
+
+  def mult[S <: VectorSpace](v1: S#Vector, v2: S#Vector): Double =
+    (0.0 /: v1.range) ((s, i) => s + v1(i) * v2(i))
+  
   lazy val R0 = VectorSpace(0)
   lazy val R1 = VectorSpace(1)
   lazy val R2 = VectorSpace(2)
