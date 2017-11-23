@@ -1,55 +1,66 @@
 package scalakittens.ml.word2vec
   
+import language.existentials
 import scalakittens.la._
-import scalakittens.ml.word2vec.Sigma._
+import scalakittens.ml.word2vec.Sigmoid.σ
 
 /**
+  * 
+  * @param text Scanned text that is undergoing SkipGram model processing
+  * @param space the instance of space in which the vectors are
+  * @param numEpochs number of iterations
+  * @param α gradient descent speed parameter, must be positive and less than 1/space.dim
+  * @param window the sliding window size 
+  * @param seed rng seed
+  * @tparam Space the type of space in which the vectors are
+  *               
   * Created by vpatryshev on 5/11/17.
   */
-case class SkipGramModel[Space <: VectorSpace](text: ScannedText, space: Space, α: Double, window: Int, numEpochs: Int, seed: Long = System.nanoTime()) {
+case class SkipGramModel[Space <: VectorSpace](
+    text: ScannedText, 
+    space: Space, 
+    numEpochs: Int,
+    window: Int,
+    α: Double,
+    seed: Long = System.nanoTime()) {
   
   require (0 < α && α < 1.0/space.dim, s"α=$α should be between 0 and ${1.0/space.dim}")
+  
   lazy val vecFactory = space.RandomSphere(seed)
 
-  lazy val in: Array[Space#MutableVector] = {
-    val in = new Array[Space#MutableVector](text.dictionarySize)
+  lazy val in: Array[space.MutableVector] = {
+    val in = new Array[space.MutableVector](text.dictionarySize)
 
     for {i <- in.indices} in(i) = vecFactory().copy
     
     in
   }
 
-  def checkme(msg: String = "", which: Int = -1): Unit = {
-    in.indices.foreach(i => {
-      val v: Space#Vector = in(i)
-
-      if (which < 0 || i == which)
-      v.foreach(
-        xi => {
-          require(!xi.isNaN, s"Vector at $i; $msg")
-          ()
-        })})
-      
-    require(in.length == 17694, s"Actually ${in.length}")
-  }
-  
   val huffman = new HuffmanTree(text.frequencies)
   
   val out: Array[space.MutableVector] = new Array[space.MutableVector](huffman.size)
 
   for {i <- out.indices} out(i) = vecFactory().copy
 
-  // TODO: get rid of casting
-  def product(i: Int, j: Int) = {
-    out(j) * in(i).asInstanceOf[space.Vector]
-  }
+  def product(i: Int, j: Int): Double = out(j) * in(i)
   
-  def proximity(i: Int, o: Int) = σ(product(i, o))
+  def proximity(i: Int, o: Int): Double = σ(product(i, o))
 
   import math._
 
+  /**
+    * Update a vector representation of word numbers i and o (and its relatives)
+    *
+    * As a result, vector i is nudged towards vector o and its parents in the hierarchy;
+    * vector o, together with its parents in the hierarchy are also nudged.
+    * The degree at which vectors are nudged depend on their proximity; the closer, the more 
+    * they are nudged towards each other.
+    * 
+    * @param i first word number 
+    * @param o second word number
+    */
   def update(i: Int, o: Int): Unit = {
-    val v = in(i).asInstanceOf[space.MutableVector] // TODO: get rid of casting
+    val v = in(i)
     val neu: space.MutableVector = space.Zero.copy
   
     for {j <- huffman.path(o)} {
@@ -67,6 +78,11 @@ case class SkipGramModel[Space <: VectorSpace](text: ScannedText, space: Space, 
     ()
   }
   
+  /**
+    * Update vector representations of words (within a window) surrounding a word at position i.
+    * 
+    * @param i word position in text
+    */
   def updateWindow(i: Int): Unit = {
     val idx = text.index(i)
 
@@ -101,10 +117,9 @@ case class SkipGramModel[Space <: VectorSpace](text: ScannedText, space: Space, 
 
 object SkipGramModel {
 
-  def run(dim: VectorSpace, numEpochs: Int, α: Double, st: ScannedText) = {
-    val model = SkipGramModel(st, dim, α, window = 3, numEpochs, seed = 123456789L)
+  def run(space: VectorSpace, numEpochs: Int, α: Double, st: ScannedText) = {
+    val model = SkipGramModel(st, space, numEpochs, window = 3,  α, seed = 123456789L)
     model.run()
-    val originalVectors = model.in
-    originalVectors
+    model.in
   }
 }

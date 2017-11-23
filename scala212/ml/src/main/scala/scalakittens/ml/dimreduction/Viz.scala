@@ -6,8 +6,8 @@ import language.postfixOps
   * Created by vpatryshev on 7/10/17.
   */
 object Viz {
-  val N = 120 /*120*/
-  val M = 30 /*60*/
+  val N = 120 /*200 for slides*/
+  val M = 30 /*25 for slides*/
   def visualize(title: String, projections: Seq[(Any, Double, Double)]): Unit = {
     println
     println
@@ -35,7 +35,7 @@ object Viz {
 
         val layout = (Map[Int, Char]() /: row) {
           case (charMap, (z, pos)) =>
-            val w = z.toString
+            val w = z.toString.split(":").head
             val wordRange = math.max(pos - 1, 0) until math.min(N, pos + w.length + 1)
             if (wordRange exists charMap.contains) charMap else {
               val m1 = 0 until w.length map (i => i + pos -> w.charAt(i)) toMap

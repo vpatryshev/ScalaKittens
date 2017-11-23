@@ -15,6 +15,9 @@ case class ScannedText(inverseIndex: Map[String, List[Int]],
   lazy val dictionarySize = dictionary.length
   lazy val length = index.length
   
+  /**
+    * Words are enumerated; this array map a word position in text to the word number
+    */
   lazy val index: Array[Int] = {
     val size = inverseIndex.values.map(_.max).max + 1
     val index = new Array[Int](size)

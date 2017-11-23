@@ -2,7 +2,7 @@ package scalakittens.ml.word2vec
 
 import org.specs2.mutable.Specification
 
-import scalakittens.{Good, IO}
+import scalakittens.Good
 
 class HuffmanTreeTest extends Specification {
 
@@ -55,24 +55,29 @@ class HuffmanTreeTest extends Specification {
 
     "process War And Peace" in {
 
-      val scanner = TextScanner.WarAndPeace
-      
-      def source() = IO.linesFromResource("/warandpeace.txt")
-
-      source map scanner.scan match {
+      WarAndPeace.scannedText match {
         case Good(ScannedText(index, words, freqs)) =>
 
           val tree = new HuffmanTree(freqs)
           tree.path(1000).length > 15 must beTrue
           tree.path(1000).length < 25 must beTrue
-        //      println(cc.size)
-        //      println(tree.path(1000))
-        //      println(tree.toGraph)
-
-        //      failure(cc.toString)
         case bad => failure(bad.listErrors.toString)
       }
       
+      ok
+    }
+
+    "process Gone With The Wind" in {
+
+      GoneWithTheWind.scannedText match {
+        case Good(ScannedText(index, words, freqs)) =>
+
+          val tree = new HuffmanTree(freqs)
+          tree.path(1000).length > 15 must beTrue
+          tree.path(1000).length < 25 must beTrue
+        case bad => failure(bad.listErrors.toString)
+      }
+
       ok
     }
   }

@@ -21,12 +21,11 @@ class AccumulatingMoments[Space <: VectorSpace](val space: Space) {
     } matrix(i,j) += row(i)*row(j)
   }
   
-  def avg: Space#MutableVector = (sum / n) .copy 
+  def avg: Space#Vector = sum / n
   
-  // TODO: get rid of casting
-  def covariance[S <: Space]: S#SquareMatrix = {
-    require (_n > 1, s"Can't produce covariance matrix for $n vector(s)")
-    space.squareMatrix((i, j) => (matrix(i, j) - sum(i) * sum(j) / n) / (n-1)) .asInstanceOf[S#SquareMatrix]
+  def covariance: space.SquareMatrix = {
+    require (n > 1, s"Can't produce covariance matrix for $n vector(s)")
+    space.squareMatrix((i, j) => (matrix(i, j) - sum(i) * sum(j) / n) / (n-1)) 
   }
   
   /**
@@ -38,7 +37,7 @@ class AccumulatingMoments[Space <: VectorSpace](val space: Space) {
     * TODO: make it type-safe
     */
   def collect[V <: Space#Vector](vectors: TraversableOnce[V]): AccumulatingMoments[Space] = {
-    vectors foreach ((v:V) => this.+=(v.asInstanceOf[space.Vector])) 
+    vectors foreach ((v:V) => this += v.asInstanceOf[space.Vector]) 
     this
   }
 }
