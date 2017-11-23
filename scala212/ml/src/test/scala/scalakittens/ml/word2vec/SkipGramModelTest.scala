@@ -172,7 +172,7 @@ class SkipGramModelTest extends Specification {
     scanner.scannedText map {
       st =>
         val α = 0.9 / reducer.source.dim
-        val vectors: List[(String, reducer.target.Vector)] = 
+        val vectors: List[(String, T#Vector)] = 
           buildModel(st, reducer, numEpoch, α, chunkSize)
         serialize(filename, reducer.target, vectors)
         println("Rare words")
@@ -191,7 +191,7 @@ class SkipGramModelTest extends Specification {
       reducer: DimensionReducer[S, T],
       numEpochs:Int, 
       α: Double, 
-      chunkSize: Option[Int] = None): List[(String, reducer.target.Vector)] = {
+      chunkSize: Option[Int] = None): List[(String, T#Vector)] = {
     val allOriginalVectors = runSkipGram(text, reducer.source, numEpochs, α)
     
     val originalVectors = chunkSize map (allOriginalVectors takeRight _) getOrElse allOriginalVectors
@@ -212,7 +212,7 @@ class SkipGramModelTest extends Specification {
     val originalVectors = model.in
     originalVectors.zipWithIndex foreach { 
       case(v,i) => v.isValid aka s"@$i: $v" must beTrue; () }
-    originalVectors.asInstanceOf[Array[Space#Vector]] // TODO: get rid of casting
+    originalVectors .asInstanceOf[Array[Space#Vector]] // TODO: get rid of casting
   }
 
 //  private def applyPCA(originalVectors: IndexedSeq[Vector], newDim: VectorSpace, precision: Double, numIterations: Int) = {
