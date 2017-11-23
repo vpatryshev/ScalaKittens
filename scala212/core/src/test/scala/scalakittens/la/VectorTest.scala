@@ -431,7 +431,7 @@ class VectorTest extends Specification {
     }
 
     "get built out of plain vectors" in {
-      val vectors: Array[R3.Vector] = sampleBasisVectors map (_.asInstanceOf[R3.Vector])
+      val vectors: Array[R3.MutableVector] = sampleBasisVectors
       
       val basis = R3.Basis(sampleCenter, vectors)
       

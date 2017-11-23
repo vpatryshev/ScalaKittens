@@ -70,11 +70,7 @@ trait Matrix[Domain <: VectorSpace, Codomain <: VectorSpace] extends ((Int, Int)
     * @param i row number
     * @return the row
     */
-  def row(i: Int): Domain#Vector = {
-    val row = new Array[Double](nCols)
-    columnRange foreach (j => row(j) = this(i, j))
-    domain.Vector(row)
-  }
+  def row(i: Int): domain.Vector = domain.OnFunction(j => this(i, j))
 
   /**
     * j-th column of this matrix
@@ -82,11 +78,7 @@ trait Matrix[Domain <: VectorSpace, Codomain <: VectorSpace] extends ((Int, Int)
     * @param j column number
     * @return the column
     */
-  def column(j: Int): codomain.Vector = {
-    val col = new Array[Double](nRows)
-    rowRange foreach (i => col(i) = this(i, j))
-    codomain.Vector(col)
-  }
+  def column(j: Int): codomain.Vector = codomain.OnFunction(i => this(i, j))
 
   def allElements: IndexedSeq[Double] = for {
     i <- rowRange
@@ -179,10 +171,17 @@ trait Matrix[Domain <: VectorSpace, Codomain <: VectorSpace] extends ((Int, Int)
   def *(v: Domain#Vector): Codomain#Vector = {
     
     v match {
-      case va: domain.OnArray => byArray(va).asInstanceOf[codomain.Vector] // todo: fixit
+      case va: domain.OnArray => byArray(va)
       case _ =>
         val data = rowRange map {
-          i => (0.0 /: v.indices)((s, j) => s + this(i, j)*v(j))
+//          i => 
+//          {
+//            val r: domain.Vector = row(i)
+//            val v1: domain.Vector = v
+//            r.mult(v1)
+//          }
+
+          i => (0.0 /: v.indices)((s, j) => s + this(i, j) * v(j))
         } toArray
         
         codomain.Vector(data)

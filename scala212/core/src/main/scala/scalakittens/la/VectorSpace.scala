@@ -23,7 +23,7 @@ case class VectorSpace(dim: Int) { space =>
   }
 
   def projectToHyperplane(v: Vector): hyperplane.Vector = {
-    hyperplane.OnFunction(i => v(i+1)).asInstanceOf[hyperplane.Vector]
+    hyperplane.OnFunction(i => v(i+1))
   }
 
   def injectFromHyperplane(v: VectorSpace#Vector): Vector = {
@@ -41,11 +41,11 @@ case class VectorSpace(dim: Int) { space =>
     */
   trait Vector extends IndexedSeq[Double] with PartialFunction[Int, Double] {
     //    def space = VectorSpace.this
-    def length = dim
+    def length: Int = dim
 
-    lazy val range = 0 until dim
+    lazy val range: Range = 0 until dim
 
-    override def isDefinedAt(i: Int) = range contains i
+    override def isDefinedAt(i: Int): Boolean = range contains i
 
     def isValid: Boolean = forall(x => !x.isNaN && !x.isInfinite)
 
@@ -75,6 +75,8 @@ case class VectorSpace(dim: Int) { space =>
       (0.0 /: range) ((s, i) => s + apply(i) * other(i))
     }
 
+    def mult(other: Vector): Double = this * other
+    
     /**
       * sum of this vector with another
       *
@@ -490,8 +492,8 @@ case class VectorSpace(dim: Int) { space =>
   def squareMatrix(data: Array[Double]): SquareMatrix = squareMatrix((i, j) => data(i*dim+j))
 
   trait SquareMatrix extends LocalMatrix {
-    override val domain = space
-    override val codomain = space
+    override val domain: space.type = space
+    override val codomain: space.type = space
 
     def triangle = new TriangularMatrix(this)
 
@@ -511,10 +513,10 @@ case class VectorSpace(dim: Int) { space =>
     override def *(v: Vector): space.Vector = {
 
       v match {
-        case va: OnArray => byArray(va).asInstanceOf[MutableVector]
+        case va: OnArray => byArray(va)
         case _ =>
           val data = rowRange map {
-            i => (0.0 /: v.indices)((s, j) => s + this(i, j)*v(j))
+            i => 42.7 //(0.0 /: v.indices)((s, j) => s + this(i, j)*v(j))
           } toArray
 
           Vector(data)
