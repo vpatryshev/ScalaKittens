@@ -2,23 +2,21 @@ package scalakittens.stats
 
 import org.specs2.mutable.Specification
 
-import scalakittens.la.VectorSpace
+import scalakittens.la.Spaces._
 
 /**
   * Tests for statistics
   * Created by vpatryshev on 5/7/17.
   */
 class StatsTest extends Specification {
-  val R3 = VectorSpace(3)
-  val R4 = VectorSpace(4)
   
   "AccumulatingMoments" should {
     "calculate moments" in {
-      val moments = new AccumulatingMoments(R3)
-      val averager = moments.collect(List(R3.Vector(1.0, 2.0, 3.0), R3.Vector(-1.0, -1.0, -1.0)))
-      
-      averager.avg must_== R3.Vector(0.0, 0.5, 1.0)
-      averager.n must_== 2
+      val moments = new AccumulatingMoments[R3.type](R3)
+      moments.collect(List(R3.Vector(1.0, 2.0, 3.0), R3.Vector(-1.0, -1.0, -1.0)))
+
+      moments.avg must_== R3.Vector(0.0, 0.5, 1.0)
+      moments.n must_== 2
     }
     
     "calculate covariance" in {
@@ -27,9 +25,9 @@ class StatsTest extends Specification {
         R4.Vector(2.0, 6.0, -1.0, 0.0), // 0, 0, 0, -2/3
         R4.Vector(3.0, 9.0, -1.5, 1.0)) // 1, 3, -0.5, 1/3
 
-      val moments = new AccumulatingMoments(R4)
-      val averager = moments.collect(vectors)
-      val cov = averager.covariance
+      val moments = new AccumulatingMoments[R4.type](R4)
+      moments.collect(vectors)
+      val cov = moments.covariance
 
       val expected = Array(
         R4.Vector(1.0, 3.0, -0.5, 0.0),

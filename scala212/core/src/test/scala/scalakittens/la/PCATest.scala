@@ -12,8 +12,6 @@ class PCATest extends Specification {
   import Spaces._
   
   private def matrix(vs: VectorSpace, values: Array[Double]) = vs.squareMatrix(values)
-
-  //    vs.squareMatrix((i, j) => values(i*vs.dim+j))
   
   "Iterations method" should {
     "not fail on one simple case" in {
@@ -24,8 +22,6 @@ class PCATest extends Specification {
       value === 100.0
 
       val expected = R2.Vector(0.7071067811865476, 0.7071067811865476)
-      val mv = m * vec
-      val vs = mv / vec
       vec === expected
     }
 
@@ -69,11 +65,14 @@ class PCATest extends Specification {
         abs(m1(0, i)) < 0.0003 aka s"col $i: ${m1(0, i)}" must beTrue
       }
       
-      val submatrix:R2.SquareMatrix = m1.projectToHyperplane().asInstanceOf[R2.SquareMatrix]
-      val Some((value2: Double, vector2: R2.Vector, _: Int)) = method.maxEigenValue(R2)(submatrix)
+      val submatrix = m1.projectToHyperplane().asInstanceOf[R2.SquareMatrix]
+      
+      val Some((value2: Double, vector2, _: Int)) = method.maxEigenValue(R2)(submatrix)
 
       l2(vector2) must beCloseTo(1.0, 0.000001)
-      val delta2: Double = l2(submatrix * vector2 / value2 - vector2)
+      // TODO: get rid of this casting
+      val v2Cast: R2.Vector = vector2.asInstanceOf[R2.Vector]
+      val delta2: Double = l2(submatrix * v2Cast / value2 - v2Cast)
       delta2 < 0.0005 aka s"error2=$delta2" must beTrue
 
       value2 must beCloseTo(3.397, 0.001)
@@ -92,7 +91,6 @@ class PCATest extends Specification {
       val method = PCA.Iterations(0.0001, 100)
       val tuples = method.buildEigenVectors(R3)(m, 3)
       tuples mustNotEqual null
-      val finder = method.eigenVectorFinder(R3)
 
       val allThree = method.buildEigenVectors(R3)(m, 3)
       

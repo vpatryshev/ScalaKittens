@@ -16,9 +16,9 @@ object PCA {
     }
 
     def maxEigenValue(space: VectorSpace)(m: space.SquareMatrix): Option[(Double, space.Vector, Int)] = {
-      require(m.domain == m.codomain, s"Expected a square matrix, have ${m.nRows}⨯${m.nCols}")
-      if (m.nCols == 0) None else if (m.nCols == 1) Some((m(0, 0), space.Vector(1.0), 0)) else {
-        val iterator = Iterator.iterate((space.unit(0), Double.MaxValue, 0)) {
+      val unitVector = m.domain.unit(0)
+      if (m.nCols == 0) None else if (m.nCols == 1) Some((m(0, 0), unitVector, 0)) else {
+        val iterator = Iterator.iterate((unitVector, Double.MaxValue, 0)) {
           case (v, d, i) =>
             val vectorToTuple = oneStep(space)(m)(_: space.Vector)
             val (v1, d1) = vectorToTuple(v)

@@ -490,6 +490,9 @@ case class VectorSpace(dim: Int) { space =>
     override val domain: space.type = space
     override val codomain: space.type = space
 
+    def isUnitary(precision: Double): Boolean =
+      l2(this * transpose - UnitMatrix) <= precision
+
     def triangle = new TriangularMatrix(this)
 
     def rotate(u: UnitaryMatrix): SquareMatrix = {
@@ -518,7 +521,6 @@ case class VectorSpace(dim: Int) { space =>
   }
 
   trait UnitaryMatrix extends SquareMatrix {
-    def isUnitary(precision: Double): Boolean = l2(this * transpose - UnitMatrix) <= precision
 
     override def *(v: Vector): Vector = OnFunction(i => row(i)*v).copy
 

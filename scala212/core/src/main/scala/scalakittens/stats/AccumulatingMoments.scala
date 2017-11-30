@@ -11,7 +11,7 @@ class AccumulatingMoments[Space <: VectorSpace](val space: Space) {
   val sum: space.MutableVector = space.Zero.copy
   private val matrix: MutableMatrix[Space, Space] = Matrix(space, space)
   
-  def +=(row: space.Vector): Unit = {
+  def add(row: space.Vector): Unit = {
     _n += 1
     sum += row
 
@@ -21,7 +21,7 @@ class AccumulatingMoments[Space <: VectorSpace](val space: Space) {
     } matrix(i,j) += row(i)*row(j)
   }
   
-  def avg: Space#Vector = sum / n
+  def avg: space.Vector = sum / n
   
   def covariance: space.SquareMatrix = {
     require (n > 1, s"Can't produce covariance matrix for $n vector(s)")
@@ -36,8 +36,8 @@ class AccumulatingMoments[Space <: VectorSpace](val space: Space) {
     *         
     * TODO: make it type-safe
     */
-  def collect[V <: Space#Vector](vectors: TraversableOnce[V]): AccumulatingMoments[Space] = {
-    vectors foreach ((v:V) => this += v.asInstanceOf[space.Vector]) 
+  def collect(vectors: TraversableOnce[space.Vector]): AccumulatingMoments[Space] = {
+    vectors foreach add
     this
   }
 }
