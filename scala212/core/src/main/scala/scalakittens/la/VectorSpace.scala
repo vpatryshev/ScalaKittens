@@ -2,8 +2,8 @@ package scalakittens.la
 
 import language.{implicitConversions, postfixOps}
 import java.util
-import ArrayOps._
 
+import ArrayOps._
 import scala.math.abs
 import scala.util.{Random, Try}
 import scalakittens.la.Norm.l2
@@ -34,6 +34,9 @@ case class VectorSpace(dim: Int) { space =>
     OnFunction(i => if (i == 0) 0.0 else v(i-1))
   }
 
+  def mult(v1: Vector, v2: Vector): Double =
+    (0.0 /: v1.range) ((s, i) => s + v1(i) * v2(i))
+
   /**
     * real-valued vector with usual operations
     *
@@ -42,7 +45,7 @@ case class VectorSpace(dim: Int) { space =>
     * Created by vpatryshev on 5/14/17.
     */
   trait Vector extends IndexedSeq[Double] with PartialFunction[Int, Double] {
-    //    def space = VectorSpace.this
+//    def space = VectorSpace.this
     def length: Int = dim
 
     lazy val range: Range = 0 until dim
@@ -51,7 +54,7 @@ case class VectorSpace(dim: Int) { space =>
 
     def isValid: Boolean = forall(x => !x.isNaN && !x.isInfinite)
 
-    private def binOp(op: (Double, Double) => Double)(other: space.type#Vector) = {
+    private def binOp(op: (Double, Double) => Double)(other: Vector) = {
       OnFunction(i => op(apply(i), other(i)))
     }
 
@@ -73,7 +76,7 @@ case class VectorSpace(dim: Int) { space =>
       * @param other another vector of the same length
       * @return the product value
       */
-    def *(other: space.Vector): Double = Spaces.mult[space.type](this, other)
+    def *(other: Vector): Double = mult(this, other)
     
     /**
       * sum of this vector with another
@@ -139,7 +142,7 @@ case class VectorSpace(dim: Int) { space =>
 
     override def equals(other: Any): Boolean = {
       other match {
-        case v: VectorSpace#Vector =>
+        case v: Vector =>
           length == v.length &&
             range.forall(i => {this(i) == v(i)
             })
@@ -512,7 +515,7 @@ case class VectorSpace(dim: Int) { space =>
         case va: OnArray => byArray(va)
         case _ =>
           val data = rowRange map {
-            i => 42.7 //(0.0 /: v.indices)((s, j) => s + this(i, j)*v(j))
+            i => (0.0 /: v.indices)((s, j) => s + this(i, j)*v(j))
           } toArray
 
           Vector(data)
@@ -697,9 +700,9 @@ case class VectorSpace(dim: Int) { space =>
     * @param b vector to project
     * @return a projection of b to a
     */
-  def project[S <: space.type](a: Vector, b: S#Vector) = a * ((a * b) / Norm.l2(a))
+  def project(a: Vector, b: Vector) = a * ((a * b) / Norm.l2(a))
 
-  def cos[V <: space.Vector](a: Vector, b: V) = (a * b) / Norm.l2(a) / Norm.l2(b)
+  def cos(a: Vector, b: Vector) = (a * b) / Norm.l2(a) / Norm.l2(b)
 
   private[la] class ColumnMatrix[Domain <: VectorSpace](val domain: Domain, val cols: Seq[MutableVector]) extends Matrix[Domain, space.type] {
     override val nRows: Int = dim
@@ -736,7 +739,7 @@ case class VectorSpace(dim: Int) { space =>
 
 object Spaces {
 
-  def mult[S <: VectorSpace](v1: S#Vector, v2: S#Vector): Double =
+  def mult(s: VectorSpace)(v1: s.Vector, v2: s.Vector): Double =
     (0.0 /: v1.range) ((s, i) => s + v1(i) * v2(i))
   
   lazy val R0 = VectorSpace(0)

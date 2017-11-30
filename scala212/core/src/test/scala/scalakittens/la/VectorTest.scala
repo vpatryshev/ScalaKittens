@@ -18,7 +18,7 @@ class VectorTest extends Specification {
       val unitCube = R3.unitCube(vectors)
       val z = unitCube(R3.Zero)
       val ucs = unitCube.toString
-      (z aka ucs) must_== R3.Vector(1,-0.5,-0.25)
+      z aka ucs must_== R3.Vector(1,-0.5,-0.25)
       unitCube(R3.Vector(-1, 0, 0)) === R3.Vector(0.5,-0.5,-0.25)
       unitCube(R3.Vector(0,1,0)) === R3.Vector(1,0,-0.25)
       unitCube(R3.Vector(0,0,1)) === R3.Vector(1.0,-0.5,-0.125)
@@ -154,7 +154,7 @@ class VectorTest extends Specification {
       val v = R3.Vector(111.0, 222.0, 333.0)
       val sut = R3.projectToHyperplane(v)
       sut.length must_== 2
-      sut must_== R2.Vector(222.0, 333.0)
+      sut must_== R3.hyperplane.Vector(222.0, 333.0)
     }
 
     "inject vector from hyperplane" in {
