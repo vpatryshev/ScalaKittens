@@ -12,7 +12,7 @@ object PCA {
       val normalized: space.Vector = vector.normalize(Norm.l2)
       val v1: space.MutableVector = normalized.copy
       val d = Norm.l2.distance(v1, v)
-      (v1, d)
+      ((v1 + v)/2, d)
     }
 
     def maxEigenValue(space: VectorSpace)(m: space.SquareMatrix): Option[(Double, space.Vector, Int)] = {
@@ -36,7 +36,7 @@ object PCA {
       }
     }
 
-    def buildEigenVectors(space: VectorSpace)(m: space.type#SquareMatrix, numberRequested: Int): List[(Double, space.Vector)] = {
+    def buildEigenVectors(space: VectorSpace)(m: space.SquareMatrix, numberRequested: Int): List[(Double, space.Vector)] = {
       eigenVectorFinder(space).runOn(m, numberRequested)
     }
 
