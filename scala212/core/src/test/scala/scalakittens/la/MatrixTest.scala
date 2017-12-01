@@ -16,7 +16,10 @@ class MatrixTest extends Specification {
     } toArray
   }
 
-  case class TestMatrix[Dom <: VectorSpace, Codom <: VectorSpace](domain: Dom, codomain: Codom, f: Int => Int => Double) extends MutableMatrix[Dom, Codom] {
+  case class TestMatrix[Dom <: VectorSpace, Codom <: VectorSpace](
+      override val domain: Dom,
+      override val codomain: Codom, f: Int => Int => Double) 
+    extends MutableMatrix[Dom, Codom](domain, codomain) {
     override def nRows: Int = codomain.dim
     override def nCols: Int = domain.dim
     val d = nxm(nRows, nCols, f)

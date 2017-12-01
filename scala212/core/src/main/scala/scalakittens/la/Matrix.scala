@@ -15,17 +15,8 @@ import language.postfixOps
   * 
   * Created by vpatryshev on 5/15/17.
   */
-trait Matrix[Domain <: VectorSpace, Codomain <: VectorSpace] extends ((Int, Int) => Double) with Iterable[Double] {
-  
-  /**
-    * Vector space that is domain of this matrix
-    */
-  val domain: Domain
-
-  /**
-    * Vector space that is Codomain of this matrix
-    */
-  val codomain: Codomain
+abstract class  Matrix[Domain <: VectorSpace, Codomain <: VectorSpace](
+    val domain: Domain, val codomain: Codomain) extends ((Int, Int) => Double) with Iterable[Double] {
 
   /**
     * @return number of rows
@@ -219,7 +210,10 @@ trait Matrix[Domain <: VectorSpace, Codomain <: VectorSpace] extends ((Int, Int)
   }
 }
 
-trait MutableMatrix[Domain <: VectorSpace, Codomain <: VectorSpace] extends Matrix[Domain, Codomain] {
+abstract class MutableMatrix[Domain <: VectorSpace, Codomain <: VectorSpace](
+    domain: Domain,
+    codomain: Codomain)
+  extends Matrix[Domain, Codomain](domain, codomain) {
 
   /**
     * generic value setter
@@ -269,7 +263,7 @@ object Matrix {
     apply(domain, codomain, storage = new Array[Double](domain.dim * codomain.dim))
   }
     
-  class OnArray[Domain <: VectorSpace, Codomain <: VectorSpace](val domain: Domain, val codomain: Codomain, val data: Array[Double]) extends MutableMatrix[Domain, Codomain] {
+  class OnArray[Domain <: VectorSpace, Codomain <: VectorSpace](domain: Domain, codomain: Codomain, val data: Array[Double]) extends MutableMatrix[Domain, Codomain](domain, codomain) {
     
     override def iterator: Iterator[Double] = data.iterator
     
@@ -315,7 +309,7 @@ object Matrix {
     * @param f the function that gives matrix values
     */
   class OnFunction[Domain <: VectorSpace, Codomain <: VectorSpace]
-    (val domain: Domain, val codomain: Codomain, f: (Int, Int) => Double) extends Matrix[Domain, Codomain] {
+    (domain: Domain, codomain: Codomain, f: (Int, Int) => Double) extends Matrix[Domain, Codomain](domain, codomain) {
 
     override lazy val size: Int = domain.dim * codomain.dim
 
@@ -335,8 +329,7 @@ object Matrix {
     * @param codomain matrix Codomain (space of columns)
     * @param pf the partial function that gives matrix values if defined, all other values are 0.
     */
-  class OnPartialFunction[Domain <: VectorSpace, Codomain <: VectorSpace](val domain: Domain, val codomain: Codomain, pf: PartialFunction[(Int, Int), Double]) extends Matrix[Domain, Codomain] {
-
+  class OnPartialFunction[Domain <: VectorSpace, Codomain <: VectorSpace](domain: Domain, codomain: Codomain, pf: PartialFunction[(Int, Int), Double]) extends Matrix[Domain, Codomain](domain, codomain) {
     override def apply(i: Int, j: Int): Double = {
       checkIndexes(i, j)
       if (pf.isDefinedAt((i, j))) pf((i, j)) else 0.0

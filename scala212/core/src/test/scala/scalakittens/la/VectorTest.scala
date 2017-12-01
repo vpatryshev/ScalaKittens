@@ -5,6 +5,7 @@ import org.specs2.mutable.Specification
 import scalakittens.la.Norm.l2
 
 /**
+  * Test suite for VectorSpace and the vectors inside
   * Created by vpatryshev on 5/7/17.
   */
 class VectorTest extends Specification {
@@ -158,11 +159,11 @@ class VectorTest extends Specification {
     }
 
     "inject vector from hyperplane" in {
-      val v = R3.Vector(111.0, 222.0, 333.0)
+      val v = R4.hyperplane.Vector(111.0, 222.0, 333.0)
       val sut = R4.injectFromHyperplane(v)
       sut.length must_== 4
       sut must_== R4.Vector(0.0, 111.0, 222.0, 333.0)
-      R4.injectFromHyperplane(R2.Vector(1.1, 2.2)) must throwA[Exception]
+      R4.injectFromHyperplane(R4.hyperplane.Vector(1.1, 2.2)) must throwA[Exception]
     }
     
     "rotate square matrix" in {

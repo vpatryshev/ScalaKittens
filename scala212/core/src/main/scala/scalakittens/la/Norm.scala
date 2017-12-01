@@ -14,7 +14,7 @@ trait Norm {
   
   def apply(m: Matrix[_,_]): Double = apply(m.allElements)
   
-  def distance(xs: IndexedSeq[Double], ys: IndexedSeq[Double]) = {
+  def distance(xs: IndexedSeq[Double], ys: IndexedSeq[Double]): Double = {
     this(xs.indices map { i => xs(i) - ys(i) } view)
   }
       
@@ -27,7 +27,7 @@ object Norm {
     *
     * sum of absolute values of vector elements
     */
-  val l1 = new Norm {
+  val l1: Norm = new Norm {
     override def apply(xs: Iterable[Double]): Double = xs map abs sum
   }
 
@@ -36,13 +36,11 @@ object Norm {
     *
     * square root of sum of squares of vector elements
     */
-  val l2 = new Norm {
+  val l2: Norm = new Norm {
     override def apply(xs: Iterable[Double]): Double = {
       xs match {
-        case ax: VectorSpace#OnArray =>
-          ArrayOps.l2(ax.data)
-        case _ =>
-          sqrt(xs map (x => x*x) sum)
+        case ax: VectorSpace#OnArray => ArrayOps.l2(ax.data)
+        case _ => sqrt(xs map (x => x*x) sum)
       }
     }
 
@@ -62,7 +60,7 @@ object Norm {
     *
     * @return max abs value of elements
     */
-  val linf = new Norm {
-    override def apply(xs: Iterable[Double]): Double = if (xs.isEmpty) 0.0 else (xs map (x => abs(x))) max
+  val linf: Norm = new Norm {
+    override def apply(xs: Iterable[Double]): Double = (0.0 /: (xs map abs view))(max)
   }
 }

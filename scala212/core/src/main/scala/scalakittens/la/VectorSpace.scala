@@ -28,9 +28,7 @@ case class VectorSpace(dim: Int) { space =>
 
   def projectToHyperplane(m: SquareMatrix): hyperplane.SquareMatrix = hyperplane.squareMatrix((i, j) => m(i + 1, j + 1))
 
-  def injectFromHyperplane(v: VectorSpace#Vector): Vector = {
-    // the following check runs in runtime, who knows where is Hyperplane coming from
-    require(v.length + 1 == dim)
+  def injectFromHyperplane(v: hyperplane.Vector): Vector = {
     OnFunction(i => if (i == 0) 0.0 else v(i-1))
   }
 
@@ -179,7 +177,7 @@ case class VectorSpace(dim: Int) { space =>
       * Updates this vector, making all components not smaller than those of the other vector
       * @param other vector
       */
-    def increaseBy(other: Vector) = {
+    def increaseBy(other: Vector): Unit = {
       for (i <- range) this(i) = math.max(this(i), other(i))
     }
 
@@ -247,7 +245,7 @@ case class VectorSpace(dim: Int) { space =>
       */
     def apply(i: Int) = data(i)
 
-    def update(i: Int, v: Double) = data(i) = v
+    def update(i: Int, v: Double): Unit = data(i) = v
 
     override def copy: MutableVector = Vector(util.Arrays.copyOf(data, length))
 
@@ -371,6 +369,11 @@ case class VectorSpace(dim: Int) { space =>
     * @return a new Vec
     */
   def Vector(values: Double*): MutableVector = Vector(Array(values: _*))
+  
+  def Vector(anotherVector: VectorSpace#Vector): Vector = {
+    require(anotherVector.size == dim)
+    OnFunction(anotherVector)
+  }
 
   /**
     * Vector factory, instantiates vectors
@@ -406,7 +409,7 @@ case class VectorSpace(dim: Int) { space =>
   /**
     * zero vector
     */
-  val Zero = const(0.0)
+  val Zero: Vector = const(0.0)
 
   /**
     * this factory creates uniform random vectors in the cube [-1..1]<sup>size</sup>
@@ -700,31 +703,29 @@ case class VectorSpace(dim: Int) { space =>
     * @param b vector to project
     * @return a projection of b to a
     */
-  def project(a: Vector, b: Vector) = a * ((a * b) / Norm.l2(a))
+  def project(a: Vector, b: Vector): Vector = a * ((a * b) / Norm.l2(a))
 
-  def cos(a: Vector, b: Vector) = (a * b) / Norm.l2(a) / Norm.l2(b)
+  def cos(a: Vector, b: Vector): Double = (a * b) / Norm.l2(a) / Norm.l2(b)
 
-  private[la] class ColumnMatrix[Domain <: VectorSpace](val domain: Domain, val cols: Seq[MutableVector]) extends Matrix[Domain, space.type] {
+  private[la] class ColumnMatrix[Domain <: VectorSpace](domain: Domain, val cols: Seq[Vector]) extends Matrix[Domain, space.type](domain, space) {
     override val nRows: Int = dim
     require (domain.dim == cols.length)
     override val nCols: Int = cols.length
-    val codomain: space.type = space
 
     def apply(i: Int, j: Int): Double = {
       checkIndexes(i, j)
       column(j)(i)
     }
 
-    override def column(j: Int): MutableVector = cols(j)
+    override def column(j: Int): Vector = cols(j)
 
     override def transpose: Matrix[space.type, Domain] = new RowMatrix[Domain](domain, cols)
   }
 
-  class RowMatrix[Codomain <: VectorSpace](val codomain: Codomain, val rows: Seq[MutableVector]) extends Matrix[space.type, Codomain] {
+  class RowMatrix[Codomain <: VectorSpace](codomain: Codomain, val rows: Seq[Vector]) extends Matrix[space.type, Codomain](space, codomain) {
     require (codomain.dim == rows.length)
-    override val nRows = rows.length
-    override val nCols = dim
-    val domain = space
+    override val nRows: Int = rows.length
+    override val nCols: Int = dim
 
     def apply(i: Int, j: Int): Double = {
       checkIndexes(i, j)

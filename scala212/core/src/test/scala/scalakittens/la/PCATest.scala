@@ -79,7 +79,8 @@ class PCATest extends Specification {
       val expected2 = R2.Vector(0.982,0.189)
       l2.distance(vector2, expected2) must be <= 0.001
 
-      val vector3 = R3.injectFromHyperplane(vector2)
+      val vector2InHyperplane = R3.hyperplane.Vector(vector2)
+      val vector3 = R3.injectFromHyperplane(vector2InHyperplane)
       val vector3InOurBasis = newBasis * vector3
       val vector3AfterM = m * vector3InOurBasis
       val diff = vector3AfterM - vector3InOurBasis * value2
