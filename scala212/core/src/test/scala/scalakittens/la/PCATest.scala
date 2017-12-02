@@ -21,8 +21,6 @@ class PCATest extends Specification {
 
       value === 100.0
 
-      val arr = Array(0.0, 1.0)
-      val expected1 = R2.Vector(arr)
       val expected = R2.Vector(0.706904528470545,0.706904528470545)
       vec === expected
       val product = m * vec
@@ -34,7 +32,7 @@ class PCATest extends Specification {
       val m = matrix(R3, Array(5.0, 1, 2, 1, 4, 1, 2, 1, 3))
       val method = PCA.Iterations(0.001, 1000)
       val Some((value: Double, vec: R3.Vector, nIter)) = method.maxEigenValue(R3)(m)
-      l2(vec) must beCloseTo(1.0, 0.000001)
+      l2(vec) must beCloseTo(1.0, 0.0001)
       val delta: Double = l2(m * vec / value - vec)
       delta < 0.001 aka s"error=$delta" must beTrue
 
@@ -58,7 +56,7 @@ class PCATest extends Specification {
 
       val newBasis = R3.unitaryMatrix(R3.buildOrthonormalBasis(vector1).map(_.copy))
       val dv = newBasis.column(0) - vector1
-      l2(dv) must be < 0.00000001
+      l2(dv) must be < 0.0000001
       val newBasisT = newBasis.transpose
       newBasisT.row(0) === newBasis.column(0)
       val checkBasis = R3.UnitMatrix rotate newBasis
@@ -108,7 +106,7 @@ class PCATest extends Specification {
       
       for {
         (value, vector) <- allThree
-      } l2(m * vector - vector * value) < 0.001 must beTrue
+      } l2(m * vector - vector * value) must be < 0.002
       
       val eigenBasis = R3.unitaryMatrix(allThree map (_._2.asInstanceOf[R3.MutableVector]))
       eigenBasis.isUnitary(0.001) must beTrue

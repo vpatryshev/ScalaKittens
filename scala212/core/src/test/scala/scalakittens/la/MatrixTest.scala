@@ -101,12 +101,12 @@ class MatrixTest extends Specification {
 
     "multiply by a vector" in {
       val sut = TestMatrix(R4, R3, i => j => i * 10 + j)
-      (sut * R4.Vector(0, 1, 2, 3)) === R3.Vector(14, 74, 134)
+      (sut * sut.domain.Vector(0, 1, 2, 3)) === R3.Vector(14, 74, 134)
     }
 
     "multiply by an immutable vector" in {
       val sut = TestMatrix(R4, R3, i => j => i * 10 + j)
-      val vec = R4.OnFunction(i => 1.0*i)
+      val vec = sut.domain.OnFunction(i => 1.0*i)
       val actual = sut * vec
       actual === R3.Vector(14, 74, 134)
     }

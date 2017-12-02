@@ -159,7 +159,7 @@ abstract class  Matrix[Domain <: VectorSpace, Codomain <: VectorSpace](
     * @param v the vector
     * @return another vector, this * v; it so happens that it is mutable
     */
-  def *(v: Domain#Vector): Codomain#Vector = {
+  def *(v: domain.Vector): codomain.Vector = {
     
     v match {
       case va: domain.OnArray => byArray(va)

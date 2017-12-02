@@ -1,31 +1,32 @@
 package scalakittens.la
 
 import language.existentials
+import Norm.l2
 /**
   * Created by vpatryshev on 5/17/17.
   */
 object PCA {
   case class Iterations(precision: Double, maxRepeats: Int) {
 
-    private def oneStep(space: VectorSpace)(m: space.SquareMatrix)(v: space.Vector): (space.Vector, Double) = {
+    private def oneStep(space: VectorSpace)(m: space.SquareMatrix, v: space.Vector): (space.Vector, Double) = {
       val vector = m * v
-      val normalized: space.Vector = vector.normalize(Norm.l2)
-      val v1: space.MutableVector = normalized.copy
-      val d = Norm.l2.distance(v1, v)
-      ((v1 + v)/2, d)
+      val normalized: space.Vector = vector.normalize(l2)
+      val v1 = (normalized + v) / 2
+      val d = l2.distance(v1, v)
+      (v1, d)
     }
-
+    
     def maxEigenValue(space: VectorSpace)(m: space.SquareMatrix): Option[(Double, space.Vector, Int)] = {
+
       val unitVector = m.domain.unit(0)
       if (m.nCols == 0) None else if (m.nCols == 1) Some((m(0, 0), unitVector, 0)) else {
         val iterator = Iterator.iterate((unitVector, Double.MaxValue, 0)) {
           case (v, d, i) =>
-            val vectorToTuple = oneStep(space)(m)(_: space.Vector)
-            val (v1, d1) = vectorToTuple(v)
+            val (v1, d1) = oneStep(space)(m, v)
             (v1, d1, i + 1)
         }
 
-        val goodData = iterator find (p => p._2 <= precision || p._3 > maxRepeats)
+        val goodData = iterator find (p => p._2 <= precision / 2 || p._3 > maxRepeats)
 
         val maybeTuple: Option[(Double, space.Vector, Int)] = goodData map {
           case (vector, delta, nSteps) =>

@@ -55,19 +55,20 @@ public class ArrayOps {
     return product.fold(xs, ys);
   }
   
-  static private final Folding2 l2distance = new Folding2() {
+  static private final Folding2 l2diff = new Folding2() {
     public double op(double x, double y) {
       double d = x - y;
       return d * d;
     }
   };
   
-  public static double l2(double[] xs) {
+  public static double l2(double[] xs) { 
     return Math.sqrt(scalarProduct(xs, xs));
   }
   
   public static double l2(double[] xs, double[] ys) {
-    final double squareDistance = l2distance.fold(xs, ys);return Math.sqrt(squareDistance);
+    final double squareDistance = l2diff.fold(xs, ys);
+    return Math.sqrt(squareDistance);
   }
   
   public static final Folding2 sammonErrorMeasure = new Folding2() {
