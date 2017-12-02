@@ -39,7 +39,7 @@ object Norm {
   val l2: Norm = new Norm {
     override def apply(xs: Iterable[Double]): Double = {
       xs match {
-        case ax: VectorSpace#OnArray => ArrayOps.l2(ax.data)
+        case ax: VectorSpace#Vector => ax.l2
         case _ => sqrt(xs map (x => x*x) sum)
       }
     }
@@ -50,7 +50,6 @@ object Norm {
           ArrayOps.l2(ax.data, ay.data)
         case _ => super.distance(xs, ys)
       }
-
     }
 
   }

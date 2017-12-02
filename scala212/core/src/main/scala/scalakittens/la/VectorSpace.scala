@@ -1,10 +1,10 @@
 package scalakittens.la
 
-import language.{implicitConversions, postfixOps}
+import language.{implicitConversions, postfixOps, existentials}
 import java.util
 
 import ArrayOps._
-import scala.math.abs
+import scala.math.{abs, sqrt}
 import scala.util.{Random, Try}
 import scalakittens.la.Norm.l2
 
@@ -136,7 +136,11 @@ case class VectorSpace(dim: Int) { space =>
       * @param v vector to project
       * @return a projection of b to a
       */
-    def project(v: Vector): Vector = this * ((this * v) / Norm.l2(this))
+    def project(v: Vector): Vector = this * ((this * v) / l2)
+
+    def l2: Double = _l2
+      
+    private lazy val _l2 = sqrt(iterator map (x => x*x) sum)
 
     override def equals(other: Any): Boolean = {
       other match {
@@ -346,6 +350,12 @@ case class VectorSpace(dim: Int) { space =>
 
     override def iterator: Iterator[Double] = range.iterator map (data(_))
 
+    /**
+      * l2 norm of this vector
+      * @return square root of the sum of squares of components
+      */
+    override def l2: Double = ArrayOps.l2(data)
+    
     override def hashCode(): Int = {
       2017 + length * 17 + data.hashCode()
     }
@@ -722,14 +732,15 @@ case class VectorSpace(dim: Int) { space =>
     override def transpose: Matrix[space.type, Domain] = new RowMatrix[Domain](domain, cols)
   }
 
-  class RowMatrix[Codomain <: VectorSpace](codomain: Codomain, val rows: Seq[Vector]) extends Matrix[space.type, Codomain](space, codomain) {
+  class RowMatrix[Codomain <: VectorSpace](codomain: Codomain, override val rows: Seq[Vector]) extends Matrix[space.type, Codomain](space, codomain) {
     require (codomain.dim == rows.length)
     override val nRows: Int = rows.length
     override val nCols: Int = dim
 
     def apply(i: Int, j: Int): Double = {
       checkIndexes(i, j)
-      rows(i)(j)
+      val row = rows(i)
+      row(j)
     }
 
     override def row(j: Int): Vector = rows(j)

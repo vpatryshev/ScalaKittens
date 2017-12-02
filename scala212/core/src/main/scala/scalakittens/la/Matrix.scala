@@ -64,12 +64,25 @@ abstract class  Matrix[Domain <: VectorSpace, Codomain <: VectorSpace](
   def row(i: Int): domain.Vector = domain.OnFunction(j => this(i, j))
 
   /**
+    * collection of rows of this matrix
+    * @return an indexed seq of rows (each is a vector in domain)
+    */
+  def rows: Seq[domain.Vector] = rowRange map row
+  
+  /**
     * j-th column of this matrix
     *
     * @param j column number
     * @return the column
     */
   def column(j: Int): codomain.Vector = codomain.OnFunction(i => this(i, j))
+
+  /**
+    * collection of columns of this matrix
+    * @return an indexed seq of columns (each is a vector in codomain)
+    */
+  def columns: Seq[codomain.Vector] = columnRange map column
+
 
   def allElements: IndexedSeq[Double] = for {
     i <- rowRange
@@ -159,25 +172,15 @@ abstract class  Matrix[Domain <: VectorSpace, Codomain <: VectorSpace](
     * @param v the vector
     * @return another vector, this * v; it so happens that it is mutable
     */
-  def *(v: domain.Vector): codomain.Vector = {
-    
-    v match {
-      case va: domain.OnArray => byArray(va)
-      case _ =>
-        val data = rowRange map {
-          i => (0.0 /: v.indices)((s, j) => s + this(i, j) * v(j))
-        } toArray
-        
-        codomain.Vector(data)
-    }
-  }
+  def *(v: domain.Vector): codomain.Vector = 
+    codomain.Vector(rows map (v * ) toArray)
 
   /**
     * Specialization of vector multiplication
     * @param v vector on array
     * @return product of this matrix and the array
     */
-  protected def byArray(v: VectorSpace#OnArray): codomain.MutableVector = {
+  protected def byArray(v: domain.OnArray): codomain.Vector = {
     val data = rowRange map {
       i => (0.0 /: (0 until v.length))((s, j) => s + this(i, j)*v.data(j))
     } toArray

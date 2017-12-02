@@ -24,7 +24,7 @@ class PCATest extends Specification {
       val expected = R2.Vector(0.706904528470545,0.706904528470545)
       vec === expected
       val product = m * vec
-      val diff = Norm.l2.distance(product, vec * value)
+      val diff = l2.distance(product, vec * value)
       diff must be < 0.00001
     }
 
@@ -32,8 +32,8 @@ class PCATest extends Specification {
       val m = matrix(R3, Array(5.0, 1, 2, 1, 4, 1, 2, 1, 3))
       val method = PCA.Iterations(0.001, 1000)
       val Some((value: Double, vec: R3.Vector, nIter)) = method.maxEigenValue(R3)(m)
-      l2(vec) must beCloseTo(1.0, 0.0001)
-      val delta: Double = l2(m * vec / value - vec)
+      vec.l2 must beCloseTo(1.0, 0.0001)
+      val delta: Double = l2.distance(m * vec / value, vec)
       delta < 0.001 aka s"error=$delta" must beTrue
 
       value must beCloseTo(6.895, 0.001)
@@ -47,7 +47,7 @@ class PCATest extends Specification {
       val method = PCA.Iterations(0.0001, 100)
       val Some((value1: Double, vector1: R3.Vector, nIter1)) = method.maxEigenValue(R3)(m)
       l2(vector1) must beCloseTo(1.0, 0.000001)
-      val delta1: Double = l2(m * vector1 / value1 - vector1)
+      val delta1: Double = l2.distance(m * vector1 / value1, vector1)
       delta1 < 0.0005 aka s"error1=$delta1" must beTrue
 
       value1 must beCloseTo(6.895, 0.001)
@@ -106,7 +106,7 @@ class PCATest extends Specification {
       
       for {
         (value, vector) <- allThree
-      } l2(m * vector - vector * value) must be < 0.002
+      } l2.distance(m * vector, vector * value) must be < 0.002
       
       val eigenBasis = R3.unitaryMatrix(allThree map (_._2.asInstanceOf[R3.MutableVector]))
       eigenBasis.isUnitary(0.001) must beTrue
