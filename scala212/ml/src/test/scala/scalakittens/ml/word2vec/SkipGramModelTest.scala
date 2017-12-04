@@ -206,13 +206,13 @@ class SkipGramModelTest extends Specification {
       space: Space,
       numEpochs: Int,
       α: Double
-      ): Array[Space#Vector] = {
+      ): Array[space.Vector] = {
     val model = SkipGramModel(text, space, numEpochs, window = 3, α, seed = 123456789L)
     model.run()
     val originalVectors = model.in
     originalVectors.zipWithIndex foreach { 
       case(v,i) => v.isValid aka s"@$i: $v" must beTrue; () }
-    originalVectors .asInstanceOf[Array[Space#Vector]] // TODO: get rid of casting
+    originalVectors .asInstanceOf[Array[space.Vector]] // TODO: get rid of casting
   }
 
 //  private def applyPCA(originalVectors: IndexedSeq[Vector], newDim: VectorSpace, precision: Double, numIterations: Int) = {

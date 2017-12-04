@@ -28,13 +28,7 @@ case class SkipGramModel[Space <: VectorSpace](
   
   lazy val vecFactory = space.RandomSphere(seed)
 
-  lazy val in: Array[space.MutableVector] = {
-    val in = new Array[space.MutableVector](text.dictionarySize)
-
-    for {i <- in.indices} in(i) = vecFactory().copy
-    
-    in
-  }
+  lazy val in: Array[space.MutableVector] = vecFactory.build(text.dictionarySize)
 
   val huffman = new HuffmanTree(text.frequencies)
   

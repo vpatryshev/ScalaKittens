@@ -407,6 +407,14 @@ case class VectorSpace(dim: Int) { space =>
       fill(v)
       v
     }
+    
+    def build(n: Int) = {
+      val array = new Array[space.MutableVector](n)
+
+      for {i <- array.indices} array(i) = apply().copy
+
+      array
+    }
   }
 
   /**
