@@ -5,7 +5,6 @@ import java.util
 
 import ArrayOps._
 import scala.util.{Random, Try}
-import math.abs
 
 /**
   * Making vectors path-dependent.
@@ -16,10 +15,19 @@ case class VectorSpace(dim: Int) { space =>
 
   require(dim >= 0, s"Space dimension $dim makes no sense")
 
-  lazy val hyperplane: VectorSpace = {
+  class Hyperplane extends VectorSpace({
     require(dim > 0, "0-dimensional space does not have a hyperplane")
-    VectorSpace(dim-1)
+    dim-1
+  }) {
+
+    def project(v: space.Vector): Vector = {
+      OnFunction(i => v(i+1))
+    }
+
+    def project(m: space.SquareMatrix): SquareMatrix = squareMatrix((i, j) => m(i + 1, j + 1))
   }
+
+  lazy val hyperplane = new Hyperplane
 
   def projectToHyperplane(v: Vector): hyperplane.Vector = {
     hyperplane.OnFunction(i => v(i+1))
@@ -511,7 +519,12 @@ case class VectorSpace(dim: Int) { space =>
   def squareMatrix(f: (Int, Int) => Double): SquareMatrix =
     new Matrix.OnFunction[space.type, space.type](space, space, f) with SquareMatrix
 
-  def squareMatrix(data: Array[Double]): SquareMatrix = squareMatrix((i, j) => data(i*dim+j))
+  def squareMatrixFrom(values: Double*): SquareMatrix = {
+    require(values.length == dim * dim, s"Bad data length ${values.size}, expected $dim ⨯ $dim")
+    squareMatrix(values)
+  }
+  
+  def squareMatrix(data: Seq[Double]): SquareMatrix = squareMatrix((i, j) => data(i*dim+j))
 
   trait SquareMatrix extends LocalMatrix {
     override val domain: space.type = space
@@ -530,6 +543,7 @@ case class VectorSpace(dim: Int) { space =>
     }
 
     def projectToHyperplane(basis: UnitaryMatrix = UnitMatrix): hyperplane.SquareMatrix = {
+      
       space.projectToHyperplane(rotate(basis.transpose))
     }
 
@@ -699,6 +713,7 @@ case class VectorSpace(dim: Int) { space =>
   }
 
   def buildOrthonormalBasis(v: Vector): Array[Vector] = {
+    import scala.math.abs
     val (maxValue, whereMax) = v.zipWithIndex map {case (x, i) => (abs(x), i)} max
 
     val vs = new Array[Vector](dim)

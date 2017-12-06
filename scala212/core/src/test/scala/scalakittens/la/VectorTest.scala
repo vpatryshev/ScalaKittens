@@ -89,8 +89,9 @@ class VectorTest extends Specification {
       val space0 = VectorSpace(3)
       def recurse(s: VectorSpace)(v: s.Vector): Unit = {
         val ignoreme = if (s.dim == 0) v else {
-          val v1 = s.projectToHyperplane(v) * 2
-          recurse(s.hyperplane)(v1)
+          val hyperplane = s.hyperplane
+          val v1 = hyperplane.project(v) * 2
+          recurse(hyperplane)(v1)
         }
         ignoreme mustNotEqual null
         ()
