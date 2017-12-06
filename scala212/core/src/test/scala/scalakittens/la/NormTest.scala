@@ -2,7 +2,9 @@ package scalakittens.la
 
 import org.specs2.mutable.Specification
 import math._
+
 /**
+  * Some normed spaces being tested
   * Created by vpatryshev on 11/30/17.
   */
 class NormTest extends Specification {

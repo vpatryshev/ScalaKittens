@@ -1,12 +1,11 @@
 package scalakittens.la
 
-import language.{implicitConversions, postfixOps, existentials}
+import language.{implicitConversions, postfixOps}
 import java.util
 
 import ArrayOps._
-import scala.math.{abs, sqrt}
 import scala.util.{Random, Try}
-import scalakittens.la.Norm.l2
+import math.abs
 
 /**
   * Making vectors path-dependent.
@@ -131,16 +130,20 @@ case class VectorSpace(dim: Int) { space =>
       if (n > Double.MinPositiveValue) this / n else this
     }
 
+    private lazy val _l2 = Norm.l2(iterator)
+
+    /**
+      * l2 norm of this vector
+      * @return the square root of the sum of squares of components
+      */
+    def l2: Double = _l2
+
     /**
       * Project vector b to this vector
       * @param v vector to project
       * @return a projection of b to a
       */
     def project(v: Vector): Vector = this * ((this * v) / l2)
-
-    def l2: Double = _l2
-      
-    private lazy val _l2 = sqrt(iterator map (x => x*x) sum)
 
     override def equals(other: Any): Boolean = {
       other match {
@@ -515,7 +518,7 @@ case class VectorSpace(dim: Int) { space =>
     override val codomain: space.type = space
 
     def isUnitary(precision: Double): Boolean =
-      l2(this * transpose - UnitMatrix) <= precision
+      Norm.l2(this * transpose - UnitMatrix) <= precision
 
     def triangle = new TriangularMatrix(this)
 
@@ -755,9 +758,15 @@ case class VectorSpace(dim: Int) { space =>
 
     override def transpose: Matrix[Codomain, space.type] = new ColumnMatrix[Codomain](codomain, rows)
   }
+  
+  def run[T](op: VectorSpace => T): T = op(this)
 }
 
 object Spaces {
+
+  case class inside(space: VectorSpace) {
+    def apply[T](f: VectorSpace => T) = space.run(f)
+  }
 
   def mult(s: VectorSpace)(v1: s.Vector, v2: s.Vector): Double =
     (0.0 /: v1.range) ((s, i) => s + v1(i) * v2(i))
