@@ -9,7 +9,7 @@ import scalakittens.la.Spaces.R3
   * 
   * Created by vpatryshev on 7/3/17.
   */
-object TestTools {
+object Widgets {
 
   def testFigure3dButterfly: Array[R3.Vector] = {
     val precision: Double = 0.025

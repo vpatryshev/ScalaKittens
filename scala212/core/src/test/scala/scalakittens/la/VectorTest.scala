@@ -14,6 +14,13 @@ class VectorTest extends Specification {
 
   "VectorSpace" should {
 
+    "not fail miserably on types incompatibility" in {
+      val v1: VectorSpace#Vector = R2 OnFunction (i => 1.0 + i * 2)
+      val v2: VectorSpace#Vector = R3 OnFunction (i => 1.0 - i * 2)
+      // val oops = v1 + v2 // should not compile
+      ok
+    }
+    
     "build unit cube" in {
       val vectors = R3.Vector(0,1,2)::R3.Vector(0,2,4)::R3.Vector(-2,3,10)::Nil
       val unitCube = R3.unitCube(vectors)

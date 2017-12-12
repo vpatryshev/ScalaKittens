@@ -3,7 +3,7 @@ package scalakittens.ml.dimreduction
 import org.specs2.mutable.Specification
 
 import scalakittens.la.Spaces.{R2, R3}
-import scalakittens.ml.TestTools._
+import scalakittens.ml.Widgets._
 import scalakittens.ml.dimreduction.Viz._
 
 /**

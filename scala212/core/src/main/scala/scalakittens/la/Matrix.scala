@@ -154,7 +154,11 @@ abstract class  Matrix[Domain <: VectorSpace, Codomain <: VectorSpace](
     * @param that another matrix
     * @return this matrix multiplied by another one; matrix is materialized
     */
-  def *[NewDomain <: VectorSpace](that: Matrix[NewDomain, Domain]): Matrix[NewDomain, Codomain] = {
+  def *[NewDomain <: VectorSpace](that: Matrix[NewDomain, domain.type]): Matrix[NewDomain, Codomain] = {
+//    val r1 = domain.mmult[NewDomain, Codomain](that, this)
+//    so far does not work
+//    val r = domain.mmult(that, this)
+    
     val data = new Array[Double](nRows * that.nCols)
     for {
       i <- this.rowRange

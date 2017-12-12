@@ -514,6 +514,23 @@ case class VectorSpace(dim: Int) { space =>
       case garbage => None
     }
 
+  type MatrixTo[Codomain <: VectorSpace] = Matrix[space.type, Codomain]
+  
+  type MatrixFrom[Domain <: VectorSpace] = Matrix[Domain, space.type]
+  
+  def mmult[Domain <: VectorSpace, Codomain <: VectorSpace](
+    second: Matrix[space.type, Codomain],
+    first: Matrix[Domain, space.type]): Matrix[Domain, Codomain] = {
+
+    val data = new Array[Double](second.nRows * first.nCols)
+    for {
+      i <- second.rowRange
+      j <- first.columnRange
+    } data(i*second.nCols + j) = first.columnRange map (k => first(i, k) * second(k, j)) sum
+
+    new Matrix.OnArray[Domain, Codomain](first.domain, second.codomain, data)
+  } 
+  
   type LocalMatrix = Matrix[space.type, space.type]
 
   def squareMatrix(f: (Int, Int) => Double): SquareMatrix =
