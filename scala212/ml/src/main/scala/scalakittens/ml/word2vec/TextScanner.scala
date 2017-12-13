@@ -40,6 +40,7 @@ trait TextScanner {
   }
 
   def scan(source: Iterator[String]): ScannedText = {
+    
     val inverseIndex = new mutable.HashMap[String, List[Int]] withDefaultValue Nil
 
     var i: Int = -1
@@ -50,7 +51,11 @@ trait TextScanner {
       }
     }
 
+    require(inverseIndex.size > 1, s"Weird text, empty inverse index; added ${i+1} words actually")
+
     val frequencies = inverseIndex.toList.map{case (w,l) => (w, l.size)}.sortBy(_._2).zipWithIndex
+
+    require(frequencies.size > 1, s"Weird text, 0 frequencies")
 
     val words: List[String] = frequencies map (_._1._1)
 

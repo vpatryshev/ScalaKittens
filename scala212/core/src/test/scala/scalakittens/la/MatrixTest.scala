@@ -98,7 +98,7 @@ class MatrixTest extends Specification {
 
       product === expected
 
-      R4.mult(sut1, sut2) aka s"$sut1\n*\n$sut2" must_== expected
+//      R4.mult(sut1, sut2) aka s"$sut1\n*\n$sut2" must_== expected
     }
 
     "multiply by a vector" in {

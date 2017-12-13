@@ -15,9 +15,9 @@ import scalakittens.ml.dimreduction.Viz._
 
 class SkipGramModelTest extends Specification {
   val WaPmodelFileName = "warandpeace.vecs.txt"
-  val WaPbigModelFileName = "warandpeace.vecs.txt"
+  val WaPbigModelFileName = "warandpeace.vecs.big.txt"
   val GwtWmodelFileName = "gonewiththewind.vecs.txt"
-  val GwtWbigModelFileName = "gonewiththewind.vecs.txt"
+  val GwtWbigModelFileName = "gonewiththewind.vecs.big.txt"
   
   def serialize[Space <: VectorSpace](filename: String, space: Space, vectors: List[(String, Space#Vector)]): Unit = {
     val file = new File(s"$filename.tmp")
@@ -207,6 +207,7 @@ class SkipGramModelTest extends Specification {
       numEpochs: Int,
       α: Double
       ): Array[space.Vector] = {
+    require(text.frequencies.size > 1, s"Weird text, 0 frequencies: $text")
     val model = SkipGramModel(text, space, numEpochs, window = 3, α, seed = 123456789L)
     model.run()
     val originalVectors = model.in
