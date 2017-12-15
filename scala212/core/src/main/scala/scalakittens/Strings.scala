@@ -120,7 +120,7 @@ trait Strings {
     "gave", "get", "give", "given", "gives", "go", "goes", "going", "good", "got", "great",
     "had", "has", "have", "having", "he", "her", "here", "here", 
       "herself", "him", "him", "himself", "his", "how",
-    "i", "i'll", "i'm", "if", "in", "into", "is", "it", "its", "je", "just",
+    "i", "i'll", "i'm", "i've", "if", "in", "into", "is", "it", "its", "je", "just",
     "knew", "know",
     "lay", "left", "less", "let", "like", "little", "long", "look", "looked", "looking", "looks",
     "made", "make", "many", "may", "me", "might", "mine", "more", "most", "much", "must", "my",
@@ -137,7 +137,7 @@ trait Strings {
       "turns", "two",
     "under", "up", "us", "very",
     "was", "we", "well", "went", "were", "what", "when", "where", 
-      "whether", "which", "while", "who", "whole", "whom", "why", "will", "with", "without", "won't", "would",
+      "whether", "which", "while", "who", "whole", "whom", "why", "will", "with", "without", "won't", "would", "wouldn't",
     "yes", "yet", "you", "your")
 }
 

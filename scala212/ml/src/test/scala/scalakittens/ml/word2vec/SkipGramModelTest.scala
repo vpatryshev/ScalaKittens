@@ -81,14 +81,15 @@ class SkipGramModelTest extends Specification {
 
     "process 'Gone with the Wind' with PCA, fast" in {
       val ext = "vecs.fast.txt"
-      val reducer: DimensionReducer[R10.type, R3.type] = new PcaDimensionReducer[R10.type, R3.type](R10, R3, precision = 0.001, 30)//pcaReducer(dim, newDim, 30)
+      val mainSpace = R100
+      val reducer: DimensionReducer[mainSpace.type, R3.type] = new PcaDimensionReducer[mainSpace.type, R3.type](mainSpace, R3, precision = 0.001, 30)//pcaReducer(dim, newDim, 30)
 
-      doNovel[R10.type, R3.type](GoneWithTheWind, reducer, ext, numEpoch = 50) match {
+      doNovel[mainSpace.type, R3.type](GoneWithTheWind, reducer, ext, numEpoch = 1000) match {
         case Good(vs) =>
           showNovel[R3.type]("Gone with the Wind", vs.iterator)
           ok
         case bad: Bad[_] => failure(bad.listErrors.toString + "\n" + bad.stackTrace)
-        case Empty => failure("No War, no Peace! /* Trotsky */")
+        case Empty => failure("Nobody leaves!")
       }
 
       ok
