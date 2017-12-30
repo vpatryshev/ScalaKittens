@@ -4,58 +4,60 @@ import scala.language.postfixOps
 
 object TuringMachines {
 
-  val `UN+1`: Machine = Machine("UN+1", 
-    0 -> "00R/11R",
-    1 -> "01S/11R"
+  val `UN+1`: Machine = Machine("UN+1",
+    "zeroes",   
+    "zeroes" -> "zeroes 0 R / ones 1 R",
+    "ones" -> "zeroes 1 S / ones 1 R"
   )
 
   val EUC: Machine = Machine("Euclid",
-    0 -> "00R/11L",
-    1 -> "21R/11L",
-    2 -> "100R/30R",
-    3 -> "40R/31R",
-    4 -> "40R/50R",
-    5 -> "70L/61L",
-    6 -> "60L/11L",
-    7 -> "70L/81L",
-    8 -> "90L/81L",
-    9 -> "20R/11L",
-    10 -> "00S/101R"
+    "start",
+    "start" -> "start 0R / atFirst 1L",
+    "atFirst" -> "beforeFirst 1R / atFirst 1L",
+    "beforeFirst" -> "done 0R / skipFirst 0R",
+    "skipFirst" -> "separator 0R / skipFirst 1R",
+    "separator" -> "separator 0R / atSecond 0R",
+    "atSecond" -> "doneSubtraction 0L / backToFirst 1L",
+    "backToFirst" -> "backToFirst 0L / atFirst 1L",
+    "doneSubtraction" -> "doneSubtraction 0L / skipSecond 1L",
+    "skipSecond" -> "beforeSecond 0L / skipSecond 1L",
+    "beforeSecond" -> "beforeFirst 0R / atFirst 1L",
+    "done" -> "done 0S / done 1R"
   )
 
-  val `UN*2`: Machine = Machine("UN*2",
-    0 -> "00R/10R",
-    1 -> "21L/11R",
-    2 -> "30R/40R",
-    3 -> "01S/31R",
-    4 -> "51L/41R",
-    5 -> "21L/51L"
+  val `UN*2`: Machine = Machine("UN*2", "start",
+    "start" -> "start 0R / passOne 0R",
+    "passOne" -> "endOfN 1L / passOne 1R",
+    "endOfN" -> "done 0R / add1To2N 0R",
+    "done" -> "done 1S / done 1R",
+    "add1To2N" -> "backToN 1L / add1To2N 1R",
+    "backToN" -> "endOfN 1L/ backToN 1L"
   )
 
-  val `XN+1`: Machine = Machine("XN+1",
-    0 -> "00R/11R",
-    1 -> "00R/21R",
-    2 -> "30L/21R",
-    3 -> "01S/40L",
-    4 -> "51L/41L",
-    5 -> "60R/21R",
-    6 -> "71R/71R",
-    7 -> "31R/70R"
+  val `XN+1`: Machine = Machine("XN+1", "0",
+    "0" -> "00R/11R",
+    "1" -> "00R/21R",
+    "2" -> "30L/21R",
+    "3" -> "01S/40L",
+    "4" -> "51L/41L",
+    "5" -> "60R/21R",
+    "6" -> "71R/71R",
+    "7" -> "31R/70R"
   )
   
-  val `XN*2`: Machine = Machine("XN*2",
-    0 -> "00R/11R",
-    1 -> "00R/21R",
-    2 -> "31L/81S",
-    3 -> "80S/41L",
-    4 -> "80S/00S"
+  val `XN*2`: Machine = Machine("XN*2", "0",
+    "0" -> "00R/11R",
+    "1" -> "00R/21R",
+    "2" -> "31L/81S",
+    "3" -> "80S/41L",
+    "4" -> "80S/00S"
   )
 
-  val `XN*2-book` = Machine("XN*2-book",
-    0 -> "00R/10R",
-    1 -> "01R/20R",
-    2 -> "31R/81S",
-    3 -> "01S/81S"
+  val `XN*2-book` = Machine("XN*2-book", "0",
+    "0" -> "00R/10R",
+    "1" -> "01R/20R",
+    "2" -> "31R/81S",
+    "3" -> "01S/81S"
   )
 
   def unaryDecode(tape: List[Int]): List[Int] = {
@@ -98,15 +100,15 @@ object TuringMachines {
 
   def main(args: Array[String]): Unit = {
     //    println(`UN+1` run unaryEncode(4))
-    // println(EUC run unaryEncode(4, 2))
- //   println(`UN*2` run unaryEncode(4))
-    val xn2 = Machine("XN2",
-      0 -> "00R/10R",
-      1 -> "01R/20R",
-      2 -> "31R/81S",
-      3 -> "01S/81S"
-    )
-    xn2 run binaryEncode(11)
+//    println(EUC run unaryEncode(4, 2))
+    println(`UN*2` run unaryEncode(4) ++ (0::Nil))
+//    val xn2 = Machine("XN2", "0",
+//      "0" -> "00R/10R",
+//      "1" -> "01R/20R",
+//      "2" -> "31R/81S",
+//      "3" -> "01S/81S"
+//    )
+//    xn2 run binaryEncode(11)
   }
 }
 

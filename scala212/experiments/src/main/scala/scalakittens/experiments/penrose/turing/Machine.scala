@@ -1,8 +1,9 @@
 package scalakittens.experiments.penrose.turing
 
 import language.postfixOps
+import scalaz.Digit._2
 
-case class Machine(name: String, src: (Int, String)*) {
+case class Machine(name: String, initState: String, commands: (String, String)*) {
 
   sealed trait Where
   case object L extends Where
@@ -12,23 +13,24 @@ case class Machine(name: String, src: (Int, String)*) {
   val where = Map('L' -> L, 'R' -> R, 'S' -> S)
 
   class Done extends Exception
-
-  def decode(cmd: String): (Int, Int, Where) = {
-    val next = cmd.dropRight(2).toInt
+  
+  def decode(cmd: String): (String, Int, Where) = {
+    val next = cmd.dropRight(2)
     val nw = cmd.takeRight(2)
     (next, nw.head.toInt - '0', where(nw.tail.head))
   }
 
-  val program: Array[Array[(Int, Int, Where)]] = {
-    val code = for {
-      p <- 0 until src.size
-      row = src(p)._2.split("/") map decode
-    } yield row
+  val program: Map[String, Array[(String, Int, Where)]] = {
 
-    code.toArray
+    val code = for {
+      (label, command) <- commands
+      cmd = command.replaceAll(" ", "").split(":").last
+      row = cmd.split("/") map decode
+    } yield label -> row
+    code.toMap
   }
 
-  private var state = 0
+  private var state = initState
   private var tape: Tape = _
 
   def run(initTape: List[Int]): Tape = {
@@ -44,7 +46,7 @@ case class Machine(name: String, src: (Int, String)*) {
   }
 
   def init(initData: List[Int]): Unit = {
-    state = 0
+    state = initState
     tape = new Tape(initData)
   }
 
