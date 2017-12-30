@@ -1,8 +1,8 @@
-package scalakittens.experiments.penrose
+package scalakittens.experiments.penrose.turing
 
 import org.specs2.mutable.Specification
 
-import scalakittens.experiments.penrose.TuringMachine._
+import scalakittens.experiments.penrose.turing.TuringMachines._
 
 class TuringMachineTest extends Specification {
   def tape(s: String): List[Int] = s.replaceAll(" ", "").split("").map(_.toInt).toList
@@ -20,21 +20,51 @@ class TuringMachineTest extends Specification {
       res must_== Tape("00111110")
     }
 
+    "UNx2" in {
+      val res = `UN*2` run unaryEncode(5)
+      val expected = new Tape(unaryEncode(10))
+      res must_== expected
+    }
+
     "XN+1" in {
-      def plus1(n: Int) = `XN+1` run binaryEncode(n)
+      def plus1(n: Int) = {
+        `XN+1` run binaryEncode(n)
+      }
       for {
         i <- 0 to 256
-      } plus1(i) must_== Tape(binaryEncode(i+1))
+      } plus1(i) must_== new Tape(binaryEncode(i+1))
       
-      plus1(255) must_== Tape(binaryEncode(256))
+      ok
+    }
+
+    "XN*2" in {
+      def double(n: Int) = {
+        `XN*2` run binaryEncode(n)
+      }
+      double(1) must_== new Tape(binaryEncode(2))
+
+      for {
+        i <- 0 to 256
+      } double(i) must_== new Tape(binaryEncode(i*2))
+
+      double(7) must_== new Tape(binaryEncode(14))
       println("?")
       ok
     }
-    
-    "UNx2" in {
-      val res = `UNx2` run unaryEncode(5)
-      val expected = Tape("0001111111111")
-      res must_== expected
+
+    "XN*2-book" in {
+      def double(n: Int) = {
+        `XN*2-book` run binaryEncode(n)
+      }
+      double(1) must_== new Tape(binaryEncode(2))
+
+      for {
+        i <- 0 to 256
+      } double(i) must_== new Tape(binaryEncode(i*2))
+
+      double(7) must_== new Tape(binaryEncode(14))
+      println("?")
+      ok
     }
     
     "unaryDecode" in {
