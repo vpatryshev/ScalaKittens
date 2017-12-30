@@ -1,7 +1,6 @@
 package scalakittens.experiments.penrose.turing
 
 import language.postfixOps
-import scalaz.Digit._2
 
 case class Machine(name: String, initState: String, commands: (String, String)*) {
 
