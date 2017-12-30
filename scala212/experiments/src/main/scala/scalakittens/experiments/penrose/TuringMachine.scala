@@ -184,6 +184,7 @@ object TuringMachine {
 
     def run(initTape: List[Int]): Tape = {
       init(initTape)
+      println(s"Starting $name with $tape")
       try {
         while (true) step()
       } catch {

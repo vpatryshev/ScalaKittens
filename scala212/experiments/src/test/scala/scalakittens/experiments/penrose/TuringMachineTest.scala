@@ -7,6 +7,8 @@ import scalakittens.experiments.penrose.TuringMachine._
 class TuringMachineTest extends Specification {
   def tape(s: String): List[Int] = s.replaceAll(" ", "").split("").map(_.toInt).toList
 
+  sequential
+  
   "TuringMachineTest" should {
     "EUC" in {
       val res = EUC run unaryEncode(4, 2)
