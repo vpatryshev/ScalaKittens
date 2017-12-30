@@ -23,9 +23,10 @@ case class Machine(name: String, initState: String, commands: (String, String)*)
 
     val code = for {
       (label, command) <- commands
-      cmd = command.replaceAll(" ", "").split(":").last
-      row = cmd.split("/") map decode
+      cmd = command.replaceAll(" ", "") split ":" last;
+      row = cmd split "/" map decode
     } yield label -> row
+    
     code.toMap
   }
 
