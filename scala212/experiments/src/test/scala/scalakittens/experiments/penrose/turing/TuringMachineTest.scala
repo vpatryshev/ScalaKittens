@@ -67,6 +67,11 @@ class TuringMachineTest extends Specification {
       ok
     }
     
+    "machine" in {
+      val actual = machine("XN*2-book", "R10R1R100R111R10001S1S10001S")
+      actual must_== `XN*2-book`
+    }
+    
     "unaryDecode" in {
       val t = tape("010 0 010110101011010 0 01110101011110 0110")
       val nums = List(1, 0, 0, 1, 2, 1, 1, 2, 1, 0, 0, 3, 1, 1, 4, 0, 2, 0)
