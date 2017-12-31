@@ -5,7 +5,7 @@ import org.specs2.mutable.Specification
 import scalakittens.experiments.penrose.turing.TuringMachines._
 
 class TuringMachineTest extends Specification {
-  def tape(s: String): List[Int] = s.replaceAll(" ", "").split("").map(_.toInt).toList
+  def tape(s: String): List[Int] = s.replaceAll("\\s", "").split("").map(_.toInt).toList
 
   sequential
   
@@ -68,8 +68,10 @@ class TuringMachineTest extends Specification {
     }
     
     "machine" in {
-      val actual = machine("XN*2-book", "R10R1R100R111R10001S1S10001S")
-      actual must_== `XN*2-book`
+      val sample1 = machine("XN*2-book", "10R1R100R111R10001S1S10001S")
+      sample1 must_== `XN*2-book`
+      val sample2 = machine("XN+1", `XN+1 source`)
+      sample2 must_== `XN+1`
     }
     
     "unaryDecode" in {
@@ -92,9 +94,29 @@ class TuringMachineTest extends Specification {
     }
 
     "binaryEncode" in {
+      val n2t1 = binaryEncode(5, 13)
+      n2t1 must_== tape("10 0 10 110 10 10 0 10 110")
       val n2t = binaryEncode(5, 13, 0, 1, 1, 4)
       n2t must_== tape("10 0 10 110 10 10 0 10 110 0 110 10 110 10 110 10 0 0 110")
     }
 
+    "encodeProgram" in {
+      val actual = encodeProgram(`XN+1 source`).mkString("")
+      val expected = 
+        """
+          |10101101101001011010100111010010110101111
+          |01000011101001010111010001011101010001101
+          |0010110110101010101101010101101010100
+        """.stripMargin
+      
+      actual must_== expected.replaceAll("\\s", "")
+      val actualDecimal = BigInt(actual, 2)
+      val expectedDecimal = BigInt("450813704461563958982113775643437908")
+
+      val binp1bin = encodeProgram(`UN+1 source`).mkString("")
+      val binp1dec = BigInt(binp1bin, 2)
+      binp1dec must_== BigInt("177642")
+    }
+    
   }
 }

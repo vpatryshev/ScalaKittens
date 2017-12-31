@@ -59,8 +59,15 @@ case class Machine(name: String, src: String*) {
 
     state = nextState
   } finally {
-    println(this)
+    dumpState()
   }
 
-  override def toString = s"$state: $tape"
+  override def toString: String = program.map(_.mkString("/")).mkString(";")
+  
+  override def equals(o: Any): Boolean = o match {
+    case other: Machine => toString == other.toString
+    case _ => false
+  }
+  
+  def dumpState(): Unit = println(s"$state: $tape")
 }

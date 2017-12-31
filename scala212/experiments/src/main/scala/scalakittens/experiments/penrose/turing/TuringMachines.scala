@@ -8,6 +8,8 @@ object TuringMachines {
     /* 0 */ "00R", "11R",
     /* 1 */ "01S", "11R"
   )
+  
+  val `UN+1 source` = "11R1S11R"
 
   lazy val EUC: Machine = Machine("Euclid",
     /* 0 */ "00R", "11L",
@@ -39,10 +41,13 @@ object TuringMachines {
     /* 3 */ "1S", "1000L",
     /* 4 */ "1011L", "1001L",
     /* 5 */ "1100R", "101R",
-    /* 6 */ "1111R", "1111R",
+    /* 6 */ "R", "1111R",
     /* 7 */ "111R", "1110R"
   )
 
+  // note that 'R' in the beginning is missing, see page 68 of Penrose book 
+  val `XN+1 source` = "11RR101R110L101R1S1000L1011L1001L1100R101RR1111R111R1110R"
+  
   lazy val `XN*2`: Machine = Machine("XN*2",
     /* 0 */ "R", "11R",
     /* 1 */ "R", "101R",
@@ -60,7 +65,7 @@ object TuringMachines {
   
   def machine(name: String, program: String): Machine = {
     val RLS = Set('R', 'L', 'S')
-    val commands = (List[String]() /: program.reverse) {
+    val commands = (List[String]() /: (program.reverse + 'R')) {
       case (cs, ch) if RLS(ch) => ""+ch::cs
       case (h::t, ch) => ch+h::t
     }
@@ -91,24 +96,34 @@ object TuringMachines {
     }.tail.reverse
   }
 
+  val binaryEncoding: Char => List[Int] = Map(
+    '0' -> List(0),
+    '1' -> List(1, 0),
+    'R' -> List(1, 1, 0),
+    'L' -> List(1, 1, 1, 0),
+    'S' -> List(1, 1, 1, 1, 0),
+    ',' -> List(1, 1, 0)) withDefaultValue Nil
+  
+
   def binaryEncode(numbers: Int*): List[Int] = {
-    def encodeChar = Map(
-      '0' -> List(0),
-      '1' -> List(1, 0),
-      ',' -> List(1, 1, 0)) withDefaultValue Nil
 
     for {
       n <- numbers.toList
-      char <- n.toBinaryString + List(",")
-      bit <- encodeChar(char)
+      char <- n.toBinaryString + ","
+      bit <- binaryEncoding(char)
     } yield bit
+  }
+
+  def encodeProgram(program: String): List[Int] = {
+    val sp = if (program.endsWith("R")) program.dropRight(1) else program
+    sp flatMap binaryEncoding toList
   }
 
   def unaryEncode(numbers: Int*): List[Int] = numbers.toList flatMap (n => 0 :: List.fill(n)(1))
 
   def main(args: Array[String]): Unit = {
 //    println(`UN+1` run unaryEncode(4))
-    println(EUC run unaryEncode(4, 2))
+//    println(EUC run unaryEncode(4, 2))
 //       println(`UN*2` run unaryEncode(4))
 //    val xn2 = Machine("XN2",
 //      /* 0 */ "00R", "10R",
@@ -117,6 +132,10 @@ object TuringMachines {
 //      /* 3 */ "01S", "10001S"
 //    )
 //    xn2 run binaryEncode(11)
+    val bits = encodeProgram(`XN+1 source`) mkString ""
+    
+    val n = BigInt(bits, 2)
+    println(n)
   }
 }
 
