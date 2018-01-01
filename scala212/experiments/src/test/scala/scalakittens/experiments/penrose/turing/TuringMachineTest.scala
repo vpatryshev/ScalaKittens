@@ -9,7 +9,7 @@ class TuringMachineTest extends Specification {
 
   sequential
   
-  "TuringMachineTest" should {
+  "TuringMachine" should {
     "EUC" in {
       val res = EUC run unaryEncode(4, 2)
       res must_== Tape("11")
@@ -68,7 +68,7 @@ class TuringMachineTest extends Specification {
     }
     
     "machine" in {
-      val sample1 = machine("XN*2-book", "10R1R100R111R10001S1S10001S")
+      val sample1 = machine("XN*2-book", "R10R1R100R111R10001S1S10001S")
       sample1 must_== `XN*2-book`
       val sample2 = machine("XN+1", `XN+1 source`)
       sample2 must_== `XN+1`
@@ -101,22 +101,42 @@ class TuringMachineTest extends Specification {
     }
 
     "encodeProgram" in {
-      val actual = encodeProgram(`XN+1 source`).mkString("")
-      val expected = 
+      val sample1 = programEncode(`XN+1 source`)
+      val expected1 = 
         """
           |10101101101001011010100111010010110101111
           |01000011101001010111010001011101010001101
           |0010110110101010101101010101101010100
-        """.stripMargin
+        """.stripMargin.replaceAll("\\s", "")
       
-      actual must_== expected.replaceAll("\\s", "")
-      val actualDecimal = BigInt(actual, 2)
+      sample1.mkString("") must_== expected1
+      
+      val back1 = programDecode(sample1)
+      back1 must_== `XN+1 source`
+      
+      val actualDecimal = BigInt(sample1.mkString(""), 2)
       val expectedDecimal = BigInt("450813704461563958982113775643437908")
+      val sample2 = programEncode(`UN*2 source`)
+      val expected2 =
+        """
+          |100110 100101110 1010110 10100110 10000110 01011110
+          |101010110 10010101110 100010110 100101110 10010101
+        """.stripMargin.replaceAll("\\s", "")
+      sample2.mkString("") must_== expected2
 
-      val binp1bin = encodeProgram(`UN+1 source`).mkString("")
+      val back2 = programDecode(sample2)
+      back2 must_== `UN*2 source`
+
+      val binp1bin = programEncode(`UN+1 source`).mkString("")
       val binp1dec = BigInt(binp1bin, 2)
       binp1dec must_== BigInt("177642")
     }
-    
+  }
+  
+  "UTM" should {
+    "get from denary" in {
+      `U binary` must startWith("1101000000001")
+      `U binary` must endWith("10001001010110")
+    }
   }
 }

@@ -60,8 +60,6 @@ class Tape(init: List[Int]) {
 }
 
 object Tape {
-
   def apply(src: String): Tape = 
     new Tape(src.replaceAll(" ", "") map (_.toInt - '0') toList)
-
 }
