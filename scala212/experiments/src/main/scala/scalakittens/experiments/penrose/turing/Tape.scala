@@ -28,8 +28,6 @@ class Tape(init: List[Int]) {
   val leftSide = new Stack
   val rightSide = new Stack
 
-  def this(src: String) = this(src map (_.toInt - '0') toList)
-
   leftSide.setTo(Nil)
   rightSide.setTo(init)
 

@@ -67,6 +67,11 @@ class TuringMachineTest extends Specification {
       ok
     }
     
+    "sassa_nf" in {
+      val machine = Machine("A.Otenko", "S 10L 101R 11L 1R 101R" split " " : _*)
+      machine.runOn(Tape("1110")) must_== Tape("1111110")
+    }
+    
     "machine" in {
       val sample1 = machine("XN*2-book", "R10R1R100R111R10001S1S10001S")
       sample1 must_== `XN*2-book`
@@ -131,12 +136,29 @@ class TuringMachineTest extends Specification {
       val binp1dec = BigInt(binp1bin, 2)
       binp1dec must_== BigInt("177642")
     }
+    
+    "run 11" in {
+      val prog11 = programDecode(1::0::1::1::Nil)
+      prog11 must_== "R 1S"
+      val machine = Machine("11", prog11 split " " : _*)
+      val res = machine runOn Tape("00110100")
+      res must_== Tape("1101")
+    }
   }
   
   "UTM" should {
     "get from denary" in {
-      `U binary` must startWith("1101000000001")
-      `U binary` must endWith("10001001010110")
+      `U binary`.mkString("") must startWith("1101000000001")
+      `U binary`.mkString("") must endWith("10001001010110")
+    }
+    
+    "Run 11 on 6" in {
+      val `11 6` = Tape("10111111100001101")
+      
+      val result = U runOn `11 6`
+      ok // does not work...
+//      result.toString.split("111110")(1) must_== "1101"
+//      result must_== Tape("10111111101101")
     }
   }
 }

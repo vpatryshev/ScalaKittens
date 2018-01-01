@@ -30,8 +30,11 @@ case class Machine(name: String, src: String*) {
   private var state = 0
   private var tape: Tape = _
 
-  def run(initTape: List[Int]): Tape = {
-    init(initTape)
+  def run(initData: List[Int]): Tape = runOn(new Tape(initData))
+
+  def runOn(t: Tape): Tape = {
+    tape = t
+    state = 0
     println(s"Starting $name with $tape")
     try {
       while (true) step()
@@ -40,11 +43,6 @@ case class Machine(name: String, src: String*) {
     }
 
     tape
-  }
-
-  def init(initData: List[Int]): Unit = {
-    state = 0
-    tape = new Tape(initData)
   }
 
   def step(): Unit = try {

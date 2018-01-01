@@ -121,10 +121,15 @@ object TuringMachines {
     (cp flatMap binaryEncoding toList) dropRight 3
   }
 
+  def programDecode(bits: String): String = {
+    programDecode("110" + BigInt(bits).toString(2) + "110" map(_ - '0') toList)
+  }
+   
   def programDecode(bits: List[Int]): String = {
     val programDecoding = Array("0", "1", "R ", "L ", "S ")
     val R = List(1,1,0)
-    val cbs = R ++ bits ++ R
+    
+    val cbs = if (bits.startsWith(R)) bits ++ R else R ++ bits ++ R
 
     val counts = (List[Int]() /: cbs) {
       case (Nil, b) => b :: Nil
@@ -165,7 +170,9 @@ object TuringMachines {
       |95689139748137504926429605010013651980186945639498 
     """.stripMargin replaceAll("\\s", "")
   
-  val `U binary` = "110" + BigInt(`U denary`).toString(2) + "110"
+  val `U binary`: List[Int] = "110" + BigInt(`U denary`).toString(2) + "110" map(_ - '0') toList
+  
+  val U: Machine = machine("UTM", programDecode(`U binary`))
 
   def main(args: Array[String]): Unit = {
     //    println(`UN+1` run unaryEncode(4))
@@ -178,9 +185,26 @@ object TuringMachines {
     //      /* 3 */ "01S", "10001S"
     //    )
     //    xn2 run binaryEncode(11)
-    val bits = programEncode(`XN+1 source`) mkString ""
 
-    val n = BigInt(bits, 2)
-    println(n)
+    val T11 = "R 1S"
+    val T11bits = programEncode(T11)
+    println(T11bits)
+    val prog11 = programDecode(T11bits)
+    val machine = Machine("11", T11 split " " : _*)
+    val res = machine runOn Tape("00110100")
+
+    println(res)
+
+    val `11 6` = Tape("00010111111101101000")
+
+    val result = U runOn `11 6`
+    println(result) // not a good result; it stops in front of the first 1 on the tape, moving it to the head... bad.
+
+    //    val sassa_nf = Machine("sassa_nf", "S 10L 101R 11L 1R 101R" split " " : _*)
+//    println(sassa_nf runOn Tape("1110"))
+//    val bits = programEncode(`XN+1 source`) mkString ""
+//
+//    val n = BigInt(bits, 2)
+//    println(n)
   }
 }
