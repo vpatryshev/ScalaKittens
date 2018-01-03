@@ -12,9 +12,9 @@ trait Norm {
 
   def apply(xs: Iterable[Double]): Double
   
-  def apply(m: Matrix[_,_]): Double = apply(m.allElements)
+//  def apply(m: Matrix[_,_]): Double = apply(m.allElements)
   
-  def distance(xs: IndexedSeq[Double], ys: IndexedSeq[Double]) = {
+  def distance(xs: IndexedSeq[Double], ys: IndexedSeq[Double]): Double = {
     this(xs.indices map { i => xs(i) - ys(i) } view)
   }
       
@@ -27,7 +27,7 @@ object Norm {
     *
     * sum of absolute values of vector elements
     */
-  val l1 = new Norm {
+  object l1 extends Norm {
     override def apply(xs: Iterable[Double]): Double = xs map abs sum
   }
 
@@ -36,15 +36,15 @@ object Norm {
     *
     * square root of sum of squares of vector elements
     */
-  val l2 = new Norm {
+  object l2 extends Norm {
     override def apply(xs: Iterable[Double]): Double = {
       xs match {
-        case ax: VectorSpace#OnArray =>
-          ArrayOps.l2(ax.data)
-        case _ =>
-          sqrt(xs map (x => x*x) sum)
+        case ax: VectorSpace#Vector => ax.l2
+        case _ => apply(xs.iterator)
       }
     }
+
+    def apply(xs: Iterator[Double]): Double = sqrt(xs map (x => x*x) sum)
 
     override def distance(xs: IndexedSeq[Double], ys: IndexedSeq[Double]): Double = {
       (xs, ys) match {
@@ -52,7 +52,6 @@ object Norm {
           ArrayOps.l2(ax.data, ay.data)
         case _ => super.distance(xs, ys)
       }
-
     }
 
   }
@@ -62,7 +61,7 @@ object Norm {
     *
     * @return max abs value of elements
     */
-  val linf = new Norm {
-    override def apply(xs: Iterable[Double]): Double = if (xs.isEmpty) 0.0 else (xs map (x => abs(x))) max
+  object linf extends Norm {
+    override def apply(xs: Iterable[Double]): Double = (0.0 /: (xs map abs view))(max)
   }
 }

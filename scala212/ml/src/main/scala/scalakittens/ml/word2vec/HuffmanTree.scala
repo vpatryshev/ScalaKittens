@@ -15,6 +15,7 @@ import scala.collection.mutable
   */
 class HuffmanTree(source: List[Int]) {
   val numWords: Int = source.length
+  require(numWords > 1, "Empty source? Oh no.")
   val size = numWords * 2 - 1
   private val parentRef = new Array[Int](size)
 

@@ -14,9 +14,12 @@ class PcaDimensionReducer[Source <: VectorSpace, Target <: VectorSpace](
   extends DimensionReducer[Source, Target] {
 
   def reduce(originalVectors: IndexedSeq[Source#Vector]): IndexedSeq[Target#Vector] = {
-    val acc = new AccumulatingMoments[Source](source).collect(originalVectors)
-    val avg = acc.avg
-    val cov: Source#SquareMatrix = acc.covariance
+    val moments = new AccumulatingMoments[Source](source)
+    originalVectors foreach(v => moments.add(v.asInstanceOf[moments.space.Vector]))
+    // TODO: get rid of casting
+    moments.collect(originalVectors map (_.asInstanceOf[moments.space.Vector]))
+    val avg = moments.avg
+    val cov: Source#SquareMatrix = moments.covariance
     val iterations = PCA.Iterations(precision, numIterations)
     val buildEigenVectors = iterations.buildEigenVectors(source) _
     // TODO: get rid of casting

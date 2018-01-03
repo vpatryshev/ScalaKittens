@@ -2,6 +2,8 @@ package scalakittens.la
 
 import org.specs2.mutable.Specification
 
+import scalakittens.la.Matrix.OnFunction
+
 /**
   * Created by vpatryshev on 5/7/17.
   */
@@ -9,14 +11,17 @@ class MatrixTest extends Specification {
   import Spaces._
   
   private def nxm(n: Int, m: Int, f: Int => Int => Double) = {
-    (0 until n) map { i =>
-      (0 until m) map { j =>
+    ((0 until n) map { i =>
+      ((0 until m) map { j =>
         f(i)(j)
-      } toArray
-    } toArray
+      }).toArray
+    }).toArray
   }
 
-  case class TestMatrix[Dom <: VectorSpace, Codom <: VectorSpace](domain: Dom, codomain: Codom, f: Int => Int => Double) extends MutableMatrix[Dom, Codom] {
+  case class TestMatrix[Dom <: VectorSpace, Codom <: VectorSpace](
+      override val domain: Dom,
+      override val codomain: Codom, f: Int => Int => Double) 
+    extends MutableMatrix[Dom, Codom](domain, codomain) {
     override def nRows: Int = codomain.dim
     override def nCols: Int = domain.dim
     val d = nxm(nRows, nCols, f)
@@ -72,8 +77,8 @@ class MatrixTest extends Specification {
     }
     
     "multiply" in {
-      val sut1 = TestMatrix(R4, R3, i => j => i * 10 + j)
-      val sut2 = TestMatrix(R5, R4, i => j => (i - j + 1000) % 2 * 1.0)
+      val sut1 = TestMatrix[R4.type, R3.type](R4, R3, i => j => i * 10 + j)
+      val sut2 = TestMatrix[R5.type, R4.type](R5, R4, i => j => (i - j + 1000) % 2 * 1.0)
 
       val expected = Matrix(R5, R3, 
         Array(4.0, 2.0, 4.0, 2.0, 4.0,
@@ -93,17 +98,17 @@ class MatrixTest extends Specification {
 
       product === expected
 
-      (sut1 * sut2) aka s"$sut1\n*\n$sut2" must_== expected
+//      R4.mult(sut1, sut2) aka s"$sut1\n*\n$sut2" must_== expected
     }
 
     "multiply by a vector" in {
       val sut = TestMatrix(R4, R3, i => j => i * 10 + j)
-      (sut * R4.Vector(0, 1, 2, 3)) === R3.Vector(14, 74, 134)
+      (sut * sut.domain.Vector(0, 1, 2, 3)) === R3.Vector(14, 74, 134)
     }
 
     "multiply by an immutable vector" in {
       val sut = TestMatrix(R4, R3, i => j => i * 10 + j)
-      val vec = R4.OnFunction(i => 1.0*i)
+      val vec = sut.domain.OnFunction(i => 1.0*i)
       val actual = sut * vec
       actual === R3.Vector(14, 74, 134)
     }
@@ -302,5 +307,19 @@ class MatrixTest extends Specification {
       source must_== sut
       source.transpose must_== sut
     }
+    
+    "properly check compatibility" in {
+      val m1: Matrix[VectorSpace, VectorSpace] = 
+        new OnFunction[VectorSpace, VectorSpace](R2, R3, (i: Int, j: Int) => 1 + i * i + j * j)
+
+      val m2: Matrix[VectorSpace, VectorSpace] =
+        new OnFunction[VectorSpace, VectorSpace](R5, R6, (i: Int, j: Int) => 1 - i * i - j * j)
+
+      val badMatrix: Matrix[VectorSpace, VectorSpace] = m1 + m2
+      
+      failure("Should not have compiled")
+
+    }
+    
   }
 }

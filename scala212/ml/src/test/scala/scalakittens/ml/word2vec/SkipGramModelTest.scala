@@ -15,9 +15,9 @@ import scalakittens.ml.dimreduction.Viz._
 
 class SkipGramModelTest extends Specification {
   val WaPmodelFileName = "warandpeace.vecs.txt"
-  val WaPbigModelFileName = "warandpeace.vecs.txt"
+  val WaPbigModelFileName = "warandpeace.vecs.big.txt"
   val GwtWmodelFileName = "gonewiththewind.vecs.txt"
-  val GwtWbigModelFileName = "gonewiththewind.vecs.txt"
+  val GwtWbigModelFileName = "gonewiththewind.vecs.big.txt"
   
   def serialize[Space <: VectorSpace](filename: String, space: Space, vectors: List[(String, Space#Vector)]): Unit = {
     val file = new File(s"$filename.tmp")
@@ -81,14 +81,15 @@ class SkipGramModelTest extends Specification {
 
     "process 'Gone with the Wind' with PCA, fast" in {
       val ext = "vecs.fast.txt"
-      val reducer: DimensionReducer[R10.type, R3.type] = new PcaDimensionReducer[R10.type, R3.type](R10, R3, precision = 0.001, 30)//pcaReducer(dim, newDim, 30)
+      val mainSpace = R100
+      val reducer: DimensionReducer[mainSpace.type, R3.type] = new PcaDimensionReducer[mainSpace.type, R3.type](mainSpace, R3, precision = 0.001, 30)//pcaReducer(dim, newDim, 30)
 
-      doNovel[R10.type, R3.type](GoneWithTheWind, reducer, ext, numEpoch = 50) match {
+      doNovel[mainSpace.type, R3.type](GoneWithTheWind, reducer, ext, numEpoch = 1000) match {
         case Good(vs) =>
           showNovel[R3.type]("Gone with the Wind", vs.iterator)
           ok
         case bad: Bad[_] => failure(bad.listErrors.toString + "\n" + bad.stackTrace)
-        case Empty => failure("No War, no Peace! /* Trotsky */")
+        case Empty => failure("Nobody leaves!")
       }
 
       ok
@@ -206,13 +207,14 @@ class SkipGramModelTest extends Specification {
       space: Space,
       numEpochs: Int,
       α: Double
-      ): Array[Space#Vector] = {
+      ): Array[space.Vector] = {
+    require(text.frequencies.size > 1, s"Weird text, 0 frequencies: $text")
     val model = SkipGramModel(text, space, numEpochs, window = 3, α, seed = 123456789L)
     model.run()
     val originalVectors = model.in
     originalVectors.zipWithIndex foreach { 
       case(v,i) => v.isValid aka s"@$i: $v" must beTrue; () }
-    originalVectors .asInstanceOf[Array[Space#Vector]] // TODO: get rid of casting
+    originalVectors .asInstanceOf[Array[space.Vector]] // TODO: get rid of casting
   }
 
 //  private def applyPCA(originalVectors: IndexedSeq[Vector], newDim: VectorSpace, precision: Double, numIterations: Int) = {

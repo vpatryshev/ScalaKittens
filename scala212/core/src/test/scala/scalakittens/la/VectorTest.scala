@@ -5,6 +5,7 @@ import org.specs2.mutable.Specification
 import scalakittens.la.Norm.l2
 
 /**
+  * Test suite for VectorSpace and the vectors inside
   * Created by vpatryshev on 5/7/17.
   */
 class VectorTest extends Specification {
@@ -13,12 +14,19 @@ class VectorTest extends Specification {
 
   "VectorSpace" should {
 
+    "not fail miserably on types incompatibility" in {
+      val v1: VectorSpace#Vector = R2 OnFunction (i => 1.0 + i * 2)
+      val v2: VectorSpace#Vector = R3 OnFunction (i => 1.0 - i * 2)
+      // val oops = v1 + v2 // should not compile
+      ok
+    }
+    
     "build unit cube" in {
       val vectors = R3.Vector(0,1,2)::R3.Vector(0,2,4)::R3.Vector(-2,3,10)::Nil
       val unitCube = R3.unitCube(vectors)
       val z = unitCube(R3.Zero)
       val ucs = unitCube.toString
-      (z aka ucs) must_== R3.Vector(1,-0.5,-0.25)
+      z aka ucs must_== R3.Vector(1,-0.5,-0.25)
       unitCube(R3.Vector(-1, 0, 0)) === R3.Vector(0.5,-0.5,-0.25)
       unitCube(R3.Vector(0,1,0)) === R3.Vector(1,0,-0.25)
       unitCube(R3.Vector(0,0,1)) === R3.Vector(1.0,-0.5,-0.125)
@@ -88,8 +96,9 @@ class VectorTest extends Specification {
       val space0 = VectorSpace(3)
       def recurse(s: VectorSpace)(v: s.Vector): Unit = {
         val ignoreme = if (s.dim == 0) v else {
-          val v1 = s.projectToHyperplane(v) * 2
-          recurse(s.hyperplane)(v1)
+          val hyperplane = s.hyperplane
+          val v1 = hyperplane.project(v) * 2
+          recurse(hyperplane)(v1)
         }
         ignoreme mustNotEqual null
         ()
@@ -154,15 +163,15 @@ class VectorTest extends Specification {
       val v = R3.Vector(111.0, 222.0, 333.0)
       val sut = R3.projectToHyperplane(v)
       sut.length must_== 2
-      sut must_== R2.Vector(222.0, 333.0)
+      sut must_== R3.hyperplane.Vector(222.0, 333.0)
     }
 
     "inject vector from hyperplane" in {
-      val v = R3.Vector(111.0, 222.0, 333.0)
+      val v = R4.hyperplane.Vector(111.0, 222.0, 333.0)
       val sut = R4.injectFromHyperplane(v)
       sut.length must_== 4
       sut must_== R4.Vector(0.0, 111.0, 222.0, 333.0)
-      R4.injectFromHyperplane(R2.Vector(1.1, 2.2)) must throwA[Exception]
+      R4.injectFromHyperplane(R4.hyperplane.Vector(1.1, 2.2)) must throwA[Exception]
     }
     
     "rotate square matrix" in {
@@ -456,7 +465,7 @@ class VectorTest extends Specification {
       sut.unapply(v0) === sampleCenter
       sut(v0) === v1
       val v2 = sut.unapply(v1)
-      Norm.l2(v2 - v0) < 0.000001 aka v2.toString must beTrue
+      Norm.l2.distance(v2, v0) < 0.000001 aka v2.toString must beTrue
       val v3 = R3.Vector(2.6730326074756157, 0.7411809548974794, 1.3660254037844384)
       sut.unapply(sampleCenter) === v3
     }
