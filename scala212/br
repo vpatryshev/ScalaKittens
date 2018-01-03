@@ -4,9 +4,9 @@ export curdir=${PWD##*/}
 
 #set -e
 if [ -z $1 ]; then
-  echo "../branch new_branch_name
+  echo "./br new_branch_name
 or
-../branch base_branch_name new_branch_name"
+./br base_branch_name new_branch_name"
   exit 1
 elif [ -z $2 ]; then
   export fromb=master

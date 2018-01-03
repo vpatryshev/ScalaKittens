@@ -1,5 +1,10 @@
 package scalakittens
 
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, InputStreamReader}
+import java.util.Base64
+import java.util.zip._
+
+import scala.io.Source
 import scala.language.postfixOps
 import scala.util.matching.Regex
 
@@ -11,6 +16,25 @@ trait Strings {
     if (s1.isEmpty || s2.isEmpty || s1(0) != s2(0)) "" else s1.head + commonPrefix(s1.tail, s2.tail)
   }
 
+  def zip(s: String): String = {
+    val baos = new ByteArrayOutputStream()
+    val zos = new GZIPOutputStream(baos)
+    zos.write(s.getBytes("UTF8"))
+    zos.close()
+    val bytes = baos.toByteArray
+    Base64.getEncoder.encodeToString(bytes)
+  }
+
+  def unzip(bytes: Array[Byte]): String = {
+    val bios = new ByteArrayInputStream(bytes)
+    val zis = new GZIPInputStream(bios)
+    Source.fromInputStream(zis, "UTF8").mkString("")
+  }
+
+  def unzip(base64: String): String = {
+    unzip(Base64.getDecoder.decode(base64))
+  }
+  
   implicit class powerString(s: String) {
     def containsIgnoreCase(other: String): Boolean = s.toUpperCase.contains(other.toUpperCase)
 
@@ -44,7 +68,6 @@ trait Strings {
     val leftPos = s.toUpperCase.indexOf(prefix.toUpperCase)
     (if (leftPos >= 0) s.substring(leftPos + prefix.length) else s).trim
   }
-
 
   /**
     * Removes leading characters from a string.
