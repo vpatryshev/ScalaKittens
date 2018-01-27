@@ -1,6 +1,6 @@
 package scalakittens
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, InputStreamReader}
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.util.Base64
 import java.util.zip._
 

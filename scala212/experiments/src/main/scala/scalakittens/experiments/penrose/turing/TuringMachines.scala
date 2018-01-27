@@ -4,15 +4,15 @@ import scala.language.postfixOps
 import scalakittens.Strings
 
 object TuringMachines {
-
-  lazy val `UN+1`: Machine = Machine("UN+1",
+  
+  lazy val `UN+1`: Machine = PTM("UN+1",
     /* 0 */ "00R", "11R",
     /* 1 */ "01S", "11R"
   )
 
   val `UN+1 source` = "R11R1S11R"
 
-  lazy val EUC: Machine = Machine("Euclid",
+  lazy val EUC: Machine = PTM("Euclid",
     /* 0 */ "00R", "11L",
     /* 1 */ "101R", "11L",
     /* 2 */ "10100R", "110R",
@@ -26,7 +26,7 @@ object TuringMachines {
     /* 10 */ "00S", "10101R"
   )
 
-  lazy val `UN*2`: Machine = Machine("UN*2",
+  lazy val `UN*2`: Machine = PTM("UN*2",
     /* 0 */ "R", "10R",
     /* 1 */ "101L", "11R",
     /* 2 */ "110R", "1000R",
@@ -38,7 +38,7 @@ object TuringMachines {
   val `UN*2 source` = 
     "R 10R 101L 11R 110R 1000R 01S 111R 1011L 1001R 101L 1011L"
   
-  lazy val `XN+1`: Machine = Machine("XN+1",
+  lazy val `XN+1`: Machine = PTM("XN+1",
     /* 0 */ "R", "11R",
     /* 1 */ "R", "101R",
     /* 2 */ "110L", "101R",
@@ -52,7 +52,7 @@ object TuringMachines {
   val `XN+1 source` = 
     "R 11R R 101R 110L 101R 1S 1000L 1011L 1001L 1100R 101R R 1111R 111R 1110R"
 
-  lazy val `XN*2`: Machine = Machine("XN*2",
+  lazy val `XN*2`: Machine = PTM("XN*2",
     /* 0 */ "R", "11R",
     /* 1 */ "R", "101R",
     /* 2 */ "111L", "10001S",
@@ -60,21 +60,22 @@ object TuringMachines {
     /* 4 */ "10000S", "S"
   )
 
-  lazy val `XN*2-book` = Machine("XN*2-book",
+  lazy val `XN*2-book` = PTM("XN*2-book",
     /* 0 */ "R", "10R",
     /* 1 */ "1R", "100R",
     /* 2 */ "111R", "10001S",
     /* 3 */ "1S", "10001S"
   )
 
-  def machine(name: String, program: String): Machine = {
-    val RLS = Set('R', 'L', 'S')
-    val commands = (List[String]() /: (program.replaceAll("\\s", "").reverse)) {
+  val RLS = Set('R', 'L', 'S')
+
+  def penroseMachine(name: String, programSource: String): Machine = {
+    val commands = (List[String]() /: (programSource.replaceAll("\\s", "").reverse)) {
       case (cs, ch) if RLS(ch) => "" + ch :: cs
       case (h :: t, ch) => ch + h :: t
     }
 
-    Machine(name, commands.toArray: _*)
+    PTM(name, commands.toArray: _*)
   }
   
   def unaryDecode(tape: List[Int]): List[Int] = {
@@ -167,13 +168,13 @@ object TuringMachines {
   
   val `U binary`: List[Int] = ubs + "110" map(_ - '0') toList
   
-  val U: Machine = machine("UTM", programDecode(`U binary`))
+  val U: Machine = penroseMachine("UTM", programDecode(`U binary`))
 
   def main(args: Array[String]): Unit = {
-    //    println(`UN+1` run unaryEncode(4))
+        println(`UN+1` run unaryEncode(4))
     //    println(EUC run unaryEncode(4, 2))
     //       println(`UN*2` run unaryEncode(4))
-    //    val xn2 = Machine("XN2",
+    //    val xn2 = PenroseMachine("XN2",
     //      /* 0 */ "00R", "10R",
     //      /* 1 */ "01R", "100R",
     //      /* 2 */ "111R", "10001S",
@@ -181,21 +182,21 @@ object TuringMachines {
     //    )
     //    xn2 run binaryEncode(11)
 
-    val T11 = "R 1S"
-    val T11bits = programEncode(T11)
-    println(T11bits)
-    val prog11 = programDecode(T11bits)
-    val machine = Machine("11", T11 split " " : _*)
-    val res = machine runOn Tape("00110100")
+//    val T11 = "R 1S"
+//    val T11bits = programEncode(T11)
+//    println(T11bits)
+//    val prog11 = programDecode(T11bits)
+//    val machine = PenroseMachine("11", T11 split " " : _*)
+//    val res = PenroseMachine runOn Tape("00110100")
+//
+//    println(res)
 
-    println(res)
+//    val `11 6` = Tape("00010111111101101000")
+//
+//    val result = U runOn `11 6`
+//    println(result) // not a good result; it stops in front of the first 1 on the tape, moving it to the head... bad.
 
-    val `11 6` = Tape("00010111111101101000")
-
-    val result = U runOn `11 6`
-    println(result) // not a good result; it stops in front of the first 1 on the tape, moving it to the head... bad.
-
-    //    val sassa_nf = Machine("sassa_nf", "S 10L 101R 11L 1R 101R" split " " : _*)
+    //    val sassa_nf = PenroseMachine("sassa_nf", "S 10L 101R 11L 1R 101R" split " " : _*)
 //    println(sassa_nf runOn Tape("1110"))
 //    val bits = programEncode(`XN+1 source`) mkString ""
 //

@@ -68,14 +68,14 @@ class TuringMachineTest extends Specification {
     }
     
     "sassa_nf" in {
-      val machine = Machine("A.Otenko", "S 10L 101R 11L 1R 101R" split " " : _*)
+      val machine = PTM("A.Otenko", "S 10L 101R 11L 1R 101R" split " " : _*)
       machine.runOn(Tape("1110")) must_== Tape("1111110")
     }
     
     "machine" in {
-      val sample1 = machine("XN*2-book", "R10R1R100R111R10001S1S10001S")
+      val sample1 = penroseMachine("XN*2-book", "R10R1R100R111R10001S1S10001S")
       sample1 must_== `XN*2-book`
-      val sample2 = machine("XN+1", `XN+1 source`)
+      val sample2 = penroseMachine("XN+1", `XN+1 source`)
       sample2 must_== `XN+1`
     }
     
@@ -140,7 +140,7 @@ class TuringMachineTest extends Specification {
     "run 11" in {
       val prog11 = programDecode(1::0::1::1::Nil)
       prog11 must_== "R 1S"
-      val machine = Machine("11", prog11 split " " : _*)
+      val machine = PTM("11", prog11 split " " : _*)
       val res = machine runOn Tape("00110100")
       res must_== Tape("1101")
     }

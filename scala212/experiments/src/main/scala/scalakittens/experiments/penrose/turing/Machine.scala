@@ -1,9 +1,11 @@
 package scalakittens.experiments.penrose.turing
 
 import language.postfixOps
+import scalakittens.experiments.penrose.turing.Tape.Γ
+import scalaz.StreamT.Done
 
-case class Machine(name: String, src: String*) {
-
+ abstract class Machine(name: String) { self =>
+   
   sealed trait Where
   case object L extends Where
   case object R extends Where
@@ -11,31 +13,22 @@ case class Machine(name: String, src: String*) {
 
   val where = Map('L' -> L, 'R' -> R, 'S' -> S)
 
+  type State = String
+  val initState: State = "0"
+  
   class Done extends Exception
 
-  def decode(cmd: String): (Int, Int, Where) = {
-    val n = Integer.parseInt("0" + cmd.dropRight(1), 2)
-    (n/2, n%2, where(cmd.last))
-  }
-
-  val program: Array[Array[(Int, Int, Where)]] = {
-    val code = for {
-      p <- 0 until src.size / 2
-      row = Array(src(2*p), src(2*p+1)) map decode
-    } yield row
-
-    code.toArray
-  }
-
-  private var state = 0
+  val program: Map[(State, Int), (State, Int, Where)]
+   
+  private var state = initState
   private var tape: Tape = _
 
   def run(initData: List[Int]): Tape = runOn(new Tape(initData))
 
   def runOn(t: Tape): Tape = {
     tape = t
-    state = 0
-    println(s"Starting $name with $tape")
+    state = initState
+    println(s"Starting $self with $tape")
     try {
       while (true) step()
     } catch {
@@ -47,7 +40,7 @@ case class Machine(name: String, src: String*) {
 
   def step(): Unit = try {
     val x = tape.read
-    val (nextState, nextDigit, whither) = program(state)(x)
+    val (nextState, nextDigit, whither) = program((state, x))
     tape.w(nextDigit)
     whither match {
       case L => tape.left()
@@ -60,7 +53,7 @@ case class Machine(name: String, src: String*) {
     dumpState()
   }
 
-  override def toString: String = program.map(_.mkString("/")).mkString(";")
+  override def toString: String = s"$name:\n$program"
   
   override def equals(o: Any): Boolean = o match {
     case other: Machine => toString == other.toString
