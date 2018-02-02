@@ -6,7 +6,7 @@ import Tape._
 
 class Tape(init: List[Γ]) {
   
-  class Stack {
+  private class Stack {
     var data: List[Γ] = Nil
 
     def setTo(source: List[Γ]): Unit = data = source
@@ -27,15 +27,15 @@ class Tape(init: List[Γ]) {
     }
   }
 
-  val leftSide = new Stack
-  val rightSide = new Stack
+  private val leftSide = new Stack
+  private val rightSide = new Stack
 
   leftSide.setTo(Nil)
   rightSide.setTo(init)
 
   def read: Γ = rightSide @@
 
-  def w(b: Γ): Unit = rightSide !! b
+  def write(b: Γ): Unit = rightSide !! b
 
   def right(): Unit = leftSide.push(rightSide.pop())
 
@@ -44,7 +44,6 @@ class Tape(init: List[Γ]) {
   override def equals(other: Any): Boolean = other match {
     case t: Tape => canonical == t.canonical
     case _ => false
-
   }
 
   private def canonical =
@@ -53,10 +52,10 @@ class Tape(init: List[Γ]) {
       .trim
       .replaceAll(" ", "0") + "0"
 
-  def all: List[Γ] = leftSide.data.reverse ++ rightSide.data
+  private def all: List[Γ] = leftSide.data.reverse ++ rightSide.data
 
   override def toString =
-    s"${leftSide.data.reverse mkString ""} ${rightSide.data mkString ""}"
+    s"${leftSide.data.reverse mkString ""}>${rightSide.data mkString ""}"
 }
 
 object Tape {

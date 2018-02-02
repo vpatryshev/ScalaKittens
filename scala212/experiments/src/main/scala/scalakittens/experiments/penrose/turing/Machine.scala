@@ -1,8 +1,6 @@
 package scalakittens.experiments.penrose.turing
 
 import language.postfixOps
-import scalakittens.experiments.penrose.turing.Tape.Γ
-import scalaz.StreamT.Done
 
  abstract class Machine(name: String) { self =>
    
@@ -11,7 +9,8 @@ import scalaz.StreamT.Done
   case object R extends Where
   case object S extends Where
 
-  val where = Map('L' -> L, 'R' -> R, 'S' -> S)
+  val where = Map(
+    'L' -> L, 'R' -> R, 'S' -> S, 'r' -> L, 'l' -> R, 's' -> S)
 
   type State = String
   val initState: State = "0"
@@ -25,10 +24,12 @@ import scalaz.StreamT.Done
 
   def run(initData: List[Int]): Tape = runOn(new Tape(initData))
 
+  def run(initData: String): Tape = run(initData map (_ - '0') toList) 
+   
   def runOn(t: Tape): Tape = {
     tape = t
     state = initState
-    println(s"Starting $self with $tape")
+    println(s"Starting $self with\n$tape")
     try {
       while (true) step()
     } catch {
@@ -41,7 +42,7 @@ import scalaz.StreamT.Done
   def step(): Unit = try {
     val x = tape.read
     val (nextState, nextDigit, whither) = program((state, x))
-    tape.w(nextDigit)
+    tape.write(nextDigit)
     whither match {
       case L => tape.left()
       case R => tape.right()
