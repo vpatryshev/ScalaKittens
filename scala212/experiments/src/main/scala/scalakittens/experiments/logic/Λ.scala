@@ -4,13 +4,13 @@ package scalakittens.experiments.logic
   * Experiments with logic and typed/untyped lambda implemented in Scala
   * Created by vpatryshev on 12/10/14.
   */
-trait Lambda[T] {
+trait λ[T] {
 
 }
 
-case class Var[T](name: String) extends Lambda[T]
-case class App[U,V](left: Lambda[U⇒V], V:Lambda[U]) extends Lambda[V]
-case class Abs[U,V](x: Lambda[U⇒V]) extends Lambda[U⇒V]
+case class Var[T](name: String) extends λ[T]
+case class App[U,V](left: λ[U⇒V], V:λ[U]) extends λ[V]
+case class Abs[U,V](x: λ[U⇒V]) extends λ[U⇒V]
 
 object UntypedSKI {
   val I = (x:Any) ⇒ x

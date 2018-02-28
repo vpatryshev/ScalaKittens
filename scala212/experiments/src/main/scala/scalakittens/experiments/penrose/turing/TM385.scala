@@ -120,4 +120,40 @@ object TM385 {
     )
     minus.run("1101111")
   }
+  
+  def JonathanLaroco = {
+    val plus = TM385("plus", "0 0/1r1 1/1r0 1 0/0l2 1/1r1 2 1/0l3 0/0ss 3 0/0r4 1/1l3 4 0/0ss 1/1ss")
+    plus.run("1101111")
+    
+    val minus = TM385("minus", 
+      "0 0/0s0 1/1r1 1 0/0r2 1/1r1 2 0/0r2 1/0l6 3 0/0l4 1/1l3 4 0/0l4 1/1r5 5 0/1r2 1/1r5 6 0/0l6 1/1r7 7 1/1s0 0/0s0")
+    
+    minus.run("1101111")
+  }
+
+  def CassidyTarng = {
+    val plus = TM385("plus", "0 0/0ss 1/1Rb b 0/1Rc 1/1Rb c 1/1Rd 0/0ss d 0/0Le 1/1Rd e 0/0ss 1/0ss")
+    plus.run("1101111")
+
+    val minus = TM385("minus",
+      "0 0/0ss 1/1Rb b 0/0Rc 1/1Rb c 0/0ss 1/1Rd d 0/0Lh 1/1Le e 0/0ss 1/0Lf f 0/0Lf 1/0Rg g 0/0Rg 1/1Rd h 1/0Li 0/0ss i 0/0Li 1/0ss")
+
+    minus.run("1101111")
+  }
+
+  CassidyTarng
+  
+  def MoseYoloye = {
+    val plus = TM385("plus", "0 0/0ra 1/0ra a 0/0ss 1/0rb b 1/1rb 0/1ss")
+    plus.run("1101111")
+
+    val minus = TM385("minus",
+      "0 0/0ra 1/0ra a 0/0ss 1/0rb b 0/0rc 1/1rb c 0/0ss 1/1rd d 0/0le 1/1rd e 0/0ss 1/0lf f 0/0ss 1/1lg g 0/0lh 1/1lg h 1/1lh 0/0li i 0/0ra 1/1li")
+
+    minus.run("1101111")
+  }
+  
+  
+  
+  MoseYoloye
 }
