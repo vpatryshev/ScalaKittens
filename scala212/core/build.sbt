@@ -22,7 +22,7 @@ artifactName := { (sv: ScalaVersion, module: ModuleID, artifact: Artifact) =>
   artifact.name + "-" + module.revision + "." + artifact.extension
 }
 
-enablePlugins(JmhPlugin)
+
 
 libraryDependencies ++= Seq(
   "org.scalatest"  %% "scalatest"     % "3.0.1" % "test" withSources(),
@@ -35,7 +35,7 @@ libraryDependencies ++= Seq(
   "org.apache.httpcomponents" % "httpmime"   % "4.3.6",
   "org.specs2" %% "specs2-core" % "3.8.8" % "test",
   "org.scalacheck" %% "scalacheck" % "1.13.4" % "test"
-  //  "org.openjdk.jmh" % "jmh-scala-benchmark-archetype" % "0.5.5" from "http://repo1.maven.org/maven2/org/openjdk/jmh/jmh-scala-benchmark-archetype/0.5.5/jmh-scala-benchmark-archetype-0.5.5.jar"
+
 )
 
 resolvers ++= Seq("snapshots" at "http://oss.sonatype.org/content/repositories/snapshots",

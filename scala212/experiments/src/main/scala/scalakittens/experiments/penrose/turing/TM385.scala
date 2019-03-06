@@ -61,12 +61,17 @@ object TM385 {
       minus.run("1111011")
     }
     
-    def Chen = {
-      val minus = TM385("minus",
-        "0 1/1l0 0/0lb b 1/0lc 0/0lb c 1/1rd 0/0lf d 0/0rd 1/1le e 0/1r0 1/1lx f 0/0ss 1/1ss")
-      minus.run("1111011")
-    }
   }
+
+  def Chen = {
+    val minus = TM385("minus",
+      "0 1/1l0 0/0lb b 1/0lc 0/0lb c 1/1rd 0/0re d 0/0rd 1/0lb e 0/0re 1/0lf f 0/0ss 1/1ss")
+    minus.run("1111011")
+  }
+
+  Chen
+  System.exit(0)
+  
   def Yıldırım = {
     val minus = TM385("minus",
       "0 1/1lb 0/0l0 b 1/1lb 0/0lc c 0/0lc 1/0ld d 0/0re 1/1rf e 0/0re 1/0lh f 0/0rf 1/0rb h 0/0ss 1/1ss ")
@@ -79,7 +84,7 @@ object TM385 {
   }
   def Sharma = {
     val plus = TM385("plus",
-      "0 0/0r0 1/1rb b 1/1rb 0/1rc c 1/1rc 0/1ld d 0/0rd 1/0re e 1/1ss 0/0ss"
+      "0 0/0R0 1/1Rb b 1/1Rb 0/1Rc c 1/1Rc 0/1Ld d 0/0Rd 1/0Re e 1/1ss 0/0ss"
     )
     plus.run("10111")
 //    val minus = TM385("minus",
@@ -138,10 +143,10 @@ object TM385 {
     val minus = TM385("minus",
       "0 0/0ss 1/1Rb b 0/0Rc 1/1Rb c 0/0ss 1/1Rd d 0/0Lh 1/1Le e 0/0ss 1/0Lf f 0/0Lf 1/0Rg g 0/0Rg 1/1Rd h 1/0Li 0/0ss i 0/0Li 1/0ss")
 
-    minus.run("1101111")
+    minus.run("1111011")
   }
 
-  CassidyTarng
+//  CassidyTarng
   
   def MoseYoloye = {
     val plus = TM385("plus", "0 0/0ra 1/0ra a 0/0ss 1/0rb b 1/1rb 0/1ss")
@@ -152,8 +157,4 @@ object TM385 {
 
     minus.run("1101111")
   }
-  
-  
-  
-  MoseYoloye
 }

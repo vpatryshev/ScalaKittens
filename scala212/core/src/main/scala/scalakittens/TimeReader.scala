@@ -8,5 +8,5 @@ trait TimeReader {
 }
 
 object DateAndTime extends TimeReader {
-  def currentTime = System.currentTimeMillis()
+  def currentTime: Long = System.currentTimeMillis()
 }

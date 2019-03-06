@@ -271,8 +271,8 @@ class Result_Test extends Specification {
   }
 
   "traverse" should {
-    "return Empty if the collection is empty" in {
-      Result.traverse(Nil) must_== Empty
+    "return Good Nil if the collection is empty" in {
+      Result.traverse(Nil) must_== Good(Nil)
     }
     "return Empties if the collection consists of empties" in {
       Result.traverse(Empty::Empty::Empty::Nil) must_== Empty

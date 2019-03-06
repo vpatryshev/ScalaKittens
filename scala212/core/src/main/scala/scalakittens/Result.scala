@@ -328,7 +328,7 @@ object Result {
   def traverse[T](results: TraversableOnce[Result[T]]): Result[Traversable[T]] = {
     val (goodOnes, badOnes) = partition(results)
 
-    if (goodOnes.isEmpty || badOnes.nonEmpty) badOrEmpty(badOnes.flatten)
+    if (badOnes.nonEmpty) badOrEmpty(badOnes.flatten)
     else Good(goodOnes.reverse)
   }
 

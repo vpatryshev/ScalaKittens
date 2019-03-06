@@ -1,6 +1,5 @@
 package scalakittens
 
-import org.scalatest.Assertion
 import org.specs2.mutable.Specification
 
 /**
