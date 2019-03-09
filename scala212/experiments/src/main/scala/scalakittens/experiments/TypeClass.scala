@@ -1,5 +1,8 @@
 package scalakittens.experiments
 
+//import java.util
+
+import scala.collection.parallel.immutable
 import scala.language.{higherKinds, implicitConversions, reflectiveCalls}
 
 // source: http://infoscience.epfl.ch/record/150280/files/TypeClasses.pdf
@@ -11,7 +14,7 @@ object TypeClass {
   }
 
   implicit object IntOrd extends Ord[Int] {
-    def compare(a: Int, b: Int) = a <= b
+    def compare(a: Int, b: Int): Boolean = a <= b
   }
 
   // TODO: get rid of warning
@@ -19,7 +22,7 @@ object TypeClass {
     println("well, at least it compiles"); Nil
   }
 
-  val sorted = sort(List(1, 2, 3))
+  val sorted: scala.collection.immutable.List[Int] = sort(List(1, 2, 3))
 
   trait Monoid[A] {
     def binary_op(x: A, y: A): A
@@ -63,8 +66,12 @@ object TypeClass {
     def map[X, Y](f: X ⇒ Y)(fx: F[X]): F[Y]
   }
 
-  implicit def fops[F[_] : Functor, A](fa: F[A]) = new {
-    val functor = implicitly[Functor[F]]
+  implicit def fops[F[_] : Functor, A](fa: F[A]): Object {
+    def map[B](f: A => B): F[B]
+
+    val functor: Functor[F]
+  } = new {
+    val functor: Functor[F] = implicitly[Functor[F]]
 
     final def map[B](f: A ⇒ B): F[B] = functor.map(f)(fa)
   }
@@ -80,5 +87,5 @@ object TypeClass {
   }
 
   val testList = new ArrayList[String](Arrays.asList("this", "is", "a", "test"))
-  val transformed = testList.map(_.toUpperCase)
+  val transformed: ArrayList[String] = testList.map(_.toUpperCase)
 }

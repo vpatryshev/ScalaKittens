@@ -1,7 +1,7 @@
 
 organization := "Scalakittens Inc."
 
-val WhichScala = "2.12.3"
+val WhichScala = "2.12.8"
 
 name := s"Scala Kittens Library Core, Scala $WhichScala"
 

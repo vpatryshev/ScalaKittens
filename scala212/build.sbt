@@ -1,13 +1,17 @@
 
 organization := "org.scalakittens"
 
-val WhichScala = "2.12.3"
+val WhichScala = "2.12.8"
 
 name := s"Scala Kittens Library, Scala $WhichScala"
 
 version := "1.0.0"
 
 scalaVersion := WhichScala
+// lazy val core = project // in file "core")
+// lazy val ml = project // in file "ml")
+// lazy val experiments = project // in flie "experiments")
+
 lazy val core = RootProject(file("./core"))
 lazy val ml = RootProject(file("./ml"))
 lazy val experiments = RootProject(file("./experiments"))

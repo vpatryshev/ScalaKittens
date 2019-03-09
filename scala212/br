@@ -1,4 +1,4 @@
-# Creates a new branch either from dev or from whatever you specify
+# Creates a new branch either from master or from whatever you specify
 
 export curdir=${PWD##*/}
 

@@ -1,5 +1,7 @@
 package scalakittens.experiments
 
+import language.postfixOps
+
 object CopyDL extends App {
   /*
   The problem is this: we have a linked list of nodes; each node has a value and a pointer to another node anywhere in the list.
@@ -37,10 +39,10 @@ object CopyDL extends App {
     } toList
 
     case class IndirectNode(value: Int, nextId: Int, rndId: Int) extends Node {
-      override def next = if (nextId < 0) null else newNodes(nextId)
-      override def random = if (rndId < 0) null else newNodes(rndId)
+      override def next: IndirectNode = if (nextId < 0) null else newNodes(nextId)
+      override def random: IndirectNode = if (rndId < 0) null else newNodes(rndId)
       
-      def valueOf(node: Node) = Option(node) map (_.value.toString) orNull
+      def valueOf(node: Node): String = Option(node) map (_.value.toString) orNull
       
       override def toString: String =
         s"Node($value, ->${valueOf(next)}, ->${valueOf(random)})"

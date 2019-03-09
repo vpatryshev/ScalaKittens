@@ -82,6 +82,7 @@ object TuringMachines {
     (List[Int]() /: tape) {
       case (n :: t, 1) => (n + 1) :: t
       case (xs, 0) => 0 :: xs
+      case other => throw new IllegalArgumentException(tape.mkString("."))
     } reverse
   }
 
@@ -91,6 +92,7 @@ object TuringMachines {
       case (n :: t, 0) => 0 :: n :: t
       case (0 :: t, 1) => 1 :: t
       case (1 :: t, 1) => 2 :: t
+      case other => throw new IllegalArgumentException(tape.mkString("."))
     } reverse
 
     (List[Int]() /: chars) {
@@ -98,6 +100,7 @@ object TuringMachines {
       case (h :: t, 0) => h * 2 :: t
       case (h :: t, 1) => h * 2 + 1 :: t
       case (h :: t, 2) => 0 :: h :: t
+      case other => throw new IllegalArgumentException(tape.mkString("."))
     }.tail.reverse
   }
 
@@ -136,6 +139,7 @@ object TuringMachines {
       case (Nil, b) => b :: Nil
       case (h :: t, 0) => 0 :: h :: t
       case (h :: t, 1) => h + 1 :: t
+      case other => throw new IllegalArgumentException(other.toString)
     }
     counts.tail.reverse map programDecoding mkString "" trim
   }
