@@ -57,9 +57,9 @@ trait IO { self ⇒
     using (file) (in ⇒ { prefix forall (in.read == _) }) getOrElse false
   }
 
-  def startsWith_old(prefix: Array[Byte])(file: File) =
+  def startsWith_old(prefix: Array[Byte])(file: File): Boolean =
     file.canRead &&
-    withFile_old(file)(in ⇒ prefix forall (in.read ==)).toOption .exists (identity)
+    withFile_old(file)(in ⇒ prefix forall (in.read ==)).asOption .exists (identity)
 
   val MinFileLength = 10
 

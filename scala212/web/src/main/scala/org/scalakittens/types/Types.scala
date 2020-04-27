@@ -1,7 +1,7 @@
 package org.scalakittens.types
 
-import com.healthexpense.common.web.Url
 import org.scalakittens.Result.{OK, Outcome}
+import org.scalakittens.web.Url
 import org.scalakittens.{Good, Result}
 
 import scala.language.{implicitConversions, postfixOps, reflectiveCalls}
