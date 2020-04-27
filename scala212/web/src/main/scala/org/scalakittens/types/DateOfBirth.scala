@@ -28,8 +28,8 @@ abstract class DateOfBirth(date:DateTime) {
 
   override def toString = s"DOB=${DateOfBirth.asString(date)}"
   override def equals(x: Any): Boolean = x match {
-    case other: DateOfBirth => sameAs(other)
-    case bs => false
+    case other: DateOfBirth ⇒ sameAs(other)
+    case bs ⇒ false
   }
   override def hashCode: Int = 13 * millis.hashCode()
 }
@@ -53,8 +53,8 @@ private[types] trait DobBuilder extends TimeReader {
   def apply(dob: String): Result[DateOfBirth] = extractDate(dob) flatMap apply
 
   def sameDob(dob1: Result[DateOfBirth])(dob2: Result[DateOfBirth]): Boolean = (dob1, dob2) match {
-    case (Good(first), Good(second)) => first sameAs second
-    case (x, y)               => x.isBad == y.isBad
+    case (Good(first), Good(second)) ⇒ first sameAs second
+    case (x, y)               ⇒ x.isBad == y.isBad
   }
 }
 

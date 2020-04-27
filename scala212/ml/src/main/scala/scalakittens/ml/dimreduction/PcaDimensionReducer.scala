@@ -15,7 +15,7 @@ class PcaDimensionReducer[Source <: VectorSpace, Target <: VectorSpace](
 
   def reduce(originalVectors: IndexedSeq[Source#Vector]): IndexedSeq[Target#Vector] = {
     val moments = new AccumulatingMoments[Source](source)
-    originalVectors foreach(v => moments.add(v.asInstanceOf[moments.space.Vector]))
+    originalVectors foreach(v ⇒ moments.add(v.asInstanceOf[moments.space.Vector]))
     // TODO: get rid of casting
     moments.collect(originalVectors map (_.asInstanceOf[moments.space.Vector]))
     val avg = moments.avg

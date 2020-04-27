@@ -76,7 +76,7 @@ trait Strings {
     * @param chars the characters to remove
     * @return string trimmer
     */
-  def dropLeading(chars: String): String => String = (s: String) ⇒ s dropWhile (chars contains _)
+  def dropLeading(chars: String): String ⇒ String = (s: String) ⇒ s dropWhile (chars contains _)
 
   /**
     * I could not figure out how to do multiline match in scala; so had to write this.
@@ -95,11 +95,11 @@ trait Strings {
     * @param prefix what precedes the value
     * @return the value; if not found, an empty string (missing value, right?)
     */
-  def valueOf(prefix: String): String => String = {
+  def valueOf(prefix: String): String ⇒ String = {
     (text: String) ⇒ prefixSearch(prefix)(text).getOrElse("")
   }
 
-  def prefixSearch(prefix: String): String => Option[String]
+  def prefixSearch(prefix: String): String ⇒ Option[String]
   = multilineMatch((".*" + prefix.replaceAll("\\.", "\\\\.") + " *([^\\n]*)").r)
 
   private val DIGITS = "^(\\d+)$".r

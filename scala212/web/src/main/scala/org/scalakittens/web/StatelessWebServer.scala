@@ -18,16 +18,16 @@ trait StatelessWebServer {
   def provideResponseBytes(path: String): Result[Array[Byte]]
 
   def findResponse(path:String): Response = (path, provideResponseBytes(path)) match {
-    case (TextFmt(_),   Good(bytes))   => TextResponse(path, bytes)
-    case (GifFmt(ext),  Good(bytes))  => GifResponse(path, bytes)
-    case (JpegFmt(ext), Good(bytes)) => JpgResponse(path, bytes)
-    case (PngFmt(ext),  Good(bytes))  => PngResponse(path, bytes)
-    case (IcoFmt(ext),  Good(bytes))   => IconResponse(path, bytes)
-    case (_, err) => ServerOps.error404(s"$path: ${err.listErrors mkString "; "}")
+    case (TextFmt(_),   Good(bytes))   ⇒ TextResponse(path, bytes)
+    case (GifFmt(ext),  Good(bytes))  ⇒ GifResponse(path, bytes)
+    case (JpegFmt(ext), Good(bytes)) ⇒ JpgResponse(path, bytes)
+    case (PngFmt(ext),  Good(bytes))  ⇒ PngResponse(path, bytes)
+    case (IcoFmt(ext),  Good(bytes))   ⇒ IconResponse(path, bytes)
+    case (_, err) ⇒ ServerOps.error404(s"$path: ${err.listErrors mkString "; "}")
   }
 
-  val sitemap: PartialFunction[String, Unit => (Unit, Response)] = findResponse(_) match {
-    case r => (_:Unit) => ((), r)
+  val sitemap: PartialFunction[String, Unit ⇒ (Unit, Response)] = findResponse(_) match {
+    case r ⇒ (_:Unit) ⇒ ((), r)
   }
 
   val server = new WebServer[Unit](port, initialState, sitemap)

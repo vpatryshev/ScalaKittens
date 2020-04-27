@@ -56,12 +56,12 @@ class HuffmanTreeTest extends Specification {
     "process War And Peace" in {
 
       WarAndPeace.scannedText match {
-        case Good(ScannedText(index, words, freqs)) =>
+        case Good(ScannedText(index, words, freqs)) ⇒
 
           val tree = new HuffmanTree(freqs)
           tree.path(1000).length > 15 must beTrue
           tree.path(1000).length < 25 must beTrue
-        case bad => failure(bad.listErrors.toString)
+        case bad ⇒ failure(bad.listErrors.toString)
       }
       
       ok
@@ -70,12 +70,12 @@ class HuffmanTreeTest extends Specification {
     "process Gone With The Wind" in {
 
       GoneWithTheWind.scannedText match {
-        case Good(ScannedText(index, words, freqs)) =>
+        case Good(ScannedText(index, words, freqs)) ⇒
 
           val tree = new HuffmanTree(freqs)
           tree.path(1000).length > 15 must beTrue
           tree.path(1000).length < 25 must beTrue
-        case bad => failure(bad.listErrors.toString)
+        case bad ⇒ failure(bad.listErrors.toString)
       }
 
       ok

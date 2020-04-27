@@ -27,18 +27,18 @@ trait Logging extends TimeReader {
 
   // TODO(vlad): introduce levels
   // TODO(vlad): don't need formatting; lazy format is enough
-  def log(tag: String, format: => Any, params: Any*): Unit = {
+  def log(tag: String, format: ⇒ Any, params: Any*): Unit = {
     val message =
     try {
       val formatted = if (params.isEmpty) format else format.toString.format(params: _*)
       Some(s"[$tag]: $formatted")
     } catch {
-      case t: Throwable => try {
+      case t: Throwable ⇒ try {
         dumpStackTrace(t)
         <<(s"[$tag]: !!!!!Failed to format <<$format>>: ${params mkString ","} ((${t.getMessage}))")
         None
       } catch {
-        case t: Throwable => try {
+        case t: Throwable ⇒ try {
           <<(s"[$tag]: !!!!!Failed to stringify parameters in <<$format>> (${t.getMessage})")
           None
         }
@@ -48,7 +48,7 @@ trait Logging extends TimeReader {
     try {
       message foreach <<
     } catch {
-      case e: Exception => System.err.println(s"Log failed: $message $e"); e.printStackTrace()
+      case e: Exception ⇒ System.err.println(s"Log failed: $message $e"); e.printStackTrace()
     }
   }
 
@@ -56,24 +56,24 @@ trait Logging extends TimeReader {
 
   var lastError: Any = ""
 
-  def anError(msg: => Any): Bad[Nothing] = {
+  def anError(msg: ⇒ Any): Bad[Nothing] = {
     log("Error", msg)
     Result.error[Nothing](msg)
   }
 
   def dumpStackTrace(xOrNull: Throwable): Unit = {
-    Some(xOrNull) foreach { x =>
+    Some(xOrNull) foreach { x ⇒
       val stack = x.getStackTrace
-      val tail = stack.dropWhile(el => el.getClassName.contains("Logging") || el.getMethodName == "error")
+      val tail = stack.dropWhile(el ⇒ el.getClassName.contains("Logging") || el.getMethodName == "error")
       tail.take(35).foreach(println)
     }
   }
 
   def dumpStackTrace(): Unit = dumpStackTrace(new Exception("STACK TRACE"))
 
-  def ifDebug(op: => Unit): Unit = if (Logging.isDebug || Logging.isTest) op
+  def ifDebug(op: ⇒ Unit): Unit = if (Logging.isDebug || Logging.isTest) op
 
-  def error(msg: => Any): Bad[Nothing] = {
+  def error(msg: ⇒ Any): Bad[Nothing] = {
     if (msg != lastError) {
       lastError = msg
       if (Logging.isDebug) {
@@ -86,26 +86,26 @@ trait Logging extends TimeReader {
   }
 
   // Displays error message and returns FALSE
-  def errorResult(msg: => Any): Boolean = {
+  def errorResult(msg: ⇒ Any): Boolean = {
     error(msg)
     false
   }
 
-  def warn        (message:  =>Any): Result.OK.type = { log("Warn",    message); OK }
-  def warnIf      (cond: => Boolean)(message: =>Any): Any = if (cond) warn(message)
-  def info        (message:  =>String):Unit = log("Info",    message)
-  def info[T](x:T, message: =>String):T     = {info(message); x}
-  def debug       (message:  =>String): Unit = {
+  def warn        (message:  ⇒Any): Result.OK.type = { log("Warn",    message); OK }
+  def warnIf      (cond: ⇒ Boolean)(message: ⇒Any): Any = if (cond) warn(message)
+  def info        (message:  ⇒String):Unit = log("Info",    message)
+  def info[T](x:T, message: ⇒String):T     = {info(message); x}
+  def debug       (message:  ⇒String): Unit = {
     if (Logging.isDebug)    log("Debug", message)
   }
-  def bigdebug    (message: =>String): Unit = if (Logging.isBigDebug) log("DEBUG", message)
-  def dump[T](x: =>T): T = {log("dump", "" + x); x}
-  def todo(text: =>String): Bad[Null] = {
+  def bigdebug    (message: ⇒String): Unit = if (Logging.isBigDebug) log("DEBUG", message)
+  def dump[T](x: ⇒T): T = {log("dump", "" + x); x}
+  def todo(text: ⇒String): Bad[Null] = {
     val msg = "TODO: implement this." + text
     <<(msg)
     Result.error(msg)
   }
-  def exception(ex: Throwable, msg: =>String): Outcome = {
+  def exception(ex: Throwable, msg: ⇒String): Outcome = {
       val stackTrace = ex.getStackTrace take 60 mkString "\n    "
       anError(s"$msg\n$ex\nStacktrace:\n    $stackTrace")
   }
@@ -113,12 +113,12 @@ trait Logging extends TimeReader {
 
   def report[T](message: String, result: Result[T]): Result[T] = {
     result match {
-      case Good(stuff) => info(message format stuff)
-      case bad: Bad[_] =>
+      case Good(stuff) ⇒ info(message format stuff)
+      case bad: Bad[_] ⇒
         anError(bad.errors)
 // no need actually        if (Logging.isDebug) println(bad.stackTrace)
 
-      case _       => anError(s"$message $result - no results found.")
+      case _       ⇒ anError(s"$message $result - no results found.")
     }
     result
   }
@@ -166,7 +166,7 @@ object Logging extends Logging {
   def isTest: Boolean = mode.isTest
   def isBigDebug: Boolean = mode.isBigDebug
 
-  var prefix:() => String = () => ""
+  var prefix:() ⇒ String = () ⇒ ""
 
   private def logWithContext(kind: String, sc: StringContext, args: Any*): Unit = {
     val strings = sc.parts.iterator
@@ -194,7 +194,7 @@ object Logging extends Logging {
   }
 
   implicit class ErrorReporter[T](res: Result[T]) {
-    def reportingError: Result[T] = res onError ((ee: Errors) => error(ee))
+    def reportingError: Result[T] = res onError ((ee: Errors) ⇒ error(ee))
   }
 
 }

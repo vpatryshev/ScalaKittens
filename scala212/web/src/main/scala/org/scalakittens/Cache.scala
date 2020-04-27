@@ -4,7 +4,7 @@ package org.scalakittens
   * Caches forever the values you produce, and gives them back on demand.
   */
 trait Cache[K,V] {
-  val produce: K => V
+  val produce: K ⇒ V
   def refresh(k:K): V
   def get(k: K): V
 }
@@ -17,7 +17,7 @@ trait Cache[K,V] {
   * @tparam K key type
   * @tparam V value type
   */
-class FunctionCache[K,V](val produce: K => V) extends Cache[K, V] {
+class FunctionCache[K,V](val produce: K ⇒ V) extends Cache[K, V] {
   private val storage = new scala.collection.mutable.HashMap[K, V]()
 
   def refresh(k:K): V = {
@@ -40,7 +40,7 @@ class FunctionCache[K,V](val produce: K => V) extends Cache[K, V] {
   * @tparam K key type
   * @tparam V value type
   */
-class PartialFunctionCache[K,V](val produce: K => Result[V]) extends Cache[K, Result[V]] {
+class PartialFunctionCache[K,V](val produce: K ⇒ Result[V]) extends Cache[K, Result[V]] {
   private val storage = new scala.collection.mutable.HashMap[K, Result[V]]()
 
   def refresh(k:K): Result[V] = {

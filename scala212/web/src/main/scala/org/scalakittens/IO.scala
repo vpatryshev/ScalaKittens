@@ -9,7 +9,7 @@ import scala.language.{implicitConversions, postfixOps, reflectiveCalls}
 import scala.reflect.io.Streamable
 import scala.util.Try
 
-trait IO { self =>
+trait IO { self ⇒
 
   implicit def asFile(path: String): File = new File(path)
 
@@ -34,47 +34,47 @@ trait IO { self =>
     def #>(f: File): Result[File]
   } = bytesWritable(s.getBytes)
 
-  def withFile_old[T](file:File)(f: FileInputStream => T): Result[T] = {
+  def withFile_old[T](file:File)(f: FileInputStream ⇒ T): Result[T] = {
     try {
       val in = new FileInputStream(file)
       try {
         Good(f(in))
       } catch {
-        case x: Exception => Result.exception(x)
+        case x: Exception ⇒ Result.exception(x)
       } finally {
-        try {in.close()}catch{case _:Any=> }
+        try {in.close()}catch{case _:Any⇒ }
       }
     } catch {
-      case y: Exception => Result.exception(y)
+      case y: Exception ⇒ Result.exception(y)
     }
   }
 
-  def using[T](file:File)(f: FileInputStream => T): Result[T] = Result(Try {
+  def using[T](file:File)(f: FileInputStream ⇒ T): Result[T] = Result(Try {
     val in = new FileInputStream(file)
     (Try (f(in)), Try (in.close()))._1
   } flatten)
 
   def startsWith(prefix: Array[Byte])(file: File):Boolean = {
-    using (file) (in => { prefix forall (in.read == _) }) getOrElse false
+    using (file) (in ⇒ { prefix forall (in.read == _) }) getOrElse false
   }
 
   def startsWith(prefix: String)(file: File):Boolean = startsWith(prefix.getBytes)(file)
 
   def startsWith_old(prefix: Array[Byte])(file: File): Boolean =
     file.canRead &&
-      withFile_old(file)(in => prefix forall (in.read ==)).toOption .exists (identity) 
+      withFile_old(file)(in ⇒ prefix forall (in.read ==)).toOption .exists (identity) 
   val MinFileLength = 10
 
   def ensureFileIsOk(path: String): Result[File] = {
-    Good(path).filter((path:String) => !path.isEmpty, "Empty file path, that's wrong.").flatMap(path => Result.attempt(ensureFileIsOk(new File(path).getAbsoluteFile.getCanonicalFile)))
+    Good(path).filter((path:String) ⇒ !path.isEmpty, "Empty file path, that's wrong.").flatMap(path ⇒ Result.attempt(ensureFileIsOk(new File(path).getAbsoluteFile.getCanonicalFile)))
   }
 
   def ensureFileIsOk(f: File):Result[File] = {
     Good(f).
       filter(!(_:File).getName.isEmpty,              s"Empty file name, that's wrong.").
-      filter( (_:File).exists,                  f => s"File not found: $f").
-      filter( (_:File).isFile,                  f => s"Expected a file, but it is not: $f").
-      filter( (_:File).length >= MinFileLength, f => s"The file $f is too small (<$MinFileLength bytes).")
+      filter( (_:File).exists,                  f ⇒ s"File not found: $f").
+      filter( (_:File).isFile,                  f ⇒ s"Expected a file, but it is not: $f").
+      filter( (_:File).length >= MinFileLength, f ⇒ s"The file $f is too small (<$MinFileLength bytes).")
   }
 
   lazy val HomeDir: File = new File(System.getProperty("user.home"))
@@ -105,23 +105,23 @@ trait IO { self =>
   }
 
 
-  def onSource(s:Source)(op: String => Unit): Unit = s.getLines().takeWhile(!_.isEmpty) foreach op
+  def onSource(s:Source)(op: String ⇒ Unit): Unit = s.getLines().takeWhile(!_.isEmpty) foreach op
 
-  def onStream(i: InputStream)(op: String => Unit): Unit = onSource(Source.fromInputStream(i))(op)
+  def onStream(i: InputStream)(op: String ⇒ Unit): Unit = onSource(Source.fromInputStream(i))(op)
 
-  def onInput(op: String => Unit): Unit = onStream(System.in)(op)
+  def onInput(op: String ⇒ Unit): Unit = onStream(System.in)(op)
 
   def resource(url: String): Result[URL] = Result.forValue(self.getClass.getResource(url.replaceAll("%20", " "))) orCommentTheError s"Resource not found: $url"
 
   def fromResource(url: String): Result[InputStream] = resource(url) map (_.openStream)
 
-  def readResource(path: String, codec:Codec = Codec.UTF8): Result[String] = fromResource(path) map (in => {
+  def readResource(path: String, codec:Codec = Codec.UTF8): Result[String] = fromResource(path) map (in ⇒ {
     val text = Source.fromInputStream(in)(codec).mkString
     in.close()
     text
   })
 
-  def readResourceBytes(path: String): Result[Array[Byte]] = fromResource(path) map (in => {
+  def readResourceBytes(path: String): Result[Array[Byte]] = fromResource(path) map (in ⇒ {
     val bytes = Streamable.bytes(in)
     in.close()
     bytes
@@ -132,12 +132,12 @@ trait IO { self =>
 
   def propsFromFile(filename: String): Props = Props.fromSource(Source.fromFile(filename))
 
-  def propsFromResource(path: String):Props = readResource(path) map (s => Props.fromSource(Source.fromString(s))) getOrElse Props.empty
+  def propsFromResource(path: String):Props = readResource(path) map (s ⇒ Props.fromSource(Source.fromString(s))) getOrElse Props.empty
 
-  implicit class BetterFile(val f:File) { self =>
+  implicit class BetterFile(val f:File) { self ⇒
     def extensionOpt:Option[String] = f.getName.split("\\.").toList match {
-      case name::tail => tail.lastOption
-      case Nil => None
+      case name::tail ⇒ tail.lastOption
+      case Nil ⇒ None
     }
     def withExtension(ext:String) =
       new File(f.getParentFile,

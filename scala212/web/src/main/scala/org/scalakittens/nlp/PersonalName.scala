@@ -10,13 +10,13 @@ import scala.util.matching.Regex
 /**
  * This class is supposed to store human names, be able to compare them etc.
  */
-case class PersonalName(first: String, middle:String, last:String, suffix: Option[String]) { thisName =>
+case class PersonalName(first: String, middle:String, last:String, suffix: Option[String]) { thisName ⇒
   lazy val firstlast: String = first + " " + last
   lazy val withoutSuffix: String = List(first, middle, last) filter (_.nonEmpty) mkString " "
   private lazy val addSuffix = suffix match {
-    case Some(s) if PersonalName.isAbbr(s) => s", $s."
-    case Some(s)              => s", $s"
-    case _ => ""
+    case Some(s) if PersonalName.isAbbr(s) ⇒ s", $s."
+    case Some(s)              ⇒ s", $s"
+    case _ ⇒ ""
   }
   lazy val full: String = withoutSuffix + addSuffix
 
@@ -31,7 +31,7 @@ case class PersonalName(first: String, middle:String, last:String, suffix: Optio
     val name1Suffix = suffix
     val middleNameChecked: Outcome = OKif(name2Middle.isEmpty || oneInAnother(name2Middle.toLowerCase, middle.toLowerCase),s"problems with middle name: '$name2Middle' vs '$middle'")
 
-    val suffixesMatch = OKif(name1Suffix flatMap (s1 => name2Suffix.map(s1==)) getOrElse true) orCommentTheError "Different suffixes"
+    val suffixesMatch = OKif(name1Suffix flatMap (s1 ⇒ name2Suffix.map(s1==)) getOrElse true) orCommentTheError "Different suffixes"
 
     val res = suffixesMatch andThen middleNameChecked andThen {
       val p1First = first.toLowerCase.replaceAll("-", " ")
@@ -81,10 +81,10 @@ object PersonalName {
 
   private[nlp] def extractNameString(nameEts: String): String =
     nameEts.trim match {
-      case NameWithDob(name, _) => name
-      case full@TypicalNameFormat(name, role) => if (roles contains role.toLowerCase) name else full
-      case DecoratedNamePattern(name,role) => name.replaceAll("[\\s\u00a0]", " ").trim
-      case other => other
+      case NameWithDob(name, _) ⇒ name
+      case full@TypicalNameFormat(name, role) ⇒ if (roles contains role.toLowerCase) name else full
+      case DecoratedNamePattern(name,role) ⇒ name.replaceAll("[\\s\u00a0]", " ").trim
+      case other ⇒ other
     }
 
   private def buildName(names: Iterable[String]) = names map strippedName mkString " "
@@ -124,7 +124,7 @@ object PersonalName {
     val name1 = nameSrc.replaceAll("[.!]", " ").trim
     val name1Suffix:Option[String] = suffixOf(name1)
 
-    val name1NoSuffix = name1Suffix map (s => name1.dropRight(s.length)) getOrElse name1
+    val name1NoSuffix = name1Suffix map (s ⇒ name1.dropRight(s.length)) getOrElse name1
     val norm = normalizedName(name1NoSuffix)
 
     val (firstMiddleNames, lastNames) = firstsAndLasts(norm)
@@ -141,7 +141,7 @@ object PersonalName {
     } else {
       val p0 = source.replaceAll(",", " ").replaceAll(" +", " ").trim.split(" ")
 
-      val splitCandidates = math.max(1, p0.length - 1) :: (properNameContext.lowerCaseWords.map(w => p0 indexOf w) filter (_ > 0) toList)
+      val splitCandidates = math.max(1, p0.length - 1) :: (properNameContext.lowerCaseWords.map(w ⇒ p0 indexOf w) filter (_ > 0) toList)
       val lastNameIndex = splitCandidates min
 
       val (fs, ls) = p0 splitAt lastNameIndex

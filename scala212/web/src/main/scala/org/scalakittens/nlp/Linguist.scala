@@ -11,14 +11,14 @@ import scala.language.{implicitConversions, postfixOps, reflectiveCalls}
 object Linguist {
 
   val DEBUG_MODE = false
-  private def cinmDebug(s: => String): Unit = if (DEBUG_MODE) println(s"--DEBUG; $s")
+  private def cinmDebug(s: ⇒ String): Unit = if (DEBUG_MODE) println(s"--DEBUG; $s")
 
   private val meaningless = Set("a", "at", "childhood", "did", "from", "in", "is", "it", "my", "name", "of", "on", "the", "was", "what", "which", "you", "your")
 
   private val synonyms = Set("city, town", "sibling, siblings", "job, work") .map {
-    word => word.split(", ").toList
+    word ⇒ word.split(", ").toList
   } .collect {
-    case main::tail => tail map (w => w -> main)
+    case main::tail ⇒ tail map (w ⇒ w -> main)
   } .flatten .toMap withDefault identity
 
   private val isBadWord = Set("ass") // TODO(vlad): invent more
@@ -35,15 +35,15 @@ object Linguist {
     val candidate = word.trim take size
     val words = candidate.split("[ ,\\.;]").toList.reverse
     words match {
-      case oneWord::Nil => (candidate, if (isBadWord(oneWord.toLowerCase)) s"$name: keeping bad word <<$oneWord>>" else "")
-      case last::previous if isBadWord(last.toLowerCase) =>
+      case oneWord::Nil ⇒ (candidate, if (isBadWord(oneWord.toLowerCase)) s"$name: keeping bad word <<$oneWord>>" else "")
+      case last::previous if isBadWord(last.toLowerCase) ⇒
         val dotPlace = candidate.lastIndexOf(last.last)
         val (left, right) = candidate.splitAt(dotPlace)
         val tail = right.tail.dropWhile('.'==)
         val good = s"$left.$tail"
         (good, s"$name: fixed bad word <<$last>>")
 
-      case otherwise => (candidate, "")
+      case otherwise ⇒ (candidate, "")
     }
   }
 
@@ -70,7 +70,7 @@ object Linguist {
   }
 
   private def titleCaseWord(s:String)(implicit context: WordContext): String = {
-    s.split("-").map(w => titleCasePlainWord(w, context)) mkString "-"
+    s.split("-").map(w ⇒ titleCasePlainWord(w, context)) mkString "-"
   }
 
   def cleanupProcedureText(s:String):String =
@@ -79,15 +79,15 @@ object Linguist {
     val trimmed = s.trim
     if (trimmed.isEmpty) return ""
     val plainText = trimmed match {
-      case ProcWithCPT(txt) => txt
-      case otherText => otherText
+      case ProcWithCPT(txt) ⇒ txt
+      case otherText ⇒ otherText
     }
 
     //   val DescriptionPattern = "(Not Available )?(.*)".r
 
     val cleanedUpText = plainText /*match {
-      case DescriptionPattern(_, d) => d
-      case _ => s
+      case DescriptionPattern(_, d) ⇒ d
+      case _ ⇒ s
     }*/
   val text1 = toTitleCase( cleanedUpText.replaceAll("^[\\W&&[^(]]*","").replaceAll("[\\W&&[^)]]*$","") ).trim
     val text = text1.replaceFirst(" \\(\\d\\)", "")
@@ -120,7 +120,7 @@ object Linguist {
    * @return
    */
   def normalize(s: String): String = {
-//    cinmDebug(s + "->" + s.getBytes("UTF16").toList.grouped(2).map(l => (l(0).toInt & 0xff) << 8 | (l(1).toInt&0xff)).map(_.toHexString).toList)
+//    cinmDebug(s + "->" + s.getBytes("UTF16").toList.grouped(2).map(l ⇒ (l(0).toInt & 0xff) << 8 | (l(1).toInt&0xff)).map(_.toHexString).toList)
 
     Normalizer.normalize(s, Normalizer.Form.NFD).replaceAll("[↑\\p{InCombiningDiacriticalMarks}]+", "").trim
   }

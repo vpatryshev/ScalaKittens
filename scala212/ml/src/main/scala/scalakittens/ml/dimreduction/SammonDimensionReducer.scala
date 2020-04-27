@@ -25,11 +25,11 @@ abstract class SammonDimensionReducer
   extends DimensionReducer[S, T] {
   val DEBUG = false  
   type Target = T
-  type MatrixLike = (Int, Int) => Double
+  type MatrixLike = (Int, Int) ⇒ Double
   
   val dim: Int = source.dim
 
-  protected val init: IndexedSeq[S#Vector] => IndexedSeq[target.Vector]
+  protected val init: IndexedSeq[S#Vector] ⇒ IndexedSeq[target.Vector]
 
   def reduce(originalVectors: IndexedSeq[S#Vector]): IndexedSeq[T#Vector] = {
     val iterations = new Engine(originalVectors)
@@ -58,7 +58,7 @@ abstract class SammonDimensionReducer
     private val evaluator = new Evaluator[State, Tangent] {
       override def cos(gradient1: Tangent, gradient2: Tangent): Double = {
         val moments = ((0.0, 0.0, 0.0) /: (gradient1.vectors zip gradient2.vectors)) {
-          case ((prod, norm1, norm2), (v1, v2)) => 
+          case ((prod, norm1, norm2), (v1, v2)) ⇒ 
             val n1 = Norm.l2(v1)
             val n2 = Norm.l2(v2)
             (prod + v1 * v2, norm1 + n1*n1, norm2 + n2*n2)
@@ -82,7 +82,7 @@ abstract class SammonDimensionReducer
 
       override def gradientAt(position: State): Tangent = {
         val vs = position.vectors
-        val tangentVectors: IndexedSeq[target.Vector] = vs.indices map (p => `dE/dy`(vs, position.matrix, p))
+        val tangentVectors: IndexedSeq[target.Vector] = vs.indices map (p ⇒ `dE/dy`(vs, position.matrix, p))
 
         new Tangent(tangentVectors)
       }
@@ -91,14 +91,14 @@ abstract class SammonDimensionReducer
       = {
         val vectors = position.vectors
         vectors zip direction.vectors foreach {
-          case (a:target.MutableVector,b: target.Vector) => a.nudge(b, step)
+          case (a:target.MutableVector,b: target.Vector) ⇒ a.nudge(b, step)
         }
         position.matrix = distanceMatrix(vectors)
       }
     }
 
     def distanceMatrix[Space <: VectorSpace](vs: IndexedSeq[Space#Vector]): MatrixLike = {
-      (i, j) => Norm.l2.distance(vs(i), vs(j))
+      (i, j) ⇒ Norm.l2.distance(vs(i), vs(j))
     }
     
 
@@ -148,8 +148,8 @@ object SammonDimensionReducer {
   def withPCA[S <: VectorSpace, T <: VectorSpace](source: S, target: T, numIterations: Int): DimensionReducer[S, T] = {
     val pca = pcaReducer(source, target, numIterations)
     val reducer: DimensionReducer[S, T] = new SammonDimensionReducer[S, T](source, target, numIterations) {
-      protected val init: IndexedSeq[S#Vector] => IndexedSeq[target.Vector] = 
-        v => pca.reduce(v).map(_.asInstanceOf[target.Vector])
+      protected val init: IndexedSeq[S#Vector] ⇒ IndexedSeq[target.Vector] = 
+        v ⇒ pca.reduce(v).map(_.asInstanceOf[target.Vector])
     }
 
     reducer

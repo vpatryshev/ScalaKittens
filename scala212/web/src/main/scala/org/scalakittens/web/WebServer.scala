@@ -44,7 +44,7 @@ case class LiteralTextResponse(text: String, override val responseCode: String =
 }
 
 object ServerOps {
-  type Responder = Socket => Unit
+  type Responder = Socket ⇒ Unit
   def read(path: String): Result[Array[Byte]] = readResourceBytes(if (path == "favicon.ico") path else "/"+path)
   def error404(path: String) = LiteralTextResponse(s"We don't have $path", "404 Not found")
 }
@@ -52,27 +52,27 @@ object ServerOps {
 /**
  * Test webserver
  */
-class WebServer[State](port:Int, initial:State, sitemap: PartialFunction[String, State => (State, Response)]) {
+class WebServer[State](port:Int, initial:State, sitemap: PartialFunction[String, State ⇒ (State, Response)]) {
   private val myLog:StringBuilder = new StringBuilder
   private def log(event:Any) = myLog.append("\n" + event)
   def logged: String = myLog.toString
   import ServerOps._
 
-  type Action = State => (State, Responder)
+  type Action = State ⇒ (State, Responder)
 
-  private val respond:Response => Responder =
-    (response: Response) =>
-    (socket: Socket) => {
+  private val respond:Response ⇒ Responder =
+    (response: Response) ⇒
+    (socket: Socket) ⇒ {
     socket.getOutputStream.write(response.bytes)
   }
 
-  private val ignore:Action = s => (s,{println("404"); respond(ServerOps.error404("it..."))})
+  private val ignore:Action = s ⇒ (s,{println("404"); respond(ServerOps.error404("it..."))})
 
-  val act: ((State) => (State, Response)) => (State) => (State, Responder) = {
-    f => {
-      val action = (s: State) =>
+  val act: ((State) ⇒ (State, Response)) ⇒ (State) ⇒ (State, Responder) = {
+    f ⇒ {
+      val action = (s: State) ⇒
         f(s) match {
-        case (s1, resp) =>
+        case (s1, resp) ⇒
           //println(s"->$resp")
           (s1, respond(resp))
       }
@@ -84,7 +84,7 @@ class WebServer[State](port:Int, initial:State, sitemap: PartialFunction[String,
   val actOnInput: PartialFunction[String, Action] = sitemap andThen act
 
   def dispatch(k: String): Action = {
-    actOnInput applyOrElse (k, (x:String) => ignore)
+    actOnInput applyOrElse (k, (x:String) ⇒ ignore)
   }
 
   val Format: Regex = "([A-Z]+) /([^ ?]+)([^ ]*) .*".r
@@ -104,13 +104,13 @@ class WebServer[State](port:Int, initial:State, sitemap: PartialFunction[String,
         }
         stateOption getOrElse state
 
-      } catch { case se : SocketException => log(se); state }
+      } catch { case se : SocketException ⇒ log(se); state }
       finally { s.close() }
     } catch {
-      case ioe: IOException =>
+      case ioe: IOException ⇒
         log(ioe)
         state
-      case something: Throwable =>
+      case something: Throwable ⇒
         something.printStackTrace()
         throw something
     }
@@ -132,12 +132,12 @@ class WebServer[State](port:Int, initial:State, sitemap: PartialFunction[String,
     println(s"Just starting our test web server on port $port")
 
     canRun match {
-      case Good(_) =>
+      case Good(_) ⇒
         val serverSocket = new ServerSocket(port)
         println(s"Server Socket = $serverSocket")
-        val result: Unit = Stream.iterate(initial)(processRequest(serverSocket)) takeWhile((_:State) => !Thread.interrupted()) foreach(s => ()/*print(s)*/)
+        val result: Unit = Stream.iterate(initial)(processRequest(serverSocket)) takeWhile((_:State) ⇒ !Thread.interrupted()) foreach(s ⇒ ()/*print(s)*/)
         println(s"${new Date()} r=$result")
-      case noGood => println(s"Check java security config, it does not allow to run web server: $noGood")
+      case noGood ⇒ println(s"Check java security config, it does not allow to run web server: $noGood")
     }
   }
 
@@ -154,7 +154,7 @@ class WebServer[State](port:Int, initial:State, sitemap: PartialFunction[String,
       if (!t.isAlive) t.start()
       canRun
     } catch {
-      case x:Exception => Result.exception(x)
+      case x:Exception ⇒ Result.exception(x)
     }
   }
 

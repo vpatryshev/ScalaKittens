@@ -13,13 +13,13 @@ import scala.language.{implicitConversions, postfixOps}
  * All general purpose implicit transformations should be stored here
  */
 trait Metamorphoses extends PropsOps with Percentage with Money {
-  implicit def success(result: => Any = true): ResultType.Value = {
+  implicit def success(result: ⇒ Any = true): ResultType.Value = {
     val r = result
     r match {
-      case resultValue: ResultType.Value => resultValue
-      case trueOrFalse: Boolean          => ResultType.apply(trueOrFalse)
-      case bad:Bad[_] if !bad.isEmpty    => ResultType.Error
-      case _                             => ResultType.Success
+      case resultValue: ResultType.Value ⇒ resultValue
+      case trueOrFalse: Boolean          ⇒ ResultType.apply(trueOrFalse)
+      case bad:Bad[_] if !bad.isEmpty    ⇒ ResultType.Error
+      case _                             ⇒ ResultType.Success
     }
   }
 
@@ -33,17 +33,17 @@ trait Metamorphoses extends PropsOps with Percentage with Money {
 
   def toInt(x: Any): Result[Int] = try {
     x match {
-      case s: String => Good(s.toInt)
-      case d: Double => Good(d.toInt)
-      case l: Long   => Good(l.toInt)
-      case i: Int    => Good(i)
-      case _         => Result.error[Int](s"Can't convert to int: $x")
+      case s: String ⇒ Good(s.toInt)
+      case d: Double ⇒ Good(d.toInt)
+      case l: Long   ⇒ Good(l.toInt)
+      case i: Int    ⇒ Good(i)
+      case _         ⇒ Result.error[Int](s"Can't convert to int: $x")
     }
   } catch {
-    case e: Exception => Result.exception(e)
+    case e: Exception ⇒ Result.exception(e)
   }
 
-  class DataExtractor(props:Props, string2date: String=>Result[Date]) {
+  class DataExtractor(props:Props, string2date: String⇒Result[Date]) {
     def apply(name:String): Object {
       def text: String
       def $$$: Result[BigDecimal]
@@ -64,7 +64,7 @@ trait Metamorphoses extends PropsOps with Percentage with Money {
       * @return A [[Result]] object with [[org.squeryl.customtypes.BigDecimalField]] object
       */
       def %%% : Result[BigDecimalField] = requireText flatMap parseAsNormalizedBigDecimal map (new BigDecimalField(_))
-      def asRecentDate: Result[Date] = requireText flatMap string2date filter {d => DateAndTime.isRecent(d)}
+      def asRecentDate: Result[Date] = requireText flatMap string2date filter {d ⇒ DateAndTime.isRecent(d)}
       def asDateTime: Result[DateTime] = requireText map DateTime.parse
     }
   }

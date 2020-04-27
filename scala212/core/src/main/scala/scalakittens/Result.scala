@@ -69,7 +69,7 @@ case class Good[T](protected val value: T) extends Result[T] with SomethingInsid
       Result.error(onError(value))
     }).flatten
   def errorDetails: Option[String] = None
-  def orCommentTheError(message: ⇒Any): Good[T] = this
+  def orCommentTheError(message: ⇒ Any): Good[T] = this
   def tap(op: T ⇒ Unit): Result[T] = {op(value); this}// see http://combinators.info/
   def contains[T1 >: T](x: T1): Boolean = value == x
   def iHope: T = value

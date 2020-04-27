@@ -12,7 +12,7 @@ import scala.language.{higherKinds, implicitConversions}
 import scalakittens.experiments.algebra.{Monoid, Semigroup}
 
 object All {
-  type F1[F[_],X,Y] = F[X]=>F[Y]
+  type F1[F[_],X,Y] = F[X]⇒F[Y]
   
   /**
     * Functorial features of List type

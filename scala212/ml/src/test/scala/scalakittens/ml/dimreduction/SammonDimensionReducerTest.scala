@@ -15,19 +15,19 @@ class SammonDimensionReducerTest extends Specification {
   "Test figure" should {
     "be ok" in {
       val points: List[R3.Vector] = testFigure3dButterfly.toList
-      val toView1: List[(Int, Double, Double)] = points.map ((v:R3.Vector) => {
+      val toView1: List[(Int, Double, Double)] = points.map ((v:R3.Vector) ⇒ {
         ((v.apply(2)*100).toInt, v.apply(0), v.apply(1))
       })
         
         visualize("Horizontal", toView1)
 
-      val toView2: List[(Int, Double, Double)] = points.map ((v:R3.Vector) => {
+      val toView2: List[(Int, Double, Double)] = points.map ((v:R3.Vector) ⇒ {
         ((v.apply(0)*100).toInt, v.apply(1), v.apply(2))
       })
 
       visualize("Vertical1", toView2)
 
-      val toView3: List[(Int, Double, Double)] = points.map ((v:R3.Vector) => {
+      val toView3: List[(Int, Double, Double)] = points.map ((v:R3.Vector) ⇒ {
         ((v.apply(1)*100).toInt, v.apply(0), v.apply(2))
       })
 
@@ -44,10 +44,10 @@ class SammonDimensionReducerTest extends Specification {
       val sammon: DimensionReducer[R3.type, R2.type] = SammonDimensionReducer.withPCA[R3.type, R2.type](R3, R2, 300)
       
       val source = testFigure3dButterfly
-      val vpca = pca.reduce(source).toList map {v => ("P", v.apply(0), v.apply(1))}
+      val vpca = pca.reduce(source).toList map {v ⇒ ("P", v.apply(0), v.apply(1))}
       visualize("after pca", vpca)
       
-      val vsam = sammon.reduce(source).toList map {v => ("S", v.apply(0), v.apply(1))}
+      val vsam = sammon.reduce(source).toList map {v ⇒ ("S", v.apply(0), v.apply(1))}
       visualize("after sammon", vsam)
       ok
     }
@@ -67,10 +67,10 @@ class SammonDimensionReducerTest extends Specification {
         R3.Vector(1,0.9,0),
         R3.Vector(1,0.9,0.9)
       )
-      val vpca = pca.reduce(source).toList map {v => ("P", v.apply(0), v.apply(1))}
+      val vpca = pca.reduce(source).toList map {v ⇒ ("P", v.apply(0), v.apply(1))}
       visualize("after pca", vpca)
 
-      val vsam = sammon.reduce(source).toList map {v => ("S", v.apply(0), v.apply(1))}
+      val vsam = sammon.reduce(source).toList map {v ⇒ ("S", v.apply(0), v.apply(1))}
       visualize("after sammon", vsam)
       ok
     }
@@ -90,10 +90,10 @@ class SammonDimensionReducerTest extends Specification {
         R3.Vector(1,1,0),
         R3.Vector(1,1,1)
       )
-      val vpca = pca.reduce(source).toList map {v => ("P", v.apply(0), v.apply(1))}
+      val vpca = pca.reduce(source).toList map {v ⇒ ("P", v.apply(0), v.apply(1))}
       visualize("after pca", vpca)
 
-      val vsam = sammon.reduce(source).toList map {v => ("S", v.apply(0), v.apply(1))}
+      val vsam = sammon.reduce(source).toList map {v ⇒ ("S", v.apply(0), v.apply(1))}
       visualize("after sammon", vsam)
       ok
     }

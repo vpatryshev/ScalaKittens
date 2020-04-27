@@ -29,7 +29,7 @@ case class TM385(name: String, src: String) extends Machine(name) {
             target.substring(0, 1).toInt,
             where(target(1)))
       } catch {
-        case x: Exception => throw new IllegalArgumentException(move, x)
+        case x: Exception ⇒ throw new IllegalArgumentException(move, x)
       }
     }
     

@@ -67,7 +67,7 @@ object TypeClass {
   }
 
   implicit def fops[F[_] : Functor, A](fa: F[A]): Object {
-    def map[B](f: A => B): F[B]
+    def map[B](f: A ⇒ B): F[B]
 
     val functor: Functor[F]
   } = new {

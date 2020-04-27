@@ -19,8 +19,8 @@ class MD5(bytes: Array[Byte]) {
   }
 
   override def equals(x: Any): Boolean = x match {
-    case other: MD5 => hash == other.hash
-    case orelse     => false
+    case other: MD5 ⇒ hash == other.hash
+    case orelse     ⇒ false
   }
 
   override def hashCode(): Int = ((hash._1*31337 + hash._2) % 982451653).toInt // using good primes
