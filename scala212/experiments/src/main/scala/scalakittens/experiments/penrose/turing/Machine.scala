@@ -2,7 +2,7 @@ package scalakittens.experiments.penrose.turing
 
 import language.postfixOps
 
- abstract class Machine(name: String) { self =>
+ abstract class Machine(name: String) { self ⇒
    
   sealed trait Where
   case object L extends Where
@@ -33,7 +33,7 @@ import language.postfixOps
     try {
       while (true) step()
     } catch {
-      case e: Done =>
+      case e: Done ⇒
     }
 
     tape
@@ -44,9 +44,9 @@ import language.postfixOps
     val (nextState, nextDigit, whither) = program((state, x))
     tape.write(nextDigit)
     whither match {
-      case L => tape.left()
-      case R => tape.right()
-      case S => throw new Done
+      case L ⇒ tape.left()
+      case R ⇒ tape.right()
+      case S ⇒ throw new Done
     }
 
     state = nextState
@@ -57,8 +57,8 @@ import language.postfixOps
   override def toString: String = s"$name:\n$program"
   
   override def equals(o: Any): Boolean = o match {
-    case other: Machine => toString == other.toString
-    case _ => false
+    case other: Machine ⇒ toString == other.toString
+    case _ ⇒ false
   }
   
   def dumpState(): Unit = println(s"$state: $tape")

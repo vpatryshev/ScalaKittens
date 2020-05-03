@@ -67,10 +67,10 @@ class HuffmanTree(source: List[Int]) {
       val gap = 2
       val w = rt1.w + gap + rt2.w
       val zip = rt1.content zip rt2.content
-      val commonContent = zip map { case (s1, s2) => s1 + spaces(rt1.w + gap - s1.length) + s2}
+      val commonContent = zip map { case (s1, s2) ⇒ s1 + spaces(rt1.w + gap - s1.length) + s2}
       val newContent = commonContent ++
         rt1.content.drop(zip.length) ++
-        rt2.content.drop(zip.length).map(s => spaces(rt1.w+gap) + s)
+        rt2.content.drop(zip.length).map(s ⇒ spaces(rt1.w+gap) + s)
       RT(newContent, w, rt1.w+1)
     }
 

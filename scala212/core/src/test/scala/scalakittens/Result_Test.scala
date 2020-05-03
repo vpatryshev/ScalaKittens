@@ -324,25 +324,25 @@ class Result_Test extends Specification {
     "work for Goods" in {
       val sample = Good("morning")
       sample match {
-        case Good("morning") => // ok
-        case Good("evening") => failure("match failed miserably")
-        case whatisit => failure(s"Got $whatisit instead")
+        case Good("morning") ⇒ // ok
+        case Good("evening") ⇒ failure("match failed miserably")
+        case whatisit ⇒ failure(s"Got $whatisit instead")
       }
       ok
     }
     "work for Empty" in {
       val sample = Empty
       sample match {
-        case Empty => // ok
-        case whatisit => failure(s"Got $whatisit instead")
+        case Empty ⇒ // ok
+        case whatisit ⇒ failure(s"Got $whatisit instead")
       }
       ok
     }
     "work for Bad" in {
       val sample = Result.error[Double]("good error")
       sample match {
-        case bad:Bad[Double] => // ok
-        case whatisit => failure(s"Got $whatisit instead")
+        case bad:Bad[Double] ⇒ // ok
+        case whatisit ⇒ failure(s"Got $whatisit instead")
       }
       ok
     }

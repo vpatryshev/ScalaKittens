@@ -90,7 +90,7 @@ case class SkipGramModel[Space <: VectorSpace](
     val numCores = Runtime.getRuntime.availableProcessors
     val oneRange = (text.length + numCores-1) / numCores
     val threads = (0 until numCores).par
-    threads.foreach((t:Int) => {
+    threads.foreach((t:Int) ⇒ {
       val range = (t*oneRange) until min(text.length, (t+1)*oneRange)
       range foreach updateWindow
     })
@@ -99,7 +99,7 @@ case class SkipGramModel[Space <: VectorSpace](
   def run(): Unit = {
     doOneEpoch(0)
     val t0 = System.currentTimeMillis
-    (1 until numEpochs).foreach(i => {
+    (1 until numEpochs).foreach(i ⇒ {
       val t1 = System.currentTimeMillis
       doOneEpoch(i)
       println(s"$i: ${System.currentTimeMillis - t1}")

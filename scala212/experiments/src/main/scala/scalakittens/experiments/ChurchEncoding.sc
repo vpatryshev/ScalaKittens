@@ -1,6 +1,9 @@
 import scalakittens.experiments.logic.LinearLogic
 import scalakittens.experiments.logic.LinearLogic.⊥
 
+
+object taktak
+
 val True  = (x1: Any) => (x2: Any) => x1
 val False = (x1: Any) => (x2: Any) => x2
 

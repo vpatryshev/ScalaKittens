@@ -161,7 +161,7 @@ trait NonemptyTraversability[T] extends TraversabilityOfResult[T] with Something
 
   override def mkString: String = value.toString
 
-  override def find(pred: (T) ⇒ Boolean): Option[T] = toOption filter pred
+  override def find(pred: (T) ⇒ Boolean): Option[T] = asOption filter pred
 
   override def :\[B](z: B)(op: (T, B) ⇒ B): B = op(value, z)
 
