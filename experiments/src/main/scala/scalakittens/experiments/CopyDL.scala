@@ -1,17 +1,21 @@
 package scalakittens.experiments
 
-import language.postfixOps
+import scala.language.postfixOps
 
 object CopyDL extends App {
+
   /*
-  The problem is this: we have a linked list of nodes; each node has a value and a pointer to another node anywhere in the list.
+  The problem is this: we have a linked list of nodes; each node has a value and a pointer to another node anywhere 
+  in the list.
   We have to make a copy of this list.
   Impossible without mutability or laziness. Haskell solution is laziness. Here's my solution.
    */
 
   trait Node {
     def value: Int
+
     def next: Node
+
     def random: Node
   }
 
@@ -40,10 +44,11 @@ object CopyDL extends App {
 
     case class IndirectNode(value: Int, nextId: Int, rndId: Int) extends Node {
       override def next: IndirectNode = if (nextId < 0) null else newNodes(nextId)
+
       override def random: IndirectNode = if (rndId < 0) null else newNodes(rndId)
-      
+
       def valueOf(node: Node): String = Option(node) map (_.value.toString) orNull
-      
+
       override def toString: String =
         s"Node($value, ->${valueOf(next)}, ->${valueOf(random)})"
     }
@@ -58,7 +63,7 @@ object CopyDL extends App {
   n1.next = n2
   n1.random = n3
 
-  val copied = copy(n1::n2::n3::Nil)
+  val copied = copy(n1 :: n2 :: n3 :: Nil)
   println(copied)
 
 }

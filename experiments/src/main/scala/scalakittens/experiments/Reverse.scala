@@ -1,25 +1,26 @@
 package scalakittens.experiments
 
+import scala.language.postfixOps
 import scala.annotation.tailrec
 
 object Reverse {
-  
+
   def recurse[X](list: List[X]): List[X] = {
     @tailrec def doit(from: List[X], to: List[X]): List[X] =
       from match {
         case Nil ⇒ to
-        case x::xs ⇒ doit(xs, x::to)
+        case x :: xs ⇒ doit(xs, x :: to)
       }
 
     doit(list, Nil)
   }
-  
-  def tonymorris[X](list: List[X]): List[X] = (List[X]() /: list) { 
-    case (xs, x) ⇒ x::xs
+
+  def tonymorris[X](list: List[X]): List[X] = (List[X]() /: list) {
+    case (xs, x) ⇒ x :: xs
   }
-  
+
   case class Var[X](var x: X)
-  
+
   def snowps[X](list: List[Var[X]]): List[Var[X]] = {
     val n = list.length
     for {
@@ -30,7 +31,7 @@ object Reverse {
       list(i).x = list(j).x
       list(j).x = xi
     }
-    
+
     list
   }
 
@@ -47,7 +48,7 @@ object Reverse {
 
     list
   }
-  
+
   def time(what: String)(op: ⇒ Any): Unit = {
     val t0 = System.currentTimeMillis
     op
@@ -55,10 +56,10 @@ object Reverse {
     val dt = t1 - t0
     println(s"$what: $dt ms")
   }
-  
+
   def main(args: Array[String]): Unit = {
     val n = 70000
-    val sut = (for { i <- 0 until n} yield s"<<$i>>") toList
+    val sut = (for {i <- 0 until n} yield s"<<$i>>") toList
     val sut1 = sut map (Var(_))
     val sut2 = sut.toArray
     println(s"Running $n elements")

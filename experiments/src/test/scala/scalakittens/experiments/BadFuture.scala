@@ -1,6 +1,5 @@
 package scalakittens.experiments
 
-import com.sun.tools.javac.util.ListBuffer
 import org.specs2.mutable.Specification
 import scala.concurrent.duration._
 

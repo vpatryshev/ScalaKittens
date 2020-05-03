@@ -1,8 +1,9 @@
 package scalakittens.experiments.applicative
 
-import language.{higherKinds, implicitConversions}
+import scala.language.{higherKinds, implicitConversions}
 
-trait Functor[T[_]] { self ⇒
+trait Functor[T[_]] {
+  self ⇒
   // mapping on objects of a category
   type f0[_] = T[_]
 

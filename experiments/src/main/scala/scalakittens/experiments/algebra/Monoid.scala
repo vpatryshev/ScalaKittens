@@ -1,7 +1,8 @@
 package scalakittens.experiments.algebra
 
-import scala.language.{higherKinds, implicitConversions}
 import scalakittens.experiments.applicative._
+
+import scala.language.{higherKinds, implicitConversions}
 
 trait Monoid[X] extends Semigroup[X] {
   val _0: X
@@ -15,7 +16,7 @@ trait Monoid[X] extends Semigroup[X] {
     }
   }
 
-  def accumulate[A,T[_]](traversable: Traversable[T])(eval: A ⇒ X)(ta: T[A]): X = {
+  def accumulate[A, T[_]](traversable: Traversable[T])(eval: A ⇒ X)(ta: T[A]): X = {
     val evalAndWrap: A ⇒ Value[X] = eval andThen value
     traversable.traverse(App)(evalAndWrap)(ta).value
   }

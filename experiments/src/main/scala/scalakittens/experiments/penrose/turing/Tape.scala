@@ -1,11 +1,11 @@
 package scalakittens.experiments.penrose.turing
 
-import language.postfixOps
+import scalakittens.experiments.penrose.turing.Tape._
 
-import Tape._
+import scala.language.postfixOps
 
 class Tape(init: List[Γ]) {
-  
+
   private class Stack {
     var data: List[Γ] = Nil
 
@@ -61,6 +61,7 @@ class Tape(init: List[Γ]) {
 object Tape {
   type Γ = Int
   val void: Γ = 0
-  def apply(src: String): Tape = 
+
+  def apply(src: String): Tape =
     new Tape(src.replaceAll(" ", "") map (_.toInt - '0') toList)
 }

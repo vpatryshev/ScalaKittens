@@ -1,8 +1,5 @@
 package scalakittens.experiments
 
-//import java.util
-
-import scala.collection.parallel.immutable
 import scala.language.{higherKinds, implicitConversions, reflectiveCalls}
 
 // source: http://infoscience.epfl.ch/record/150280/files/TypeClasses.pdf
@@ -19,7 +16,8 @@ object TypeClass {
 
   // TODO: get rid of warning
   def sort[T](xs: List[T])(implicit ordT: Ord[T]): List[T] = {
-    println("well, at least it compiles"); Nil
+    println(s"well, at least it compiles, $ordT");
+    Nil
   }
 
   val sorted: scala.collection.immutable.List[Int] = sort(List(1, 2, 3))
