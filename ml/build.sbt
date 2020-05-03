@@ -3,7 +3,7 @@ organization := "org.scalakittens"
 
 val WhichScala = "2.12.8"
 
-name := s"Scala Kittens Library Experiments, Scala $WhichScala"
+name := s"Scala Kittens Machine Learning, Scala $WhichScala"
 
 version := "1.0.0"
 
@@ -11,7 +11,7 @@ scalaVersion := WhichScala
 
 lazy val core = RootProject(file("../scala212/core"))
 
-val main = Project(id = "experiments", base = file(".")).dependsOn(core)
+val main = Project(id = "ml", base = file(".")).dependsOn(core)
 
 scalacOptions ++= Seq("-feature", "-deprecation", "-encoding", "UTF-8", "-feature", "-target:jvm-1.8", "-unchecked",
     "-Ywarn-adapted-args", "-Ywarn-value-discard", "-Xlint")
