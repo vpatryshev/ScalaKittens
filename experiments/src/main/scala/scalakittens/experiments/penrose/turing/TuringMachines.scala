@@ -79,7 +79,7 @@ object TuringMachines {
       |72y46dt09z5ec9lvynpmyqicwu1tqiz2tzl09mrgxx7m0gjqqa0dzmft
       |34ns8mg2xgk7mg2qwx5t3iam5q5my0jazo2upqb5edy8h9ajqwq3cqm2
       |o4lrhcvvokf9wvwqilyqrh1h17rykvjt5kf071ebpu2u09favm1c6dm""".stripMargin.replaceAll("\\s", "")
-  val `U binary`: List[Int] = ubs + "110" map (_ - '0') toList
+  val `U binary`: List[Int] = (ubs + "110") map (_ - '0') toList
   val U: Machine = penroseMachine("UTM", programDecode(`U binary`))
   private val binaryEncoding = Map(
     '0' -> List(0),
@@ -88,7 +88,7 @@ object TuringMachines {
     'L' -> List(1, 1, 1, 0),
     'S' -> List(1, 1, 1, 1, 0),
     ',' -> List(1, 1, 0)) withDefaultValue Nil
-  private val ubs: String = "110" + BigInt(`U Hexatrigesimal`, 36).toString(2)
+  private lazy val ubs: String = "110" + BigInt(`U Hexatrigesimal`, 36).toString(2)
 
   def penroseMachine(name: String, programSource: String): Machine = {
     val commands = (List[String]() /: programSource.replaceAll("\\s", "").reverse) {

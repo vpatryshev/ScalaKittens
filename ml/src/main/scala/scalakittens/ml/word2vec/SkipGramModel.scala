@@ -102,7 +102,7 @@ case class SkipGramModel[Space <: VectorSpace](
     (1 until numEpochs).foreach(i ⇒ {
       val t1 = System.currentTimeMillis
       doOneEpoch(i)
-      println(s"$i: ${System.currentTimeMillis - t1}")
+      if (i % 100 == 0) println(s"$i: ${System.currentTimeMillis - t1}")
     })
     println(s"Average: ${(0.5 + (System.currentTimeMillis - t0)*1.0/(numEpochs - 1)).toInt}")
     

@@ -39,8 +39,6 @@ object ChurchEncoding {
 
 //  nothing(n = False)("x")("y")
 
-  object taktak
-
   j42("question", 3 + _)
 
   //def isNothing(m: Maybe[_]) = m True
