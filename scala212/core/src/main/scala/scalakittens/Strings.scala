@@ -147,7 +147,7 @@ trait Strings {
     "knew", "know",
     "lay", "left", "less", "let", "like", "little", "long", "look", "looked", "looking", "looks",
     "made", "make", "many", "may", "me", "might", "mine", "more", "most", "much", "must", "my",
-    "near", "new", "no", "nor", "not", "nous", "now", 
+    "near", "never", "new", "no", "nor", "not", "nous", "now", 
     "of", "off", "oh", "old", "on", "one", "only", "or", "other", "others", "our", "out", "over", "own",
     "put",
     "quite",

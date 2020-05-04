@@ -45,14 +45,14 @@ case class Good[T](protected val value: T) extends Result[T] with SomethingInsid
 
   val listErrors: Errors = Nil
   def onError[X >: Errors, Y](op: X ⇒ Y):Result[T] = this
-  def asOption = Some(value)
+  def asOption: Option[T] = Option(value)
   def map[U](f: T⇒U): Result[U] = Result.forValue(f(value))
-  def flatMap[U](f: T ⇒ Result[U]) = f(value)
+  def flatMap[U](f: T ⇒ Result[U]): Result[U] = f(value)
   def collect[U](pf: PartialFunction[T, U], onError: T ⇒ String): Result[U] = pf.lift(value) match {
     case Some(t) ⇒ Good(t)
     case None    ⇒ Result.error(onError(value))
   }
-  def fold[U](good: T ⇒ U, bad: Errors ⇒ U) = good(value)
+  def fold[U](good: T ⇒ U, bad: Errors ⇒ U): U = good(value)
 
   override def toString: String = value match {
     case () ⇒ "Good."
@@ -168,7 +168,7 @@ case object Empty extends NoResult with NoGood[Nothing] {
   def collect[U](pf: PartialFunction[Nothing, U], onError: Nothing ⇒ String): Result[U] = Empty
 
   def <*>[U](other: Result[U]): Result[(Nothing, U)] = Empty
-  def errorDetails = Some("No results")
+  def errorDetails: Option[String] = Some("No results")
   def orCommentTheError(message: ⇒Any): Result[Nothing] = Result.error(message)
   def tap(op: Nothing ⇒ Unit): Result[Nothing] = this
 }
@@ -181,7 +181,6 @@ private object NoException extends Exception {
 }
 
 class ResultException(message:String, source: Throwable = NoException) extends Exception(message, NoException root source) {
-  private val check: String = message
   override def toString: String = message
   override def equals(other: Any): Boolean = other match {
     case that: ResultException ⇒ that.toString == toString

@@ -1,13 +1,17 @@
 
-organization := "Scalakittens Inc."
+organization := "org.scalakittens"
 
 val WhichScala = "2.12.8"
 
-name := s"Scala Kittens Library Core, Scala $WhichScala"
+name := s"Scala Kittens Machine Learning, Scala $WhichScala"
 
 version := "1.0.0"
 
 scalaVersion := WhichScala
+
+lazy val core = RootProject(file("../scala212/core"))
+
+val main = Project(id = "ml", base = file(".")).dependsOn(core)
 
 scalacOptions ++= Seq("-feature", "-deprecation", "-encoding", "UTF-8", "-feature", "-target:jvm-1.8", "-unchecked",
     "-Ywarn-adapted-args", "-Ywarn-value-discard", "-Xlint")
@@ -32,13 +36,19 @@ libraryDependencies ++= Seq(
   "org.apache.httpcomponents" % "httpclient" % "4.3.6",
   "org.apache.httpcomponents" % "httpmime"   % "4.3.6",
   "org.specs2" %% "specs2-core" % "3.8.8" % "test",
-  "org.scalacheck" %% "scalacheck" % "1.13.4" % "test"
-
+  "org.scalacheck" %% "scalacheck" % "1.13.4" % "test",
+  "org.sameersingh.scalaplot" % "scalaplot" % "0.0.4"
 )
 
 resolvers ++= Seq("snapshots" at "http://oss.sonatype.org/content/repositories/snapshots",
   "releases"  at "http://oss.sonatype.org/content/repositories/releases",
   "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases")
+
+unmanagedJars in Compile := {
+  val base = file("lib/12")
+  val jars = Seq(base / "scalaplot.jar")
+  jars.classpath
+}
 
 logLevel := Level.Warn
 
