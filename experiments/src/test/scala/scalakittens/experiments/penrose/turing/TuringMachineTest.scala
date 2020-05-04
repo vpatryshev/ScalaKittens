@@ -155,7 +155,7 @@ class TuringMachineTest extends Specification {
     "Run 11 on 6" in {
       val `11 6` = Tape("10111111100001101")
       
-//      val result = U runOn `11 6`
+      val result = U runOn `11 6`
       ok // does not work...
 //      result.toString.split("111110")(2) must_== "1101"
 //      result must_== Tape("10111111101101")
