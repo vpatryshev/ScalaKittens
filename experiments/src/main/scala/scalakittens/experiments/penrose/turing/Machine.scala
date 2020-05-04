@@ -1,6 +1,6 @@
 package scalakittens.experiments.penrose.turing
 
-import language.postfixOps
+import scala.language.postfixOps
 
 abstract class Machine(name: String) {
   self ⇒

@@ -2,7 +2,7 @@ package scalakittens
 
 import org.specs2.mutable.Specification
 
-class Result_Test extends Specification {
+class ResultTest extends Specification {
   import Result._
 
   implicit class checker(r: Result[_]) {
@@ -41,7 +41,7 @@ class Result_Test extends Specification {
       Good("hello") collect ({ case "Hello" ⇒ 1}, _ ⇒ ":(") mustBeBad err
     }
     "convert to Some" in {
-      Good(":)").toOption must beSome(":)")
+      Good(":)").asOption must beSome(":)")
     }
      "stay put in orElse" in {
        Good(":)").orElse(Empty) must_== Good(":)")
@@ -123,7 +123,7 @@ class Result_Test extends Specification {
       wasThere aka "visited what you were not supposed to visit" must beFalse
     }
     "convert to None" in {
-      Result.error("oops") .toOption must beNone
+      Result.error("oops") .asOption must beNone
     }
     "get ignored in orElse" in {
       Result.error("oops") .orElse(Result.error(":(")) must_== Result.error(":(")
@@ -211,7 +211,7 @@ class Result_Test extends Specification {
       wasThere aka "visited what you were not supposed to visit" must beFalse
     }
     "convert to None" in {
-      Empty .toOption must beNone
+      Empty .asOption must beNone
     }
     "get ignored in orElse" in {
       Empty .orElse(Result.error(":(")) must_== Result.error(":(")

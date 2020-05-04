@@ -1,7 +1,7 @@
 package scalakittens.experiments
 
-import scala.language.postfixOps
 import scala.annotation.tailrec
+import scala.language.postfixOps
 
 object Reverse {
 

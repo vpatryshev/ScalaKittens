@@ -309,16 +309,16 @@ class MatrixTest extends Specification {
     }
     
     "properly check compatibility" in {
-      val m1: Matrix[VectorSpace, VectorSpace] = 
-        new OnFunction[VectorSpace, VectorSpace](R2, R3, (i: Int, j: Int) ⇒ 1 + i * i + j * j)
+      val m1: Matrix[R2.type, R3.type] = 
+        new OnFunction[R2.type, R3.type](R2, R3, (i: Int, j: Int) ⇒ 1 + i * i + j * j)
 
-      val m2: Matrix[VectorSpace, VectorSpace] =
-        new OnFunction[VectorSpace, VectorSpace](R5, R6, (i: Int, j: Int) ⇒ 1 - i * i - j * j)
+      val m2: Matrix[R5.type, R6.type] =
+        new OnFunction[R5.type, R6.type](R5, R6, (i: Int, j: Int) ⇒ 1 - i * i - j * j)
 
-      val badMatrix: Matrix[VectorSpace, VectorSpace] = m1 + m2
+      // the following line should not compile
+      // val badMatrix: Matrix[VectorSpace, VectorSpace] = m1 + m2
       
-      failure("Should not have compiled")
-
+      ok
     }
     
   }

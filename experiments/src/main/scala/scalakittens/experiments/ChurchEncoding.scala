@@ -37,7 +37,7 @@ object ChurchEncoding {
     def apply[Z](f: X => Y => Z): Z = f(x)(y)
   }
 
-//  nothing(n = False)("x")("y")
+  //  nothing(n = False)("x")("y")
 
   j42("question", 3 + _)
 

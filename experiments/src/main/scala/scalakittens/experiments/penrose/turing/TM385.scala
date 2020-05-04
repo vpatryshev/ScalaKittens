@@ -17,13 +17,13 @@ case class TM385(name: String, src: String) extends Machine(name) {
 
     def compile(instr: String): (String, Int, Where) =
       (instr drop 2,
-      instr.substring(0, 1).toInt,
-      where(instr(1)))
+        instr.substring(0, 1).toInt,
+        where(instr(1)))
 
     def entry(s: State, move: String): ((State, Int), (String, Int, Where)) = {
       val d = move.substring(0, 1)
       val target = move.split("/")(1)
-      try { (s, d.toInt) -> compile(target) } catch {
+      try {(s, d.toInt) -> compile(target) } catch {
         case x: Exception ⇒ throw new IllegalArgumentException(move, x)
       }
     }

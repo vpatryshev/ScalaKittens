@@ -22,8 +22,6 @@ artifactName := { (sv: ScalaVersion, module: ModuleID, artifact: Artifact) =>
   artifact.name + "-" + module.revision + "." + artifact.extension
 }
 
-
-
 libraryDependencies ++= Seq(
   "org.scalatest"  %% "scalatest"     % "3.0.1" % "test" withSources(),
   "org.scala-lang" % "scala-compiler" % WhichScala,

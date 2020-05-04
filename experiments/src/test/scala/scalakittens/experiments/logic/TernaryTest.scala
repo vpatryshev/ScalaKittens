@@ -3,17 +3,17 @@ package scalakittens.experiments.logic
 import org.specs2.mutable.Specification
 
 /**
-  * Created by vpatryshev on 9/26/17.
-  */
+ * Created by vpatryshev on 9/26/17.
+ */
 class TernaryTest extends Specification {
 
   "TernaryTest" should {
     "¬" in {
-//      ¬ True mustBe False
-//
-//      ¬ Unknown mustBe False
-//      
-//      ¬ False mustBe True
+      //      ¬ True mustBe False
+      //
+      //      ¬ Unknown mustBe False
+      //      
+      //      ¬ False mustBe True
       ok
     }
 

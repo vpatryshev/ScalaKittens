@@ -8,6 +8,7 @@ private[compiler] trait C[X] {
 private[compiler] trait F[Y <: C[_], Z <: C[_]] {
   val y: Y
   val z: Z
+
   def aD(key: y.D): z.D
 }
 
@@ -22,6 +23,7 @@ private[compiler] object C00 {
 private[compiler] abstract class G[X <: C[_]](val x: X) extends F[X, C0] {
   val sd: Map[x.D, C00.c0.D]
   override val z: C0 = C00.c0
+
   def aD(xd: x.D): C00.c0.D = sd(xd)
 }
 
