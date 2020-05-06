@@ -38,7 +38,7 @@ class SkipGramModelTest extends Specification {
     file.canRead aka s"output file $file somehow disappeared" must beTrue
     val minSize = 20 * vectors.length
     file.length > minSize aka s"output file $file too small: ${file.length}, expected at least $minSize" must beTrue
-    file.renameTo(new File(WaPmodelFileName))
+    file.renameTo(new File(filename))
     ()
   }
   
@@ -133,6 +133,7 @@ class SkipGramModelTest extends Specification {
     "visualize War and Piece" in {
       val lines: Iterator[String] = Source.fromResource(WaPmodelFileName).getLines
       val Header = "dim=(\\d+)".r
+      lines.nonEmpty should beTrue
       val Header(dim) = lines.next
       val space = VectorSpace(dim.toInt)
  

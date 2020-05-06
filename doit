@@ -1,4 +1,4 @@
-dir=$(dirname $0)
+dir=$1
 if [ "$dir" = '.' ]; then
  dir=`pwd`
 fi
