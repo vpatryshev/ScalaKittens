@@ -128,7 +128,7 @@ trait PDF {
       def visitFromArray(p1: COSArray): AnyRef = {
         log("--ARRAY, SIZE=" + p1.size + "--")
 
-        for (i <- 0 until p1.size) {
+        for (i ← 0 until p1.size) {
           val rawName = Option(p1.getName(i))
           val name = rawName.fold("-")(_.replaceAll("[~ -z]", "?!?!"))
           log("[" + i + "] " + name)
@@ -163,7 +163,7 @@ trait PDF {
               if (doSkip) {
                 //log("..(" + name.getName + ")")
               } else {
-                log(name.getName + "->")
+                log(name.getName + "→")
                 x.getValue.accept(deeper)
               }
             }

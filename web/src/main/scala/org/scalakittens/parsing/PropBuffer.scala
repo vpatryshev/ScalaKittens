@@ -24,7 +24,7 @@ class PropBuffer(val label:String, val properties: Props = Props.empty, val rawP
   val prefixes = filterPrefixes(rawPrefixes)
   def hasData = !properties.isEmpty
   val propertiesAndPrefixes = prefixes.partition(_ matches regexForKeyAndValue)
-  val newKVpairs:Seq[(String, String)] = propertiesAndPrefixes._1 map {case KeyAndValue(k, v) ⇒ k->v}
+  val newKVpairs:Seq[(String, String)] = propertiesAndPrefixes._1 map {case KeyAndValue(k, v) ⇒ k→v}
   val extraProps = props(newKVpairs toMap)
   val singlePrefixes = propertiesAndPrefixes._2
   val (newProps, extraPrefixes) = extractPropertiesFromPrefixes(singlePrefixes)
@@ -45,7 +45,7 @@ class PropBuffer(val label:String, val properties: Props = Props.empty, val rawP
       val mergedPrefixes = if (itIsAllText && newPrefixes.length == 2) newPrefixes.mkString(" ") :: Nil else newPrefixes
       val np = if (mergedPrefixes.length == 2 && mergedPrefixes(0).endsWith(":") && !mergedPrefixes(1).endsWith(":") && mergedPrefixes(1).nonEmpty) {
         val key: String = mergedPrefixes(0).dropRight(1).replaceAll(":", ".").trim
-        val newProp = props(key -> mergedPrefixes(1).trim)
+        val newProp = props(key → mergedPrefixes(1).trim)
         new PropBuffer(newLabel, newProps ++ newProp, Nil)
       } else {
         new PropBuffer(newLabel, newProps, mergedPrefixes)
@@ -76,7 +76,7 @@ class PropBuffer(val label:String, val properties: Props = Props.empty, val rawP
 
     if (properties.isEmpty && prefixes.nonEmpty && prefixes.length %2 == 0 && isHomogeneous) {
       def kvPairs = prefixes.grouped(2)
-      val keyMap = kvPairs .map (kv ⇒ kv(0).replaceAll(":","")->kv(1)) .toMap
+      val keyMap = kvPairs .map (kv ⇒ kv(0).replaceAll(":","")→kv(1)) .toMap
       val keysOk = keyMap.keys.forall(_.toLowerCase.matches("[a-z].*"))
 
       if (keysOk) {
@@ -138,7 +138,7 @@ object PropBuffer {
       val pairsDetected = joined replaceAll(":\\.", ":")
       val split = pairsDetected.split("\\.")
 
-      def split2pair(s:String):(String, Option[(String,String)]) = s -> (s.split(":",3).toList match {
+      def split2pair(s:String):(String, Option[(String,String)]) = s → (s.split(":",3).toList match {
           case k::v::Nil ⇒ Some(k,v)
           case _         ⇒ None
         })

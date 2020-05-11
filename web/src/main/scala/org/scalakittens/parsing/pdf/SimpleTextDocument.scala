@@ -24,7 +24,7 @@ class SimpleTextDocument(documentBuilder: DocumentBuilder, val pages:List[Page],
     val goodOnes = pages takeWhile (_.contents.forall(predicate))
     val badOne:Option[Page] = pages.find(!_.contents.forall(predicate))
 
-    val lastPageOpt = for (page <- badOne) yield {
+    val lastPageOpt = for (page ← badOne) yield {
         val lines: Seq[Line] = page.contents takeWhile predicate
       new Page(documentBuilder, page.titleOpt, lines.map(_.chunks))
     }
@@ -46,8 +46,8 @@ class SimpleTextDocument(documentBuilder: DocumentBuilder, val pages:List[Page],
 
   def findLines(predicate: Line ⇒ Boolean): List[Line] = {
     val lines: List[Line] = for {
-      page <- pages
-      line <- page findLines predicate
+      page ← pages
+      line ← page findLines predicate
     } yield line
     lines
   }
@@ -140,7 +140,7 @@ object SimpleTextDocument extends SimpleTextDocumentOps {
     def newOne(m: Map[_,_]): Result[Chunk] = {
       val chunkProps = props(m)
       val chunkSource:Result[(String, (String, String))] = (chunkProps @@ "text") andAlso (chunkProps @@ "pos" andAlso (chunkProps @@ "width"))
-      for ((text, (pos, width)) <- chunkSource) yield
+      for ((text, (pos, width)) ← chunkSource) yield
       Chunk(text, toInt(pos), toInt(width))
     }
   }
@@ -185,9 +185,9 @@ object SimpleTextDocument extends SimpleTextDocumentOps {
       val myChunks: List[Chunk] = mergedChunks(defaultProximity, chunks) // TODO(vlad): get rid of default proximity here
       val splitChunks: List[(Option[String], Option[String])] =
         myChunks map (_.text) collect {
-          case KVpattern(k, v) ⇒ Some(k) -> Some(v).filter(_.nonEmpty)
-          case Kpattern(k) ⇒ Some(k) -> None
-          case Vpattern(v) ⇒ None -> Some(v)
+          case KVpattern(k, v) ⇒ Some(k) → Some(v).filter(_.nonEmpty)
+          case Kpattern(k) ⇒ Some(k) → None
+          case Vpattern(v) ⇒ None → Some(v)
         }
 
       splitChunks
@@ -215,7 +215,7 @@ object SimpleTextDocument extends SimpleTextDocumentOps {
     private def propsAtProximity(proximity: Int) = extractProps(splitChunksAt(proximity))
 
     def findPropsHaving(keys: Set[String]): Props = {
-      val allVariants:Seq[Props] = for (proximity <- 1 to maxProximity)
+      val allVariants:Seq[Props] = for (proximity ← 1 to maxProximity)
         yield propsAtProximity(proximity).filterKeys(keys)
 
       val found = Props.accumulate(allVariants)
@@ -285,13 +285,13 @@ object SimpleTextDocument extends SimpleTextDocumentOps {
 
     def findLines(predicate: Line ⇒ Boolean):List[Line] = contents filter predicate
 
-    private def propWithPrefixes(k:String,v:String,prefix: String) = (prefix+"."+k) -> v.trim
+    private def propWithPrefixes(k:String,v:String,prefix: String) = (prefix+"."+k) → v.trim
 
     @tailrec
     private def appendPropsFromTable(strings: List[String], prefixes: List[String], collected: Props): (Props, List[String]) = {
       strings match {
         case KVpattern(k, v)::tail ⇒
-          val newProp = Map((k::prefixes).reverse.mkString(".") -> v.trim)
+          val newProp = Map((k::prefixes).reverse.mkString(".") → v.trim)
           val newProps = collected ++ newProp
           appendPropsFromTable(tail, prefixes, newProps)
         case _              ⇒ (collected, strings)
@@ -328,7 +328,7 @@ object SimpleTextDocument extends SimpleTextDocumentOps {
 
     def findSomeProps(requiredKeys: Set[String]): Props = {
       val fromAllLines = for {
-        line <- contents
+        line ← contents
       } yield line.findPropsHaving(requiredKeys)
 
       val found = Props.accumulate(fromAllLines)
@@ -368,7 +368,7 @@ object SimpleTextDocument extends SimpleTextDocumentOps {
 
     def concatProperties(p1:Props, p2:Props) = {
       val intersection:Set[String] = p1.keySet.intersect(p2.keySet)
-      val newMap:Map[String, String] = intersection.map(k ⇒ k -> (p1(k) + " " + p2(k))).toMap
+      val newMap:Map[String, String] = intersection.map(k ⇒ k → (p1(k) + " " + p2(k))).toMap
 
       val concatenatedProps = Props.fromMap(newMap)
       p1 ++ p2 ++ concatenatedProps
@@ -393,7 +393,7 @@ object SimpleTextDocument extends SimpleTextDocumentOps {
     def parseTableHavingKeys(requiredKeys: Set[String])(line0: Int, lineN: Int, headerHeight: Int): Result[Seq[Props]] = {
       if (requiredKeys.isEmpty) return Result.error("No keys to check")
       val checker = checkPropertiesSet(requiredKeys)
-      for (i <- 1 to maxProximity) {
+      for (i ← 1 to maxProximity) {
         val proximity = i
         val res = parseTableBetweenLines(line0, lineN, headerHeight, proximity)
         val checked = res flatMap checker
@@ -434,7 +434,7 @@ object SimpleTextDocument extends SimpleTextDocumentOps {
 
     private def tabulateHeaders(columnRanges: List[(Int, Int)])(line: Line): Map[(Int, Int), String] = {
       val order = new Ordering[(Int, Chunk)]{ def compare(p1: (Int, Chunk), p2: (Int, Chunk)) = p1._1.compare(p2._1)}
-      val chunksFound = columnRanges map (range ⇒ range -> {
+      val chunksFound = columnRanges map (range ⇒ range → {
         val whatFound = line.chunks.filter(chunk ⇒ {
           val what = chunk.overlapsWith(range)
           what
@@ -447,7 +447,7 @@ object SimpleTextDocument extends SimpleTextDocumentOps {
           Some(ourGuy._2)
         }
       })
-      val goodChunks = chunksFound collect { case (pos, Some(chunk)) ⇒ pos -> chunk.text}
+      val goodChunks = chunksFound collect { case (pos, Some(chunk)) ⇒ pos → chunk.text}
       goodChunks toMap
     }
 
@@ -469,7 +469,7 @@ object SimpleTextDocument extends SimpleTextDocumentOps {
     }
 
     private def tabulateData(columnRanges: List[(Int, Int)])(line: Line): Map[(Int, Int), String] = {
-      val chunkToRange:List[(Chunk, (Int, Int))] = line.chunks map (c ⇒ c -> findNearestRange(columnRanges)(c))
+      val chunkToRange:List[(Chunk, (Int, Int))] = line.chunks map (c ⇒ c → findNearestRange(columnRanges)(c))
 
       val grouped: Map[(Int, Int), List[(Chunk, (Int, Int))]] = chunkToRange.groupBy(_._2)
 
@@ -509,7 +509,7 @@ object SimpleTextDocument extends SimpleTextDocumentOps {
         val tabulatedHeaders = headerRows map tabulateHeaders(columnRanges)
 
         def headersAt(range: (Int, Int)) = join(tabulatedHeaders map (_.get(range)) toList)
-        val headers0: Map[(Int, Int), String] = columnRanges map (range ⇒ range -> headersAt(range)) toMap
+        val headers0: Map[(Int, Int), String] = columnRanges map (range ⇒ range → headersAt(range)) toMap
 
         val WithNote = "(.*)\\*\\)? *".r
         val headers = headers0 mapValues {
@@ -519,7 +519,7 @@ object SimpleTextDocument extends SimpleTextDocumentOps {
 
         val dataIndexed = dataRows map tabulateData(columnRanges)
         val dataWithNames: Seq[Map[String, String]] = dataIndexed map (
-          rowMap ⇒ rowMap.keys map (pos ⇒ headers(pos) -> rowMap(pos)) toMap
+          rowMap ⇒ rowMap.keys map (pos ⇒ headers(pos) → rowMap(pos)) toMap
           )
 
         val dataAsProps: Seq[Props] = dataWithNames map Props.apply
@@ -534,12 +534,12 @@ object SimpleTextDocument extends SimpleTextDocumentOps {
     private val formatChunks = (chunks: Seq[Chunk]) ⇒ chunks map (_.toSource) mkString ("\n[", ", ", "]")
 
     def dollarsOnLineHaving(tag: String): Result[BigDecimal] =
-      for {line      <- findLine(_ contains tag)
-           amount    <- line.findDollars
+      for {line      ← findLine(_ contains tag)
+           amount    ← line.findDollars
       } yield amount
 
     def positiveDollarsOnLineHaving(tag: String): Result[BigDecimal] =
-      for (amt <- dollarsOnLineHaving(tag)) yield
+      for (amt ← dollarsOnLineHaving(tag)) yield
         if (amt < 0) -amt else amt
 
     lazy val toSource = "{" + titleOpt.map(txt ⇒ s""""title":"$txt", """).getOrElse("") + "\"content\":" + (lineSources map formatChunks mkString("\n[", ", ", "]")) + "}"
@@ -560,8 +560,8 @@ object SimpleTextDocument extends SimpleTextDocumentOps {
 
     val fromJSON: (String ⇒ Result[Page]) = (source: String) ⇒ {
       val tsup = for {
-        json <- Result(JSON.parseFull(source), s"weird json: $source")
-        r <- buildPage(json)
+        json ← Result(JSON.parseFull(source), s"weird json: $source")
+        r ← buildPage(json)
       } yield r
         tsup
       }
@@ -569,7 +569,7 @@ object SimpleTextDocument extends SimpleTextDocumentOps {
     def buildPage(json: Any): Result[Page] = {
       json match {
         case top: Map[_, _] ⇒
-          val map = top map { case (k, v) ⇒ k.toString -> v}
+          val map = top map { case (k, v) ⇒ k.toString → v}
           val titleOpt = map.get("title") map (_.toString)
           val content = map.getOrElse("content", Nil)
           content match {
@@ -596,8 +596,8 @@ object SimpleTextDocument extends SimpleTextDocumentOps {
 
   val fromJSON: (String ⇒ Result[SimpleTextDocument]) = (source: String) ⇒ {
     val tsup = for {
-      json <- Result(JSON.parseFull(source), s"weird json: $source")
-      r <- buildDoc(json)
+      json ← Result(JSON.parseFull(source), s"weird json: $source")
+      r ← buildDoc(json)
     } yield r
     tsup
   }

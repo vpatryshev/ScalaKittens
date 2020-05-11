@@ -18,7 +18,7 @@ object Linguist {
   private val synonyms = Set("city, town", "sibling, siblings", "job, work") .map {
     word ⇒ word.split(", ").toList
   } .collect {
-    case main::tail ⇒ tail map (w ⇒ w -> main)
+    case main::tail ⇒ tail map (w ⇒ w → main)
   } .flatten .toMap withDefault identity
 
   private val isBadWord = Set("ass") // TODO(vlad): invent more
@@ -120,7 +120,7 @@ object Linguist {
    * @return
    */
   def normalize(s: String): String = {
-//    cinmDebug(s + "->" + s.getBytes("UTF16").toList.grouped(2).map(l ⇒ (l(0).toInt & 0xff) << 8 | (l(1).toInt&0xff)).map(_.toHexString).toList)
+//    cinmDebug(s + "→" + s.getBytes("UTF16").toList.grouped(2).map(l ⇒ (l(0).toInt & 0xff) << 8 | (l(1).toInt&0xff)).map(_.toHexString).toList)
 
     Normalizer.normalize(s, Normalizer.Form.NFD).replaceAll("[↑\\p{InCombiningDiacriticalMarks}]+", "").trim
   }

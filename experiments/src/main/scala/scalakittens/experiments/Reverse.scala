@@ -24,7 +24,7 @@ object Reverse {
   def snowps[X](list: List[Var[X]]): List[Var[X]] = {
     val n = list.length
     for {
-      i <- 0 until list.length / 2
+      i ← 0 until list.length / 2
     } {
       val xi = list(i).x
       val j = n - i - 1
@@ -38,7 +38,7 @@ object Reverse {
   def snowpsA[X](list: Array[X]): Array[X] = {
     val n = list.length
     for {
-      i <- 0 until list.length / 2
+      i ← 0 until list.length / 2
     } {
       val xi = list(i)
       val j = n - i - 1
@@ -59,7 +59,7 @@ object Reverse {
 
   def main(args: Array[String]): Unit = {
     val n = 70000
-    val sut = (for {i <- 0 until n} yield s"<<$i>>") toList
+    val sut = (for {i ← 0 until n} yield s"<<$i>>") toList
     val sut1 = sut map (Var(_))
     val sut2 = sut.toArray
     println(s"Running $n elements")

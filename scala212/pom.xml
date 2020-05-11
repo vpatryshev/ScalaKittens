@@ -1,7 +1,7 @@
 <project>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>group</groupId>
-  <artifactId>ScalaKittens</artifactId>
+  <groupId>ScalaKittens</groupId>
+  <artifactId>Core</artifactId>
   <version>1.0.0</version>
   <inceptionYear>2012</inceptionYear>
   <properties>
@@ -54,11 +54,6 @@
       <artifactId>specs2-core_2.12</artifactId>
       <version>3.8.7</version>
     </dependency>
-
-
-
-
-
 
     <dependency>
       <groupId>junit</groupId>

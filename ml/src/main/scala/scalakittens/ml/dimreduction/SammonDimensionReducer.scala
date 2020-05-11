@@ -71,8 +71,8 @@ abstract class SammonDimensionReducer
 //        val erfTracker = new Tracker
         var s = 0.0
         for {
-          i <- 0 until globalSpace.dim if s < maxValue * 2.5
-          j <- 0 until i if s < maxValue * 2.5
+          i ← 0 until globalSpace.dim if s < maxValue * 2.5
+          j ← 0 until i if s < maxValue * 2.5
         } {
           s += sammonErrorMeasure.op(originalDistanceMatrix(i, j), position.matrix(i, j))
         }
@@ -108,7 +108,7 @@ abstract class SammonDimensionReducer
       val absNo = i % numberOfVerticesInUnitCube
       val d = minDouble
       val coordinates = (for {
-        bitNo <- 0 until target.dim
+        bitNo ← 0 until target.dim
       } yield if (((1 << bitNo) & absNo) == 0) d else -d) toArray
       
       new target.OnArray(coordinates)
@@ -117,7 +117,7 @@ abstract class SammonDimensionReducer
     def `dE/dy`(vectors: IndexedSeq[target.Vector], m: MatrixLike, p: Int): target.Vector = {
       val v: target.MutableVector = target.Zero.copy
       for {
-        j <- 0 until size if j != p
+        j ← 0 until size if j != p
       } {
         val dpj = m(p, j)
         val dpj_ = originalDistanceMatrix(p, j)

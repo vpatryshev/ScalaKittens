@@ -31,14 +31,14 @@ object Viz {
 
     0 to M foreach {
       j ⇒
-        val row = samplesByLine.getOrElse(j, Nil) map (t ⇒ t._1 -> t._2)
+        val row = samplesByLine.getOrElse(j, Nil) map (t ⇒ t._1 → t._2)
 
         val layout = (Map[Int, Char]() /: row) {
           case (charMap, (z, pos)) ⇒
             val w = z.toString.split(":").head
             val wordRange = math.max(pos - 1, 0) until math.min(N, pos + w.length + 1)
             if (wordRange exists charMap.contains) charMap else {
-              val m1 = 0 until w.length map (i ⇒ i + pos -> w.charAt(i)) toMap
+              val m1 = 0 until w.length map (i ⇒ i + pos → w.charAt(i)) toMap
 
               charMap ++ m1
             }

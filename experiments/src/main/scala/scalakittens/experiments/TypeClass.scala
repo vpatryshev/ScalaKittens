@@ -79,7 +79,7 @@ object TypeClass {
   implicit object ArrayList_is_a_Functor extends Functor[ArrayList] {
     def map[X, Y](f: X ⇒ Y)(listX: ArrayList[X]): ArrayList[Y] = {
       val listY = new ArrayList[Y]
-      for (i <- 0 to listX.size) listY.add(f(listX.get(i)))
+      for (i ← 0 to listX.size) listY.add(f(listX.get(i)))
       listY
     }
   }

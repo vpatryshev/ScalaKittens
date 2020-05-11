@@ -14,7 +14,7 @@ trait Ops { self:AnyRef ⇒
 
   def askUser(what: String): (String, String) = {
     println(what+"?")
-    what -> readLine
+    what → readLine
   }
 
   def sleepSome(dt: Long): Outcome = {
@@ -54,7 +54,7 @@ trait Ops { self:AnyRef ⇒
       case s: String ⇒ "\"" + s.replaceAll("\"", "\\\"") + "\""
       case list:List[_] ⇒ "List(" + list.map(toSource).mkString(", ") + ")"
       case array:Array[_] ⇒ "Array(" + array.map(toSource).mkString(", ") + ")"
-      case map:Map[_, _] ⇒ "Map(" + map.map{case(k,v) ⇒ toSource(k) + "->" + toSource(v)}.mkString(", ") + ")"
+      case map:Map[_, _] ⇒ "Map(" + map.map{case(k,v) ⇒ toSource(k) + "→" + toSource(v)}.mkString(", ") + ")"
       case fp@Props(pf) ⇒ pf match {
         case map: Map[_, _] ⇒ "PropTree(" + toSource(map) + ")"
         case _ ⇒ fp.toString
@@ -71,7 +71,7 @@ trait Ops { self:AnyRef ⇒
   def asScala(x: Any): Any = {
     def iterate[T](i: jli[T]): Iterable[Any] = {
       val in = JavaConversions.iterableAsScalaIterable(i)
-      val out = for (y <- in) yield asScala(y)
+      val out = for (y ← in) yield asScala(y)
       out
     }
 
@@ -79,7 +79,7 @@ trait Ops { self:AnyRef ⇒
       case null ⇒ Empty
       case r: Result[_] ⇒ r map asScala
       case e: jum.Entry[_,_] ⇒
-        val p = asScala(e.getKey) -> asScala(e.getValue)
+        val p = asScala(e.getKey) → asScala(e.getValue)
         p
       case m: jum[_, _] ⇒
         val pairs = iterate(m.entrySet)
@@ -195,7 +195,7 @@ trait Ops { self:AnyRef ⇒
 
   def caller: String = {
     val el = callerStackTrace take 2
-    el map stringify mkString " <- "
+    el map stringify mkString " ← "
   }
 
   def ×[A,B,C,D](f:A⇒C)(g:B⇒D): (A,B) ⇒ (C,D) = (a,b) ⇒ (f(a), g(b))

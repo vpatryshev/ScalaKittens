@@ -22,9 +22,9 @@ case class ScannedText(inverseIndex: Map[String, List[Int]],
     val size = inverseIndex.values.map(_.max).max + 1
     val index = new Array[Int](size)
     for {
-      i <- dictionary.indices
+      i ← dictionary.indices
       w = dictionary(i)
-      j <- inverseIndex(w)
+      j ← inverseIndex(w)
     } { index(j) = i }
     
     index

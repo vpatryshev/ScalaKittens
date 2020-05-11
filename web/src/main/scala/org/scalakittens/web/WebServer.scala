@@ -73,7 +73,7 @@ class WebServer[State](port:Int, initial:State, sitemap: PartialFunction[String,
       val action = (s: State) ⇒
         f(s) match {
         case (s1, resp) ⇒
-          //println(s"->$resp")
+          //println(s"→$resp")
           (s1, respond(resp))
       }
 
@@ -95,7 +95,7 @@ class WebServer[State](port:Int, initial:State, sitemap: PartialFunction[String,
 
       try {
         val src = Source fromInputStream s.getInputStream
-        val stateOption = for (rq <- (src.getLines take 1).toList headOption) yield {
+        val stateOption = for (rq ← (src.getLines take 1).toList headOption) yield {
           val Format(method, key, params) = rq
 //          print(s"$method($key)")
           val (newState, resp) = dispatch(key)(state)

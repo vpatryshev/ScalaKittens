@@ -3,7 +3,7 @@
  * we also have SimpleTextDocument that extracts data, less automatically, from html produced by
  * pdf2html tool.
  * The problem with the first is that it won't deal with HTML5 kind of format;
- * the problem with the second is that the result of pdf->html transformation is pretty mediocre, and
+ * the problem with the second is that the result of pdf→html transformation is pretty mediocre, and
  * it loses a lot of information on how data are separated.
  *
  * So I decided to write a new one, which takes the result of rendering pdf via pdf.js (the thing
@@ -89,7 +89,7 @@ object PdfToDocumentConverter {
     // we convert it to pairs like ("left", "27.84px")
     val styleKeyValuePairs: Array[List[String]] = style split ";" map (_ split ":" toList)
 
-    val styleMap = styleKeyValuePairs collect { case key::value::Nil ⇒ key.trim->value.trim } toMap
+    val styleMap = styleKeyValuePairs collect { case key::value::Nil ⇒ key.trim→value.trim } toMap
 
     def property(key: String): Result[String] = Result(styleMap get key, s"$key missing in $styleMap")
 
@@ -103,7 +103,7 @@ object PdfToDocumentConverter {
   }
 
   private def tabulate(tabs: List[Int]) = (segs: List[Segment]) ⇒ {
-    val segMap = segs .map (s ⇒ s.columnNumber -> s.text) .toMap withDefaultValue ""
+    val segMap = segs .map (s ⇒ s.columnNumber → s.text) .toMap withDefaultValue ""
     tabs map segMap
   }
 
@@ -130,7 +130,7 @@ object PdfToDocumentConverter {
 
     val segmentsOpt:Result[List[Segment]] = Result.traverse(extracted).map(_.toList)
 
-    val result = for (segments <- segmentsOpt) yield {
+    val result = for (segments ← segmentsOpt) yield {
       val rows:Map[Int, List[Segment]] = segments .groupBy(_.rowNumber)
       val sortedRows = rows.mapValues ((row:List[Segment]) ⇒ row.sortBy(_.columnNumber))
       pageOf(sortedRows)
@@ -144,7 +144,7 @@ object PdfToDocumentConverter {
 
   def parse(html: List[NodeSeq]): Result[SimpleTextDocument] = {
     val optPages = html map parsePage
-    val docOpt = for (pages <- Result.traverse(optPages)) yield new SimpleTextDocument(DefaultDocumentBuilder, pages.toList)
+    val docOpt = for (pages ← Result.traverse(optPages)) yield new SimpleTextDocument(DefaultDocumentBuilder, pages.toList)
     docOpt
   }
 }

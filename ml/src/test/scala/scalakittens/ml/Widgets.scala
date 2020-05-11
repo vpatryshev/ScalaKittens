@@ -22,7 +22,7 @@ object Widgets {
       val wingSize = (abs(from - to) / precision).toInt
       val out = new Array[R3.Vector](wingSize)
       for {
-        i <- 0 until wingSize
+        i ← 0 until wingSize
       } {
         val beta = (to - from)*i/(wingSize-1)
         out(i) = wingPointAt(alpha, from + beta)
@@ -42,7 +42,7 @@ object Widgets {
       val size = (Pi/4/precision*r).toInt - 1
       val out = new Array[R3.Vector](size)
 
-      for {i <- 0 until size} {
+      for {i ← 0 until size} {
         val gamma = -Pi/2 + alpha1 - (Pi/2)*(i+1)/size
         out(i) = R3.Vector(center(0) + r * cos(gamma), center(1) + r * sin(gamma), z)
       }

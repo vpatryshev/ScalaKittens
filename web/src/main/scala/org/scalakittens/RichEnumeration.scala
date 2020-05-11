@@ -17,8 +17,8 @@ abstract class RichEnumeration extends Enumeration {
   }
 
   def find(text:String):Option[EnumVal] = {
-    for {c <- comparators
-         v <- allValues
+    for {c ← comparators
+         v ← allValues
     } if (v.matches(c)(text)) return Some(v)
 
     None

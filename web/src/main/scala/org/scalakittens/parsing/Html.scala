@@ -5,7 +5,7 @@
 object Html {
 
   def textToRefPair(node:Node):Option[(String, String)] = {
-    attribute("href") of node map (_ -> node.text)
+    attribute("href") of node map (_ → node.text)
   }
 
   def isLocalRef(k: String) = k != "#" && (k startsWith "#")

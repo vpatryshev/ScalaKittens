@@ -44,7 +44,7 @@ sealed case class GradientDescentEngine[State <: Mutable, Tangent](evaluator: Ev
     debug(s"===fAG at $position, is=$initState")
     val result = Stream.iterate(initState) {
       s ⇒
-        debug(s"@$s:\n  $position / $gradient ->")
+        debug(s"@$s:\n  $position / $gradient →")
         evaluator.nudge(position, gradient, -s.step)
         debug(s" $position")
         val newValue = evaluator.targetFunction(position, s.functionValue)

@@ -29,7 +29,7 @@ class BadFuture extends Specification {
       val log: ListBuffer[String] = new ListBuffer[String]()
 
       def internal: Future[Int] = Future {
-        for {i <- 1 to 10} {
+        for {i ← 1 to 10} {
           Thread.sleep(1000)
           log.append(s"Internal attempt #$i")
         }
@@ -48,7 +48,7 @@ class BadFuture extends Specification {
         val y = Await.result(f2, 5 seconds)
         println(y)
       } catch {
-        case _: Throwable =>
+        case _: Throwable ⇒
         // whatever
       }
       println(log)

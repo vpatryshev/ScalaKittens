@@ -34,7 +34,7 @@ case class SkipGramModel[Space <: VectorSpace](
   
   val out: Array[space.MutableVector] = new Array[space.MutableVector](huffman.size)
 
-  for {i <- out.indices} out(i) = vecFactory().copy
+  for {i ← out.indices} out(i) = vecFactory().copy
 
   def product(i: Int, j: Int): Double = out(j) * in(i)
   
@@ -57,7 +57,7 @@ case class SkipGramModel[Space <: VectorSpace](
     val v = in(i)
     val neu: space.MutableVector = space.Zero.copy
   
-    for {j <- huffman.path(o)} {
+    for {j ← huffman.path(o)} {
       val w: space.MutableVector = out(abs(j))
       val prox: Double = proximity(i, abs(j))
       val g = α * ((if (j < 0) 0 else 1) - prox)
@@ -81,7 +81,7 @@ case class SkipGramModel[Space <: VectorSpace](
     val idx = text.index(i)
 
     val limit = text.length
-    for {j <- max(0, i - window) until min(limit, i+window) if j != i} {
+    for {j ← max(0, i - window) until min(limit, i+window) if j != i} {
       update(idx, text.index(j))
     }
   }

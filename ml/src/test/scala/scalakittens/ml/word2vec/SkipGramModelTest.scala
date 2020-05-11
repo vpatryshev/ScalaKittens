@@ -26,7 +26,7 @@ class SkipGramModelTest extends Specification {
     val out = new FileWriter(file)
     out.write(s"dim=${space.dim}\n")
     for {
-      (w, v) <- vectors
+      (w, v) ← vectors
     } {
       out.write(w)
       out.write(",")
@@ -138,7 +138,7 @@ class SkipGramModelTest extends Specification {
       val space = VectorSpace(dim.toInt)
  
       val found = for {
-        line <- lines
+        line ← lines
         parts = line split ","
         numbers:Array[Double] = parts.tail map (_.toDouble)
         vec = space.Vector(numbers)
@@ -241,7 +241,7 @@ class SkipGramModelTest extends Specification {
     //
     //    val tuple1: (Double⇒Double, Double⇒Double) = 
     //      (t ⇒ math.sin(t), t ⇒ math.cos(t))
-    //    val tuple = x -> tuple1
+    //    val tuple = x → tuple1
     //    val xyChart1 = xyChart(tuple)
     //    output(png, xyChart1)
     ok

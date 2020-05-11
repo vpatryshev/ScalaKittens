@@ -14,7 +14,7 @@ abstract class Machine(name: String) {
   case object S extends Where
 
   val where = Map(
-    'L' -> L, 'R' -> R, 'S' -> S, 'r' -> L, 'l' -> R, 's' -> S)
+    'L' → L, 'R' → R, 'S' → S, 'r' → L, 'l' → R, 's' → S)
 
   type State = String
   val initState: State = "0"
@@ -39,6 +39,7 @@ abstract class Machine(name: String) {
     } catch {
       case e: Done ⇒
     }
+    println(s"Stopped with\n$tape")
 
     tape
   }
@@ -55,15 +56,15 @@ abstract class Machine(name: String) {
 
     state = nextState
   } finally {
-    dumpState()
+//    dumpState()
   }
 
-  override def toString: String = s"$name:\n$program"
+  override def toString: String = s"$name" // :\n$program"
 
   override def equals(o: Any): Boolean = o match {
     case other: Machine ⇒ toString == other.toString
     case _ ⇒ false
   }
 
-  def dumpState(): Unit = println(s"$state: $tape")
+  def dumpState(): Unit = () // println(s"$state: $tape")
 }

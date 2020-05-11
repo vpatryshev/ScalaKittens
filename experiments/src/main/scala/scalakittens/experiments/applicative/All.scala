@@ -48,7 +48,7 @@ object All {
 
     override implicit def applicable[A, B](lf: List[A ⇒ B]): Applicable[A, B, List] = {
       new Applicable[A, B, List] {
-        def <*>(as: List[A]) = for (f <- lf; a <- as) yield f(a)
+        def <*>(as: List[A]) = for (f ← lf; a ← as) yield f(a)
       }
     }
   }
@@ -59,7 +59,7 @@ object All {
     override implicit def applicable[A, B](ff: Set[A ⇒ B]): Applicable[A, B, Set] = {
       val sf: Set[A ⇒ B] = ff
       new Applicable[A, B, Set] {
-        def <*>(fa: Set[A]) = (for (f <- sf; a <- fa) yield f(a)).toSet
+        def <*>(fa: Set[A]) = (for (f ← sf; a ← fa) yield f(a)).toSet
       }
     }
   }
@@ -71,7 +71,7 @@ object All {
     implicit def applicable[A, B](ff: Seq[A ⇒ B]): Applicable[A, B, Seq] = {
       new Applicable[A, B, Seq] {
         def <*>(az: Seq[A]) = for {
-          (f, a) <- ff zip az
+          (f, a) ← ff zip az
         } yield f(a)
       }
     }

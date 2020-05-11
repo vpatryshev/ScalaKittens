@@ -101,13 +101,13 @@ sealed trait NoGood[+T] extends Result[T] with NegativeAttitude with TimeReader 
   def tag: String = s"${ts2b32(timestamp)}"
   override def toString = s"Error: ~$tag($errors)"
 
-  private def base32map = "abdeghjklmnopqrstvxyz.".zipWithIndex.map{case (c,i) ⇒ ('a'+i).toChar -> c}.toMap.withDefault(identity)
+  private def base32map = "abdeghjklmnopqrstvxyz.".zipWithIndex.map{case (c,i) ⇒ ('a'+i).toChar → c}.toMap.withDefault(identity)
 
   /**
     * Transforms a timestamp to a string
     * First, takes timestamp mod year length, in seconds
     * Then transforms it to base32, skipping probably offending letters (bad words all contain c,f,u letters
-    * e.g. 08/28/2015 @ 12:35am (UTC) -> 1440722109 -> "molly"
+    * e.g. 08/28/2015 @ 12:35am (UTC) → 1440722109 → "molly"
     *
     * @param n time (millis)
     * @return a string
@@ -216,7 +216,7 @@ object Result extends ReadsJson {
     throw new UnsupportedOperationException("This is not a good result, and we can never produce it")
   }
 
-  private def base32map = "bdeghijklmnopqrstvxyz".zipWithIndex.map{case (c,i) ⇒ ('a'+i).toChar -> c}.toMap.withDefault(identity)
+  private def base32map = "bdeghijklmnopqrstvxyz".zipWithIndex.map{case (c,i) ⇒ ('a'+i).toChar → c}.toMap.withDefault(identity)
 
   def fiveCharsIn32(n: Long): String = {
     val s0 = java.lang.Long.toString(n, 32)
@@ -429,12 +429,12 @@ object Result extends ReadsJson {
     val resultJSON = json.parse(source)
     resultJSON match {
       case JObject(List(JField("Value",JObject(keyValueFields))))⇒
-        val mp = for {JField(key,JString(value))<-keyValueFields}
-          yield key->value
+        val mp = for {JField(key,JString(value))←keyValueFields}
+          yield key→value
 
         Good(Props(Map(mp:_*)))
       case JObject(List(JField("Errors",JArray(lst)))) ⇒
-        val errs = for {JString(err) <- lst} yield err
+        val errs = for {JString(err) ← lst} yield err
 
         errs match {
           case List() ⇒ Empty
@@ -477,7 +477,7 @@ class ResultJsonSerializer[T](implicit mf:Manifest[T]) extends Serializer[Result
   val OKOutcomeClass: Class[Good[Symbol]] = classOf[Good[Symbol]]
   override def deserialize(implicit format: Formats): PartialFunction[(TypeInfo, JValue), Result[T]] = {
     case (TypeInfo(BadClass, _), JObject(List(JField(format.typeHintFieldName, JString("Bad")),JField("listErrors", JArray(lst))))) ⇒
-      val errs = for { JString(err) <- lst} yield err
+      val errs = for { JString(err) ← lst} yield err
       bad[T](errs map recordEvent)
     case (TypeInfo(NoGoodClass, _), JObject(List(JField(format.typeHintFieldName, JString("Bad")),JField("listErrors", JArray(lst))))) if lst.isEmpty ⇒
       Empty.asInstanceOf[NoGood[T]]
@@ -488,16 +488,16 @@ class ResultJsonSerializer[T](implicit mf:Manifest[T]) extends Serializer[Result
   override def serialize(implicit format: Formats): PartialFunction[Any, JValue] = {
     case a:Bad[_]⇒
       import net.liftweb.json.JsonDSL._
-      val ls = for {err<-a.listErrors} yield {
+      val ls = for {err←a.listErrors} yield {
         JString(Result.messageOf(err))
       }
-      (format.typeHintFieldName->"Bad")~("listErrors"->JArray(ls.toList))
+      (format.typeHintFieldName→"Bad")~("listErrors"→JArray(ls.toList))
     case a:NoGood[_] ⇒
       import net.liftweb.json.JsonDSL._
-      (format.typeHintFieldName->"Bad")~("listErrors"->JArray(List()))
+      (format.typeHintFieldName→"Bad")~("listErrors"→JArray(List()))
     case Good('OK) ⇒
       import net.liftweb.json.JsonDSL._
-      (format.typeHintFieldName->"OK")~("value"->'OK)
+      (format.typeHintFieldName→"OK")~("value"→'OK)
   }
 }
 

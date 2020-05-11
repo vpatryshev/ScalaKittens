@@ -33,9 +33,9 @@ trait TextScanner {
 
   def wordStream(source: Iterator[String]): Iterator[String] = {
     for {
-      line <- extractContentLines(source)
+      line ← extractContentLines(source)
       l = Strings.normalize(line)
-      word <- l.split(" ") filter isWord
+      word ← l.split(" ") filter isWord
     } yield word
   }
 

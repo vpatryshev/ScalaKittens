@@ -82,12 +82,12 @@ object TuringMachines {
   val `U binary`: List[Int] = (ubs + "110") map (_ - '0') toList
   val U: Machine = penroseMachine("UTM", programDecode(`U binary`))
   private val binaryEncoding = Map(
-    '0' -> List(0),
-    '1' -> List(1, 0),
-    'R' -> List(1, 1, 0),
-    'L' -> List(1, 1, 1, 0),
-    'S' -> List(1, 1, 1, 1, 0),
-    ',' -> List(1, 1, 0)) withDefaultValue Nil
+    '0' → List(0),
+    '1' → List(1, 0),
+    'R' → List(1, 1, 0),
+    'L' → List(1, 1, 1, 0),
+    'S' → List(1, 1, 1, 1, 0),
+    ',' → List(1, 1, 0)) withDefaultValue Nil
   private lazy val ubs: String = "110" + BigInt(`U Hexatrigesimal`, 36).toString(2)
 
   def penroseMachine(name: String, programSource: String): Machine = {
@@ -127,9 +127,9 @@ object TuringMachines {
 
   def binaryEncode(numbers: Int*): List[Int] = {
     for {
-      n <- numbers.toList
-      char <- n.toBinaryString + ","
-      bit <- binaryEncoding(char)
+      n ← numbers.toList
+      char ← n.toBinaryString + ","
+      bit ← binaryEncoding(char)
     } yield bit
   }
 

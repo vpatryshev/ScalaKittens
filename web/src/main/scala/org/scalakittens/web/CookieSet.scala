@@ -35,7 +35,7 @@ object CookieSet extends DateAndTime {
     def value: Regex = /*json |*/ text
 
     def kvPair: Parser[(String, String)] = name ~ "=" ~ value ^^ {
-      case k ~ _ ~ v ⇒ k -> v.toString
+      case k ~ _ ~ v ⇒ k → v.toString
     }
 
     def option(name: String, fmt: Regex = text): Parser[String] = (s"; ?$name=".r ~> fmt ?) ^^ { opt ⇒ opt orNull }

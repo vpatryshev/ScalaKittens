@@ -25,7 +25,7 @@ object CopyDL extends App {
     var random: Node) extends Node
 
   def inverseIndex(index: Array[Node]): Map[Node, Int] = {
-    index.indices map { i ⇒ index(i) -> i } toMap
+    index.indices map { i ⇒ index(i) → i } toMap
   }
 
   def randIndex(index: Array[Node], inverseIndex: Map[Node, Int]): Array[Int] = {
@@ -50,7 +50,7 @@ object CopyDL extends App {
       def valueOf(node: Node): String = Option(node) map (_.value.toString) orNull
 
       override def toString: String =
-        s"Node($value, ->${valueOf(next)}, ->${valueOf(random)})"
+        s"Node($value, →${valueOf(next)}, →${valueOf(random)})"
     }
 
     newNodes

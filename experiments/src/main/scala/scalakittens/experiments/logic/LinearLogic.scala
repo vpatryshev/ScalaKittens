@@ -31,7 +31,7 @@ object LinearLogic {
 
   // The exchange rule: If a sequent is valid, then any permutation of it (created by permuting its left and right 
   // sides independently) is valid.
-  def swap[X, Y]: (X, Y) => (Y, X) = (x: X, y: Y) ⇒ (y, x)
+  def swap[X, Y]: (X, Y) ⇒ (Y, X) = (x: X, y: Y) ⇒ (y, x)
 
   //The restricted weakening rule: If Γ,Δ⊢Θ, then Γ,!A,Δ⊢Θ, for any A; conversely and dually, if Γ⊢Δ,Θ, then Γ⊢Δ,?A,Θ
   // for any A.
