@@ -38,7 +38,7 @@ object Viz {
             val w = z.toString.split(":").head
             val wordRange = math.max(pos - 1, 0) until math.min(N, pos + w.length + 1)
             if (wordRange exists charMap.contains) charMap else {
-              val m1 = 0 until w.length map (i ⇒ i + pos → w.charAt(i)) toMap
+              val m1 = 0 until w.length map (i ⇒ i + pos -> w.charAt(i)) toMap
 
               charMap ++ m1
             }

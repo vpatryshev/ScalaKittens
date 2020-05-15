@@ -303,7 +303,7 @@ case class Props(private val innerMap: PropMap) extends PartialFunction[String, 
     val prefix = trimKey(rawPrefix)
 
     if (prefix.trim.isEmpty) this else {
-      val newMap = innerMap map (kv ⇒ prefix+"."+kv._1 → kv._2)
+      val newMap = innerMap map (kv ⇒ prefix+"."+kv._1 -> kv._2)
       Props(newMap)
     }
   }
