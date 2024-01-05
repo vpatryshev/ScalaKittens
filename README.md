@@ -10,6 +10,7 @@ Currently there are Caching, FS, OS, ClientHttpRequest, Result and some samples.
 ## Result
 
 Presentation here: https://docs.google.com/presentation/d/11Yzt-VvL5emFHmG1ku4QVNQbo7LawC8qinDX1bN3ifY/edit?usp=sharing
+And here: http://tinyurl.com/flatprops
 
 This is my version of scalaz.Validating; somewhat less highbrow applicative monadic monoidal bs
 (but yes, it is a monad, and it is an applicative functor).
