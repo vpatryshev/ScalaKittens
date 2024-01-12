@@ -25,7 +25,7 @@ var patience = 10
   "A Cache" should {
     "return the right stuff" in {
       var i: Int = 0 // boring
-      val cached = sut.cache(() ⇒ i).validFor(3).NANOSECONDS
+      val cached = sut.cache(() => i).validFor(3).NANOSECONDS
       i = 17
       val n1: Int = cached()
       n1 must_== 17
@@ -58,9 +58,9 @@ var patience = 10
       val t = new Thread {
         override def run() { // this thread will
           (1 to numTries) foreach ( // repeat this number of times
-            (i:Int) ⇒ {
+            (i:Int) => {
               val value: Char = cached()
-              sut.debug("attempt#" + i + "⇒" + value);
+              sut.debug("attempt#" + i + "=>" + value);
               out.write(value) // log the current entry of cache
               pause } ) // and wait for a signal
         }
@@ -77,8 +77,8 @@ var patience = 10
         println("-- starting with " + numThreads + " threads --")
         counter = 'a'
         val TTL = TimeUnit.HOURS toNanos 10 // an arbitrary timeout value
-        val cached = sut.cache(() ⇒ { counter = (counter+1).toChar; debug("tick:" + counter); counter}).validFor(10).HOURS
-        val buffers = ((1 to numThreads) map ((i: Int) ⇒ new StringWriter)).toList // have so many buffers
+        val cached = sut.cache(() => { counter = (counter+1).toChar; debug("tick:" + counter); counter}).validFor(10).HOURS
+        val buffers = ((1 to numThreads) map ((i: Int) => new StringWriter)).toList // have so many buffers
 
         threads foreach (_.stop)
         threads = buffers map startConsuming(cached) // right, we start so many threads, one per buffer
@@ -93,7 +93,7 @@ var patience = 10
           Thread sleep 1000//0 // give them a chance to do their job
         }
 
-        buffers forall (b ⇒ b.toString aka (b.toString + " at " + numThreads) must_== "bcdefghij") // this is the ideal we are looking for
+        buffers forall (b => b.toString aka (b.toString + " at " + numThreads) must_== "bcdefghij") // this is the ideal we are looking for
         true
       }
       var nThreads = 100
@@ -107,10 +107,10 @@ var patience = 10
     "try the same with soft references" in {
       myTime = 0
 //      sut.debugme = true
-      val cached = sut.cache(() ⇒ { debug("sr: bump!"); counter = (counter+1).toChar; counter}).withSoftReferences.validFor(5).MINUTES
+      val cached = sut.cache(() => { debug("sr: bump!"); counter = (counter+1).toChar; counter}).withSoftReferences.validFor(5).MINUTES
       counter = 'a'
       val numThreads: Int = 1//50//00
-      val buffers = ((1 to numThreads) map ((i:Int) ⇒ new StringWriter)).toList
+      val buffers = ((1 to numThreads) map ((i:Int) => new StringWriter)).toList
       val SEVEN_MINUTES = TimeUnit.MINUTES toNanos 7
 
       buffers foreach startConsuming(cached)

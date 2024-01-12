@@ -36,7 +36,7 @@ trait Types {
 
   class BetterArray[T](array: Array[T])/* extends Seq[T] */{
     def get(i: Int): Option[T] = Result.attempt(Good(array(i))).toOption
-    def getOrElse[T1<:T](i: Int, defaultValue: ⇒T1): T = get(i) getOrElse defaultValue
+    def getOrElse[T1<:T](i: Int, defaultValue: =>T1): T = get(i) getOrElse defaultValue
     def apply(i: Int): T = get(i).get
   }
 
@@ -52,17 +52,17 @@ trait Types {
 
     def apply(i: Int): Element = {check(i); contents(i)}
     def getOr(i: Int, alt: Element): Element = if (i < size) contents(i) else alt
-    def where(predicate: Element ⇒ Boolean): Result[Int] = {
+    def where(predicate: Element => Boolean): Result[Int] = {
       Good(contents indexWhere predicate) filter ((_:Int) >= 0, "Nothing found")
     }
 
-    def has(predicate: Element ⇒ Boolean): Boolean = this where predicate isGood
+    def has(predicate: Element => Boolean): Boolean = this where predicate isGood
   }
 
-  def extractListOfLists(list: List[_]): List[List[String]] = list .collect { case cols: List[_] ⇒ cols .map (_.toString) }
+  def extractListOfLists(list: List[_]): List[List[String]] = list .collect { case cols: List[_] => cols .map (_.toString) }
 
   // use it in lazy outcomes
-  val DoNothing: () ⇒ Result.OK.type = () ⇒ OK
+  val DoNothing: () => Result.OK.type = () => OK
   val GoodAsIs = Good(DoNothing)
 
 }

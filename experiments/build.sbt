@@ -18,9 +18,9 @@ scalacOptions ++= Seq("-feature", "-deprecation", "-encoding", "UTF-8", "-featur
 
 javacOptions ++= Seq("-Xlint:deprecation", "-Xlint:unchecked", "-source", "1.8", "-target", "1.8", "-g:vars")
 
-resolvers ++= Seq(
-  "Lightbend Releases" at "http://repo.typesafe.com/typesafe/releases"
-)
+//resolvers ++= Seq(
+//  "Lightbend Releases" at "http://repo.typesafe.com/typesafe/releases"
+//)
 
 artifactName := { (sv: ScalaVersion, module: ModuleID, artifact: Artifact) =>
   artifact.name + "-" + module.revision + "." + artifact.extension

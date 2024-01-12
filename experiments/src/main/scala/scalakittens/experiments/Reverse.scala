@@ -8,15 +8,15 @@ object Reverse {
   def recurse[X](list: List[X]): List[X] = {
     @tailrec def doit(from: List[X], to: List[X]): List[X] =
       from match {
-        case Nil ⇒ to
-        case x :: xs ⇒ doit(xs, x :: to)
+        case Nil => to
+        case x :: xs => doit(xs, x :: to)
       }
 
     doit(list, Nil)
   }
 
   def tonymorris[X](list: List[X]): List[X] = (List[X]() /: list) {
-    case (xs, x) ⇒ x :: xs
+    case (xs, x) => x :: xs
   }
 
   case class Var[X](var x: X)
@@ -49,7 +49,7 @@ object Reverse {
     list
   }
 
-  def time(what: String)(op: ⇒ Any): Unit = {
+  def time(what: String)(op: => Any): Unit = {
     val t0 = System.currentTimeMillis
     op
     val t1 = System.currentTimeMillis

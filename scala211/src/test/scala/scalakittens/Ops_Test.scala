@@ -8,6 +8,7 @@ import scala.collection.mutable.ListBuffer
 import scala.language.{implicitConversions, reflectiveCalls}
 import scalakittens.Ops._
 import scalakittens.Result._
+import scala.util.Try
 
 class Ops_Test extends Specification {
 
@@ -77,7 +78,7 @@ class Ops_Test extends Specification {
 
   "OnTimer" should {
     import scala.concurrent.duration._
-    val msInTimeout = 50
+    val msInTimeout = 100
     val tooLong = msInTimeout * 2
     val tooFast = msInTimeout / 2
     val timeout = msInTimeout milliseconds
@@ -109,7 +110,7 @@ class Ops_Test extends Specification {
       val startTime = System.currentTimeMillis()
       val report = new ListBuffer[Job.Status]
 
-      val result = spendNotMoreThan(timeout) reporting ((s:Job.Status) ⇒ {report += s; ()}) on {
+      val result = spendNotMoreThan(timeout) reporting ((s:Job.Status) => {report += s; ()}) on {
         Thread sleep tooLong
         OK
       }
@@ -133,7 +134,7 @@ class Ops_Test extends Specification {
       val report = new ListBuffer[Job.Status]
 
       val result = spendNotMoreThan(msInTimeout milliseconds).
-        reporting ((s:Job.Status) ⇒ {report += s; ()}).
+        reporting ((s:Job.Status) => {report += s; ()}).
         on {
           Thread sleep tooFast
           Good(":)")

@@ -29,20 +29,20 @@ object CookieSet extends DateAndTime {
     def date: Regex = "\\w{3}, \\d{2} \\w{3} \\d{4} \\d{2}:\\d{2}:\\d{2} \\w{3}".r
 
     /*    def json = "{" ~> repsep(value, ",") <~ "}" ^^ {
-          case inside:Seq[String] ⇒
+          case inside:Seq[String] =>
             "{" + inside.map(_.toString).mkString(",") + "}"
         }*/
     def value: Regex = /*json |*/ text
 
     def kvPair: Parser[(String, String)] = name ~ "=" ~ value ^^ {
-      case k ~ _ ~ v ⇒ k → v.toString
+      case k ~ _ ~ v => k → v.toString
     }
 
-    def option(name: String, fmt: Regex = text): Parser[String] = (s"; ?$name=".r ~> fmt ?) ^^ { opt ⇒ opt orNull }
+    def option(name: String, fmt: Regex = text): Parser[String] = (s"; ?$name=".r ~> fmt ?) ^^ { opt => opt orNull }
 
     def cookieExp: Parser[Cookie] = kvPair ~ option("expires", date) ~ option("path") ~ option("domain") ~ (("; " +
       "?secure;").r ?) ^^ {
-      case nvPair ~ expires ~ path ~ domain ~ secureOpt ⇒ // ~ secureOpt */ ⇒
+      case nvPair ~ expires ~ path ~ domain ~ secureOpt => // ~ secureOpt */ =>
         val date = Result.forValue(expires) flatMap dateFormat getOrElse null
         val cookie = new Cookie(nvPair._1, nvPair._2, domain, Option(path) getOrElse "/", date, secureOpt.isDefined)
         cookie
@@ -58,16 +58,16 @@ object CookieSet extends DateAndTime {
 
     private def extractFrom(cookieStringsSeparatedByCommas: String): Result[CookieSet] = {
       val cookieStrings = (List[String]() /: (cookieStringsSeparatedByCommas split ", ")) {
-        case (Nil, element) ⇒ List(element)
-        case (head :: tail, element) ⇒ if (element.matches("[0123].+")) s"$head, $element" :: tail
+        case (Nil, element) => List(element)
+        case (head :: tail, element) => if (element.matches("[0123].+")) s"$head, $element" :: tail
         else element :: head :: tail
       } filter (_.nonEmpty)
 
       val parsed: Seq[Result[Cookie]] = cookieStrings.reverse map {
-        cookieString ⇒
+        cookieString =>
           parseAll(cookieExp, cookieString) match {
-            case Success(result, _) ⇒ Good(result)
-            case NoSuccess(x, y) ⇒
+            case Success(result, _) => Good(result)
+            case NoSuccess(x, y) =>
               val at = y.offset
               val src = y.source.toString
               val context = src.slice(math.max(0, at - 10), math.max(0, at - 10) + 20)
@@ -78,14 +78,14 @@ object CookieSet extends DateAndTime {
       }
 
       val res: Result[Set[Cookie]] = Result.traverse(parsed).map(_.toSet) match {
-        case x if x.isEmpty ⇒ Good(Set[Cookie]())
-        case nonempty: Result[Set[Cookie]] ⇒ nonempty
+        case x if x.isEmpty => Good(Set[Cookie]())
+        case nonempty: Result[Set[Cookie]] => nonempty
       }
 
       res map (new CookieSet(_))
     }
   }
 
-  def dateFormat: String ⇒ Result[Date] =
+  def dateFormat: String => Result[Date] =
     parseFormattedDate("EEE, dd MMM yyyy HH:mm:ss zzz")
 }

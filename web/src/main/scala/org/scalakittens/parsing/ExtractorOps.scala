@@ -8,8 +8,8 @@ private [parsing] object ExtractorOps {
   def intOf(node: Node, attr: String, altValue: Int) = {
     node attribute attr map (_.text
     match {
-      case AllDigits(dd) ⇒ dd.toInt
-      case stuff ⇒ altValue
+      case AllDigits(dd) => dd.toInt
+      case stuff => altValue
     }) getOrElse altValue
   }
 
@@ -26,8 +26,8 @@ private [parsing] object ExtractorOps {
     val result = text.replaceAll("$", "").replaceAll("[\uFFF9-\uFFFE]", "").replaceAll("\u00a0","").replaceAll("\n", " ").replaceAll(" +", " ").trim
     val Equalities = "=?(.*)=?".r
     val cleanText = result match {
-      case Equalities(content) ⇒ content
-      case other ⇒ other
+      case Equalities(content) => content
+      case other => other
     }
     if (cleanText == "-") "" else cleanText
   }
@@ -36,9 +36,9 @@ private [parsing] object ExtractorOps {
     val mergeWith = node.child map textOf mkString (_:String)
 
     val txt = node.label match {
-      case "td"|"th"|"table"|"tbody"|"tr" ⇒ mergeWith(" ")
-      case "div"|"span" ⇒ mergeWith("")
-      case other ⇒ node.text
+      case "td"|"th"|"table"|"tbody"|"tr" => mergeWith(" ")
+      case "div"|"span" => mergeWith("")
+      case other => node.text
     }
     cleanupText(txt)
   }

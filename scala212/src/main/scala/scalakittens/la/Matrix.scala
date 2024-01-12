@@ -16,7 +16,7 @@ import language.postfixOps
   * Created by vpatryshev on 5/15/17.
   */
 abstract class  Matrix[Domain <: VectorSpace, Codomain <: VectorSpace](
-    val domain: Domain, val codomain: Codomain) extends ((Int, Int) ⇒ Double) with Iterable[Double] {
+    val domain: Domain, val codomain: Codomain) extends ((Int, Int) => Double) with Iterable[Double] {
 
   /**
     * @return number of rows
@@ -61,7 +61,7 @@ abstract class  Matrix[Domain <: VectorSpace, Codomain <: VectorSpace](
     * @param i row number
     * @return the row
     */
-  def row(i: Int): domain.Vector = domain.OnFunction(j ⇒ this(i, j))
+  def row(i: Int): domain.Vector = domain.OnFunction(j => this(i, j))
 
   /**
     * collection of rows of this matrix
@@ -75,7 +75,7 @@ abstract class  Matrix[Domain <: VectorSpace, Codomain <: VectorSpace](
     * @param j column number
     * @return the column
     */
-  def column(j: Int): codomain.Vector = codomain.OnFunction(i ⇒ this(i, j))
+  def column(j: Int): codomain.Vector = codomain.OnFunction(i => this(i, j))
 
   /**
     * collection of columns of this matrix
@@ -102,7 +102,7 @@ abstract class  Matrix[Domain <: VectorSpace, Codomain <: VectorSpace](
     * @param op the operation (result is ignored)
     * @return this matrix
     */
-  def foreach(op: Int ⇒ Int ⇒ Unit): this.type = {
+  def foreach(op: Int => Int => Unit): this.type = {
     for {
       i ← rowRange
       j ← columnRange
@@ -115,7 +115,7 @@ abstract class  Matrix[Domain <: VectorSpace, Codomain <: VectorSpace](
     * 
     * @return the new matrix; it is virtual, you need to call copy to materialize it
     */
-  def transpose: Matrix[Codomain, Domain] = new Matrix.OnFunction[Codomain, Domain](codomain, domain, (i, j) ⇒ this(j, i))
+  def transpose: Matrix[Codomain, Domain] = new Matrix.OnFunction[Codomain, Domain](codomain, domain, (i, j) => this(j, i))
 
   /**
     * copy of this matrix - this involves materialization
@@ -124,7 +124,7 @@ abstract class  Matrix[Domain <: VectorSpace, Codomain <: VectorSpace](
     */
  def copy: MutableMatrix[Domain, Codomain] = {
     val m = Matrix[Domain, Codomain](domain, codomain)
-    foreach((i:Int) ⇒ (j:Int) ⇒ m(i, j) = this(i, j))
+    foreach((i:Int) => (j:Int) => m(i, j) = this(i, j))
     m
   }
 
@@ -135,7 +135,7 @@ abstract class  Matrix[Domain <: VectorSpace, Codomain <: VectorSpace](
     * @return the sum (virtual matrix, no space taken)
     */
   def +(other: Matrix[Domain, Codomain]): Matrix[Domain, Codomain] = {
-    new Matrix.OnFunction(domain, codomain, (i, j) ⇒ this(i, j) + other(i, j))
+    new Matrix.OnFunction(domain, codomain, (i, j) => this(i, j) + other(i, j))
   }
 
   /**
@@ -145,7 +145,7 @@ abstract class  Matrix[Domain <: VectorSpace, Codomain <: VectorSpace](
     * @return the diference (virtual matrix, no space taken)
     */
   def -(other: Matrix[Domain, Codomain]): Matrix[Domain, Codomain] = {
-    new Matrix.OnFunction(domain, codomain, (i, j) ⇒ this(i, j) - other(i, j))
+    new Matrix.OnFunction(domain, codomain, (i, j) => this(i, j) - other(i, j))
   }
 
   /**
@@ -163,7 +163,7 @@ abstract class  Matrix[Domain <: VectorSpace, Codomain <: VectorSpace](
     for {
       i ← this.rowRange
       j ← that.columnRange
-    } data(i*that.nCols + j) = columnRange map (k ⇒ this(i, k) * that(k, j)) sum
+    } data(i*that.nCols + j) = columnRange map (k => this(i, k) * that(k, j)) sum
 
     val product = Matrix[NewDomain, Codomain](that.domain, codomain, data)
     
@@ -186,7 +186,7 @@ abstract class  Matrix[Domain <: VectorSpace, Codomain <: VectorSpace](
     */
   protected def byArray(v: domain.OnArray): codomain.Vector = {
     val data = rowRange map {
-      i ⇒ (0.0 /: (0 until v.length))((s, j) ⇒ s + this(i, j)*v.data(j))
+      i => (0.0 /: (0 until v.length))((s, j) => s + this(i, j)*v.data(j))
     } toArray
     
     codomain.Vector(data)
@@ -194,13 +194,13 @@ abstract class  Matrix[Domain <: VectorSpace, Codomain <: VectorSpace](
   
   override def equals(x: Any): Boolean = {
     x match {
-      case other: Matrix[Domain, Codomain] ⇒
+      case other: Matrix[Domain, Codomain] =>
         nRows == other.nRows &&
         nCols == other.nCols && {
-          foreach((i:Int) ⇒ (j:Int) ⇒ if (this(i, j) != other(i, j)) return false)
+          foreach((i:Int) => (j:Int) => if (this(i, j) != other(i, j)) return false)
           true
         }
-      case _ ⇒ false
+      case _ => false
     }
   }
   
@@ -238,7 +238,7 @@ abstract class MutableMatrix[Domain <: VectorSpace, Codomain <: VectorSpace](
     * @return
     */
   def :=(other: Matrix[Domain, Codomain]): this.type = {
-    foreach(i ⇒ j ⇒ this(i, j) = other(i, j))
+    foreach(i => j => this(i, j) = other(i, j))
   }
 }
 
@@ -316,7 +316,7 @@ object Matrix {
     * @param f the function that gives matrix values
     */
   class OnFunction[Domain <: VectorSpace, Codomain <: VectorSpace]
-    (domain: Domain, codomain: Codomain, f: (Int, Int) ⇒ Double) extends Matrix[Domain, Codomain](domain, codomain) {
+    (domain: Domain, codomain: Codomain, f: (Int, Int) => Double) extends Matrix[Domain, Codomain](domain, codomain) {
 
     override lazy val size: Int = domain.dim * codomain.dim
 

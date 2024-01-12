@@ -15,7 +15,7 @@ trait Norm {
 //  def apply(m: Matrix[_,_]): Double = apply(m.allElements)
   
   def distance(xs: IndexedSeq[Double], ys: IndexedSeq[Double]): Double = {
-    this(xs.indices map { i ⇒ xs(i) - ys(i) } view)
+    this(xs.indices map { i => xs(i) - ys(i) } view)
   }
       
 }
@@ -39,18 +39,18 @@ object Norm {
   object l2 extends Norm {
     override def apply(xs: Iterable[Double]): Double = {
       xs match {
-        case ax: VectorSpace#Vector ⇒ ax.l2
-        case _ ⇒ apply(xs.iterator)
+        case ax: VectorSpace#Vector => ax.l2
+        case _ => apply(xs.iterator)
       }
     }
 
-    def apply(xs: Iterator[Double]): Double = sqrt(xs map (x ⇒ x*x) sum)
+    def apply(xs: Iterator[Double]): Double = sqrt(xs map (x => x*x) sum)
 
     override def distance(xs: IndexedSeq[Double], ys: IndexedSeq[Double]): Double = {
       (xs, ys) match {
-        case (ax: VectorSpace#OnArray, ay: VectorSpace#OnArray) ⇒
+        case (ax: VectorSpace#OnArray, ay: VectorSpace#OnArray) =>
           ArrayOps.l2(ax.data, ay.data)
-        case _ ⇒ super.distance(xs, ys)
+        case _ => super.distance(xs, ys)
       }
     }
 

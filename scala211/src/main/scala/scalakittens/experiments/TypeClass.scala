@@ -23,7 +23,7 @@ object TypeClass {
     def identity :A
   }
   def acc[A] (l :List[A]) (implicit m:Monoid [A]):A =
-    l.foldLeft (m.identity) ((x,y) ⇒ m.binary_op (x,y))
+    l.foldLeft (m.identity) ((x,y) => m.binary_op (x,y))
 
   object A {
     implicit object sumMonoid extends Monoid [Int] {
@@ -48,18 +48,18 @@ object TypeClass {
   }
 
   trait Functor[F[_]] {
-    def map[X,Y](f: X ⇒ Y)(fx: F[X]): F[Y]
+    def map[X,Y](f: X => Y)(fx: F[X]): F[Y]
   }
 
   implicit def fops[F[_]: Functor, A](fa: F[A]) = new {
     val functor = implicitly[Functor[F]]
-    final def map[B](f:A⇒B):F[B] = functor.map(f)(fa)
+    final def map[B](f:A=>B):F[B] = functor.map(f)(fa)
   }
 
   import java.util._
 
   implicit object ArrayList_is_a_Functor extends Functor[ArrayList] {
-      def map[X,Y](f: X ⇒ Y)(listX: ArrayList[X]): ArrayList[Y] = {
+      def map[X,Y](f: X => Y)(listX: ArrayList[X]): ArrayList[Y] = {
         val listY = new ArrayList[Y]
         for (i ← 0 to listX.size) listY.add(f(listX.get(i)))
         listY

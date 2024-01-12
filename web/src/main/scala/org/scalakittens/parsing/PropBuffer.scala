@@ -24,7 +24,7 @@ class PropBuffer(val label:String, val properties: Props = Props.empty, val rawP
   val prefixes = filterPrefixes(rawPrefixes)
   def hasData = !properties.isEmpty
   val propertiesAndPrefixes = prefixes.partition(_ matches regexForKeyAndValue)
-  val newKVpairs:Seq[(String, String)] = propertiesAndPrefixes._1 map {case KeyAndValue(k, v) ⇒ k→v}
+  val newKVpairs:Seq[(String, String)] = propertiesAndPrefixes._1 map {case KeyAndValue(k, v) => k→v}
   val extraProps = props(newKVpairs toMap)
   val singlePrefixes = propertiesAndPrefixes._2
   val (newProps, extraPrefixes) = extractPropertiesFromPrefixes(singlePrefixes)
@@ -76,7 +76,7 @@ class PropBuffer(val label:String, val properties: Props = Props.empty, val rawP
 
     if (properties.isEmpty && prefixes.nonEmpty && prefixes.length %2 == 0 && isHomogeneous) {
       def kvPairs = prefixes.grouped(2)
-      val keyMap = kvPairs .map (kv ⇒ kv(0).replaceAll(":","")→kv(1)) .toMap
+      val keyMap = kvPairs .map (kv => kv(0).replaceAll(":","")→kv(1)) .toMap
       val keysOk = keyMap.keys.forall(_.toLowerCase.matches("[a-z].*"))
 
       if (keysOk) {
@@ -139,8 +139,8 @@ object PropBuffer {
       val split = pairsDetected.split("\\.")
 
       def split2pair(s:String):(String, Option[(String,String)]) = s → (s.split(":",3).toList match {
-          case k::v::Nil ⇒ Some(k,v)
-          case _         ⇒ None
+          case k::v::Nil => Some(k,v)
+          case _         => None
         })
 
       val tuples: Array[(String, Option[(String, String)])] = split map split2pair
@@ -160,13 +160,13 @@ object PropBuffer {
 
     private def groupTableRows(rows: Seq[Row]): Int Map Seq[Row] = {
       val labels: List[Int] = rows.foldLeft[(List[Int], Int)]((Nil, 1))(
-        (e:(List[Int], Int), row: Row) ⇒ {
+        (e:(List[Int], Int), row: Row) => {
           row.hasData ? (0::e._1, e._2+1) | (e._2::e._1, e._2)
         }
       )._1.reverse
 
       val m = rows zip labels groupBy (_._2)
-      val res = m mapValues (s ⇒ s.map(_._1)) withDefaultValue Nil
+      val res = m mapValues (s => s.map(_._1)) withDefaultValue Nil
       res
     }
 
@@ -177,7 +177,7 @@ object PropBuffer {
     val group0: Seq[Row] = rowGroups(0)
     val cellsOfGroup0: Seq[List[Cell]] = group0 map (_.cells)
     val cellsByRow: Seq[List[Cell]] = cellsOfGroup0 filter (_.nonEmpty)
-    val cellsWithPrefix: Seq[List[Cell]] = cellsByRow.zipWithIndex map { case (row, rowNo) ⇒ row map (_ withIndex (rowNo + 1)) }
+    val cellsWithPrefix: Seq[List[Cell]] = cellsByRow.zipWithIndex map { case (row, rowNo) => row map (_ withIndex (rowNo + 1)) }
     val cellsWithProps: Seq[Cell] = cellsWithPrefix.flatten
     val nestedProps: Seq[PropBuffer] = cellsWithProps map (_.data)
     val localRowGroups: Iterable[Seq[Row]] = rowGroups.filterKeys(0 <).values

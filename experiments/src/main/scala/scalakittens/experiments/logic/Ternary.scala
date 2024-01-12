@@ -34,18 +34,18 @@ case object True extends Ternary {
 
 case object Unknown extends Ternary {
   override def ∨(other: Ternary) = other match {
-    case False ⇒ this
-    case _ ⇒ other
+    case False => this
+    case _ => other
   }
 
   override def ∧(other: Ternary) = other match {
-    case True ⇒ this
-    case _ ⇒ other
+    case True => this
+    case _ => other
   }
 
   override def →(other: Ternary) = other match {
-    case False ⇒ False
-    case _ ⇒ other
+    case False => False
+    case _ => other
   }
 
   override def asBoolean = true // it is double negation, fyi
@@ -66,8 +66,8 @@ case object False extends Ternary {
 
 object Ternary {
   implicit def fromOption(opt: Option[Boolean]): Ternary = opt match {
-    case None ⇒ Unknown
-    case Some(true) ⇒ True
-    case Some(false) ⇒ False
+    case None => Unknown
+    case Some(true) => True
+    case Some(false) => False
   }
 }

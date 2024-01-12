@@ -2,6 +2,11 @@
 
 export curdir=${PWD##*/}
 
+git fetch
+git stash
+git checkout master
+git pull --rebase
+
 #set -e
 if [ -z $1 ]; then
   echo "./br new_branch_name

@@ -24,21 +24,21 @@ class ResultTest extends Specification {
     }
     "do nothing on error" in {
       var wasThere = false
-      Good("I'm good").onError((errors:Any) ⇒ wasThere = true)
+      Good("I'm good").onError((errors:Any) => wasThere = true)
       wasThere aka "was called on error" must_== false
     }
     "Map as designed" in {
       Good("hello") map (_.toUpperCase) must_== Good("HELLO")
     }
     "flatMap as designed" in {
-      Good("hello") flatMap (s ⇒ Good(s.toUpperCase)) must_== Good("HELLO")
-      Good("hello") flatMap (s ⇒ Result.error("alas...")) mustBeBad "alas..."
-      Good("hello") flatMap (s ⇒ Empty) must_== Empty
+      Good("hello") flatMap (s => Good(s.toUpperCase)) must_== Good("HELLO")
+      Good("hello") flatMap (s => Result.error("alas...")) mustBeBad "alas..."
+      Good("hello") flatMap (s => Empty) must_== Empty
     }
     "collect as designed" in {
       val err = ":("
-      Good("hello") collect ({ case "hello" ⇒ 1}, _ ⇒ ":(") must_== Good(1)
-      Good("hello") collect ({ case "Hello" ⇒ 1}, _ ⇒ ":(") mustBeBad err
+      Good("hello") collect ({ case "hello" => 1}, _ => ":(") must_== Good(1)
+      Good("hello") collect ({ case "Hello" => 1}, _ => ":(") mustBeBad err
     }
     "convert to Some" in {
       Good(":)").asOption must beSome(":)")
@@ -60,9 +60,9 @@ class ResultTest extends Specification {
        v must_== ":)"
      }
      "filter as designed" in {
-       Good("hello") filter ((s:String) ⇒ s.startsWith("he"), "oi vei") must_== Good("hello")
-       Good("huilo") filter ((s:String) ⇒ s.startsWith("he"), "oi vei") must_== Result.error("oi vei")
-       Good("huilo") filter ((s:String) ⇒ s.startsWith("he")) must_== Empty
+       Good("hello") filter ((s:String) => s.startsWith("he"), "oi vei") must_== Good("hello")
+       Good("huilo") filter ((s:String) => s.startsWith("he"), "oi vei") must_== Result.error("oi vei")
+       Good("huilo") filter ((s:String) => s.startsWith("he")) must_== Empty
      }
      "Show nothing in errorDetails" in {
        Good("sh").errorDetails must beNone
@@ -89,37 +89,37 @@ class ResultTest extends Specification {
                    new Exception("Say bye"):: Nil
       var beenThere = false
       var ed: Errors = Nil
-      bad(errors).onError((es:Errors) ⇒ { beenThere = true; ed=es})
+      bad(errors).onError((es:Errors) => { beenThere = true; ed=es})
       beenThere aka "visited what you were not supposed to visit" must beTrue
       ed must_== errors
     }
     "Map as designed" in {
       var wasThere = false
-      Result.error[Int]("oops") map ((x:Int) ⇒ {
+      Result.error[Int]("oops") map ((x:Int) => {
         wasThere = true; 1+x
       }) must_== Result.error("oops")
       wasThere aka "visited what you were not supposed to visit" must beFalse
     }
     "flatMap as designed" in {
       var wasThere = false
-      val r1 = Result.error[String]("oops") flatMap ((s:String) ⇒ {wasThere = true; Good(s.toUpperCase)})
+      val r1 = Result.error[String]("oops") flatMap ((s:String) => {wasThere = true; Good(s.toUpperCase)})
       r1 must_== Result.error("oops")
       wasThere aka "visited what you were not supposed to visit" must beFalse
       val r20:Result[String] = Result.error("oops")
-      val r2 = r20 flatMap (s ⇒ {wasThere = true; Result.error("alas...")})
+      val r2 = r20 flatMap (s => {wasThere = true; Result.error("alas...")})
       r2 mustBeBad "oops"
       wasThere aka "visited what you were not supposed to visit" must beFalse
       val r3:Result[String] = Result.error("oops")
-      r3 flatMap (s ⇒ {wasThere = true; Empty}) mustBeBad "oops"
+      r3 flatMap (s => {wasThere = true; Empty}) mustBeBad "oops"
       wasThere aka "visited what you were not supposed to visit" must beFalse
     }
     "collect nothing" in {
       var wasThere = false
       val bad:Result[String] = Result.error("oops")
-      bad collect ({ case "hello" ⇒ wasThere = true; 1}, _ ⇒ ":(") must_== Result.error("oops")
+      bad collect ({ case "hello" => wasThere = true; 1}, _ => ":(") must_== Result.error("oops")
       wasThere aka "visited what you were not supposed to visit" must beFalse
       val bad1:Result[String] = Result.error("oops")
-      bad1 collect ({ case "Hello" ⇒ wasThere = true; 1}, _ ⇒ ":(") must_== Result.error("oops")
+      bad1 collect ({ case "Hello" => wasThere = true; 1}, _ => ":(") must_== Result.error("oops")
       wasThere aka "visited what you were not supposed to visit" must beFalse
     }
     "convert to None" in {
@@ -141,12 +141,12 @@ class ResultTest extends Specification {
     "ignore call function in foreach" in {
       var wasThere = false
       val bad: Result[String] = Result.error("oops")
-      bad foreach {s ⇒ wasThere = true}
+      bad foreach {s => wasThere = true}
       wasThere aka "visited what you were not supposed to visit" must beFalse
     }
     "filter as designed" in {
-      Result.error[String]("oops") filter ((s:String) ⇒ s.startsWith("he"), "oi vei") must_== Result.error("oops")
-      Result.error[String]("oops") filter ((s:String) ⇒ s.startsWith("lo"), "oi vei") must_== Result.error("oops")
+      Result.error[String]("oops") filter ((s:String) => s.startsWith("he"), "oi vei") must_== Result.error("oops")
+      Result.error[String]("oops") filter ((s:String) => s.startsWith("lo"), "oi vei") must_== Result.error("oops")
     }
     "Merge errorDetails" in {
       val detailsOpt: Option[String] = bad(new ResultException("beer too expensive"):: new ResultException("are we there?") :: Nil).errorDetails
@@ -191,23 +191,23 @@ class ResultTest extends Specification {
     }
     "ignore on error" in {
       var beenThere = false
-      Empty.onError((es:Any) ⇒ { beenThere = true})
+      Empty.onError((es:Any) => { beenThere = true})
       beenThere must beFalse
     }
     "Map as designed" in {
       var wasThere = false
-      Empty map (x ⇒ {wasThere = true; null== x}) must_== Empty
+      Empty map (x => {wasThere = true; null== x}) must_== Empty
       wasThere aka "visited what you were not supposed to visit" must beFalse
     }
     "flatMap as designed" in {
       var wasThere = false
-      Empty flatMap (s ⇒ {wasThere = true; Empty}) must_== Empty
+      Empty flatMap (s => {wasThere = true; Empty}) must_== Empty
       wasThere aka "visited what you were not supposed to visit" must beFalse
     }
     "collect nothing" in {
       var wasThere = false
       val sut: Result[String] = Empty
-      sut collect ({ case "hello" ⇒ wasThere = true; 1}, _ ⇒ "whatevar") must_== Empty
+      sut collect ({ case "hello" => wasThere = true; 1}, _ => "whatevar") must_== Empty
       wasThere aka "visited what you were not supposed to visit" must beFalse
     }
     "convert to None" in {
@@ -229,12 +229,12 @@ class ResultTest extends Specification {
     }
     "ignore call function in foreach" in {
       var wasThere = false
-      Empty foreach {x ⇒ wasThere = true}
+      Empty foreach {x => wasThere = true}
       wasThere aka "visited what you were not supposed to visit" must beFalse
     }
     "Filter as designed" in {
-      Empty filter ((x:Any) ⇒ x != null, "oi vei") must_== Empty
-      Empty filter ((x:Any) ⇒ x == null, "oi vei") must_== Empty
+      Empty filter ((x:Any) => x != null, "oi vei") must_== Empty
+      Empty filter ((x:Any) => x == null, "oi vei") must_== Empty
     }
     "Show 'missing' in errorDetails" in {
       Empty.errorDetails must beSome("No results")
@@ -292,24 +292,24 @@ class ResultTest extends Specification {
   "applicative functionality" should {
     "impress the public" in {
       
-      implicit def app[X,Y](p: (X ⇒ Y, X)): Y = p._1(p._2)
+      implicit def app[X,Y](p: (X => Y, X)): Y = p._1(p._2)
  //     implicit def t21_to_t3[X,Y,Z](t:((X, Y), Z)):(X,Y,Z) = (t._1._1, t._1._2, t._2)
-      implicit def app20[X1,X2,Z](t: ((X1 ⇒ X2 ⇒ Z, X1), X2)): Z = t._1._1(t._1._2)(t._2)
-      implicit def app2[X1,X2,Z](t: (X1 ⇒ X2 ⇒ Z, X1, X2)): Z = t._1(t._2)(t._3)
-      val forty_two:String = ((n: Int) ⇒ n*7 + "!", 6)
+      implicit def app20[X1,X2,Z](t: ((X1 => X2 => Z, X1), X2)): Z = t._1._1(t._1._2)(t._2)
+      implicit def app2[X1,X2,Z](t: (X1 => X2 => Z, X1, X2)): Z = t._1(t._2)(t._3)
+      val forty_two:String = ((n: Int) => n*7 + "!", 6)
       forty_two must_== "42!"
-      val itWorks: String = ((n:Int) ⇒ (m:Int) ⇒ n*m+":)", 6, 7)
+      val itWorks: String = ((n:Int) => (m:Int) => n*m+":)", 6, 7)
       itWorks must_== "42:)"
 
-      val r0 = Result.forValue((n:Int) ⇒ (m:Int) ⇒ n*m + " :)")
+      val r0 = Result.forValue((n:Int) => (m:Int) => n*m + " :)")
       val r1 = Result.forValue(6)
       val r2 = Result.forValue(7)
       val r = r0 <*> r1 <*> r2
       val result:Result[String] = r map app20[Int, Int, String]
       result must_== Good("42 :)")
 
-      implicit def app3[X1,X2,X3,Z](t: (((X1 ⇒ X2 ⇒ X3 ⇒ Z, X1), X2), X3)): Z = t._1._1._1(t._1._1._2)(t._1._2)(t._2)
-      val s0 = Result.forValue((n:Int) ⇒ (m:Int) ⇒ (k:Int) ⇒ n*m + k + ".")
+      implicit def app3[X1,X2,X3,Z](t: (((X1 => X2 => X3 => Z, X1), X2), X3)): Z = t._1._1._1(t._1._1._2)(t._1._2)(t._2)
+      val s0 = Result.forValue((n:Int) => (m:Int) => (k:Int) => n*m + k + ".")
       val s1 = Result.forValue(6)
       val s2 = Result.forValue(7)
       val s3 = Result.forValue(8)
@@ -324,25 +324,25 @@ class ResultTest extends Specification {
     "work for Goods" in {
       val sample = Good("morning")
       sample match {
-        case Good("morning") ⇒ // ok
-        case Good("evening") ⇒ failure("match failed miserably")
-        case whatisit ⇒ failure(s"Got $whatisit instead")
+        case Good("morning") => // ok
+        case Good("evening") => failure("match failed miserably")
+        case whatisit => failure(s"Got $whatisit instead")
       }
       ok
     }
     "work for Empty" in {
       val sample = Empty
       sample match {
-        case Empty ⇒ // ok
-        case whatisit ⇒ failure(s"Got $whatisit instead")
+        case Empty => // ok
+        case whatisit => failure(s"Got $whatisit instead")
       }
       ok
     }
     "work for Bad" in {
       val sample = Result.error[Double]("good error")
       sample match {
-        case bad:Bad[Double] ⇒ // ok
-        case whatisit ⇒ failure(s"Got $whatisit instead")
+        case bad:Bad[Double] => // ok
+        case whatisit => failure(s"Got $whatisit instead")
       }
       ok
     }
@@ -400,7 +400,7 @@ class ResultTest extends Specification {
     "apply as in applicative functors" in {
       case class Into(n:Int)
       class X(var m:Int) { def multiply(n:Int) = Into(m*n)}
-      def mmO(xOpt:Result[X]) = xOpt map (x ⇒ x.multiply _)
+      def mmO(xOpt:Result[X]) = xOpt map (x => x.multiply _)
       def mm(x:X) = mmO(Good(x))
       val multiplier = mm(new X(7))
       multiplier (Good(42)) must_== Good(Into(294))

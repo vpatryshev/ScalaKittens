@@ -48,7 +48,7 @@ class BadFuture extends Specification {
         val y = Await.result(f2, 5 seconds)
         println(y)
       } catch {
-        case _: Throwable ⇒
+        case _: Throwable =>
         // whatever
       }
       println(log)

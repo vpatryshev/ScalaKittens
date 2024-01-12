@@ -15,8 +15,8 @@ class VectorTest extends Specification {
   "VectorSpace" should {
 
     "not fail miserably on types incompatibility" in {
-      val v1: VectorSpace#Vector = R2 OnFunction (i ⇒ 1.0 + i * 2)
-      val v2: VectorSpace#Vector = R3 OnFunction (i ⇒ 1.0 - i * 2)
+      val v1: VectorSpace#Vector = R2 OnFunction (i => 1.0 + i * 2)
+      val v2: VectorSpace#Vector = R3 OnFunction (i => 1.0 - i * 2)
       // val oops = v1 + v2 // should not compile
       ok
     }
@@ -76,9 +76,9 @@ class VectorTest extends Specification {
     }
 
     "produce a vector from function" in {
-      val sut1 = new R0.OnFunction(i ⇒ 42)
+      val sut1 = new R0.OnFunction(i => 42)
       sut1 === R0.Vector()
-      new Spaces.R6.OnFunction(i ⇒ (i*sqrt(i)).toInt) === R6.Vector(0, 1, 2, 5, 8, 11)
+      new Spaces.R6.OnFunction(i => (i*sqrt(i)).toInt) === R6.Vector(0, 1, 2, 5, 8, 11)
     }
 
     "produce a unit vector" in {
@@ -118,7 +118,7 @@ class VectorTest extends Specification {
     }
 
     "build square matrix" in {
-      val sm: R3.SquareMatrix = R3.squareMatrix((i, j) ⇒ 1.0 / (i + j + 1))
+      val sm: R3.SquareMatrix = R3.squareMatrix((i, j) => 1.0 / (i + j + 1))
       sm(0, 2) === sm(2, 0)
       sm(0, 1) === 0.5
     }
@@ -260,13 +260,13 @@ class VectorTest extends Specification {
 
     "have exists()" in {
       R0.Vector() exists (Pi == _*1.1) must beFalse
-      R3.Vector(Pi, Pi, Pi) exists (x ⇒ x*x == Pi*Pi) must beTrue
-      R3.Vector(2.0, Pi, 1.0) exists (x ⇒ x*x == Pi*Pi) must beTrue
-      R3.Vector(2.0, 2.0, 1.0) exists (x ⇒ x*x == Pi*Pi) must beFalse
+      R3.Vector(Pi, Pi, Pi) exists (x => x*x == Pi*Pi) must beTrue
+      R3.Vector(2.0, Pi, 1.0) exists (x => x*x == Pi*Pi) must beTrue
+      R3.Vector(2.0, 2.0, 1.0) exists (x => x*x == Pi*Pi) must beFalse
     }
 
     "have map()" in {
-      R0.Vector() .map ((x: Double) ⇒ "oi-vei") .toList  === Nil
+      R0.Vector() .map ((x: Double) => "oi-vei") .toList  === Nil
 
       R3.Vector(3.0, 2.0, 1.0) .map (":) " + _) .toList === List(":) 3.0", ":) 2.0", ":) 1.0")
     }

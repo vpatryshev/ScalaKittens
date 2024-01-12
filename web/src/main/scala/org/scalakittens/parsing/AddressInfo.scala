@@ -21,7 +21,7 @@ object AddressInfo {
     def restOfAddressExp: Regex = ".*".r
 
     def addressExp: Parser[AddressInfo] = text ~ rep(number) ~ restOfAddressExp ^^ {
-      case name ~ numbers ~ restOfAddress ⇒
+      case name ~ numbers ~ restOfAddress =>
         if (!restOfAddress.isEmpty) {
           // move the last number to address line only if some continuation is following. Just to avoid an address consisting from the number only
           val n = name :: numbers.dropRight(1) mkString " "
@@ -39,8 +39,8 @@ object AddressInfo {
         if (s.isEmpty) Result.error("Address Missing")
         //      else if (s.containsIgnoreCase("not available")) Result.error("not available")
         else parseAll(addressExp, s) match {
-          case Success(x, _) ⇒ Good(x)
-          case NoSuccess(x, y) ⇒ Good(AddressInfo(toTitleCase(s), None))
+          case Success(x, _) => Good(x)
+          case NoSuccess(x, y) => Good(AddressInfo(toTitleCase(s), None))
         }
 
       result

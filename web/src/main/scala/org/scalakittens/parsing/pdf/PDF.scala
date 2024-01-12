@@ -78,12 +78,12 @@ trait PDF {
 
   def extractTextFromImagesHiddenInPdf(file: File): Result[String] = {
     val pdf = Good(file).
-      filter (_.exists, f ⇒ s"File $f does not exist").
-      filter (_.canRead, f ⇒ s"File $f unreadable").
-      filter (_.length > 100, f ⇒ s"File $f too short (${f.length} bytes)").
+      filter (_.exists, f => s"File $f does not exist").
+      filter (_.canRead, f => s"File $f unreadable").
+      filter (_.length > 100, f => s"File $f too short (${f.length} bytes)").
       map(_.getAbsoluteFile.getCanonicalFile)
-    val txt = pdf map (f ⇒ new File(f.getAbsoluteFile.getCanonicalPath.replace(".pdf", ".txt")))
-    val fileExists:Result[File] = txt.filter(_.canRead, f ⇒ {
+    val txt = pdf map (f => new File(f.getAbsoluteFile.getCanonicalPath.replace(".pdf", ".txt")))
+    val fileExists:Result[File] = txt.filter(_.canRead, f => {
       s"Failed to create file $f"
     })
     val fileRetrieved:Result[String] = fileExists.map(_.getPath) orElse pdf flatMap (OS.exec("./ocrpdf.sh", _))
@@ -102,7 +102,7 @@ trait PDF {
 
   // this class is work in progress; so far could not extract any meaningful structure out of pdf; please ignore it - or fix it :)
   class PdfContent(doc: COSDocument) {
-    def objects = doc.getObjects.toArray collect {case o: COSObject ⇒ o}
+    def objects = doc.getObjects.toArray collect {case o: COSObject => o}
     lazy val contents = objects.head
 
     class PrintVisitor(out: Writer, margin: String = "") extends ICOSVisitor {
@@ -119,8 +119,8 @@ trait PDF {
       def visitAny(cos: COSBase) = {
         log("**Visiting " + (
           Option(cos) match {
-          case Some(c) ⇒ s"${c.getClass} $c"
-          case None ⇒ "nothing"
+          case Some(c) => s"${c.getClass} $c"
+          case None => "nothing"
         }))
         cos
       }
@@ -145,7 +145,7 @@ trait PDF {
 
 
       def isGoodDictionary(d: COSDictionary): Boolean = {
-        val keys: Set[String] = d.keySet.toSet map ((key:COSName) ⇒ key.getName)
+        val keys: Set[String] = d.keySet.toSet map ((key:COSName) => key.getName)
         (keys filter (_.startsWith("Font"))).isEmpty
       }
 
@@ -186,7 +186,7 @@ trait PDF {
         try {
           log("Integer=" + p1.longValue())
         } catch {
-          case x: Exception ⇒ log("Integer(none)")
+          case x: Exception => log("Integer(none)")
         }
         p1
       }
@@ -229,7 +229,7 @@ trait PDF {
 }
 
 object PDF extends PDF {
-  val splitter = (s: String) ⇒ s split "\\|" toList
+  val splitter = (s: String) => s split "\\|" toList
 
   def newDocument(s: String) = DefaultDocumentBuilder.buildDocument(XML.loadString(s), splitter)
 }

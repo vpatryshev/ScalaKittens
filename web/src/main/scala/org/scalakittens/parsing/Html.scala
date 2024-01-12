@@ -15,8 +15,8 @@ object Html {
   // of course this is non-deterministic. But we will see.
   def anchors(html:NodeSeq): String Map String = {
     val references = html \\ "a" flatMap textToRefPair
-    val localReferences = references filter (r ⇒ isLocalRef(r._1))
-    localReferences map {case (k,v) ⇒ (k.toString.tail, v)} toMap
+    val localReferences = references filter (r => isLocalRef(r._1))
+    localReferences map {case (k,v) => (k.toString.tail, v)} toMap
   }
 
   def attribute(name:String) = new {

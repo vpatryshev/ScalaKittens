@@ -33,11 +33,11 @@ object PdfToDocumentConverter {
 
   def splitPages(html: String): List[String] = {
     val pages = html match {
-      case inp if (shouldUsePageBreakAfterSplit(inp)) ⇒
+      case inp if (shouldUsePageBreakAfterSplit(inp)) =>
         inp.split("<p style=\"page-break-after:always;\"></p>").toList
-      case inp if (shouldUsePageContainerSplit(inp)) ⇒
+      case inp if (shouldUsePageContainerSplit(inp)) =>
         extractPageDivsFromHtml(inp)
-      case _ ⇒
+      case _ =>
         List(html)
     }
     pages
@@ -51,9 +51,9 @@ object PdfToDocumentConverter {
       _ \ "@id" exists (_.text startsWith "pageContainer")
     }
     pages match{
-      case pgList if (!pgList.isEmpty) ⇒
+      case pgList if (!pgList.isEmpty) =>
         pgList.map(_.toString).toList
-      case _ ⇒
+      case _ =>
         List(html)
     }
   }
@@ -89,21 +89,21 @@ object PdfToDocumentConverter {
     // we convert it to pairs like ("left", "27.84px")
     val styleKeyValuePairs: Array[List[String]] = style split ";" map (_ split ":" toList)
 
-    val styleMap = styleKeyValuePairs collect { case key::value::Nil ⇒ key.trim→value.trim } toMap
+    val styleMap = styleKeyValuePairs collect { case key::value::Nil => key.trim→value.trim } toMap
 
     def property(key: String): Result[String] = Result(styleMap get key, s"$key missing in $styleMap")
 
     val PX = "(\\d*\\.?\\d*)px".r
     def doubleValueOf(key: String): Result[Double] = property(key) collect(
-      {case PX(x) if !x.isEmpty ⇒ x.toDouble},
+      {case PX(x) if !x.isEmpty => x.toDouble},
       "Could not extract double from " + _
     )
 
     doubleValueOf("top") andAlso doubleValueOf("left") map (Segment(_, width.toDouble, text)) orElse Empty
   }
 
-  private def tabulate(tabs: List[Int]) = (segs: List[Segment]) ⇒ {
-    val segMap = segs .map (s ⇒ s.columnNumber → s.text) .toMap withDefaultValue ""
+  private def tabulate(tabs: List[Int]) = (segs: List[Segment]) => {
+    val segMap = segs .map (s => s.columnNumber → s.text) .toMap withDefaultValue ""
     tabs map segMap
   }
 
@@ -117,14 +117,14 @@ object PdfToDocumentConverter {
 
   def parsePage(html: NodeSeq): Result[Page] = {
     val extracted: Set[Result[Segment]] = (html \\ "div") collect {
-      case div if div.label == "div" ⇒
+      case div if div.label == "div" =>
         val style: String = (div \ "@style").text
         val text = div.child.toString
         val width: String = (div \ "@data-canvas-width").text
         val direction: String = (div \ "@data-data-angle").text
         val seg = buildSegment(style, width, text)
         seg
-      case otherwise ⇒
+      case otherwise =>
         Empty
     } filter(_.nonEmpty) toSet
 
@@ -132,13 +132,13 @@ object PdfToDocumentConverter {
 
     val result = for (segments ← segmentsOpt) yield {
       val rows:Map[Int, List[Segment]] = segments .groupBy(_.rowNumber)
-      val sortedRows = rows.mapValues ((row:List[Segment]) ⇒ row.sortBy(_.columnNumber))
+      val sortedRows = rows.mapValues ((row:List[Segment]) => row.sortBy(_.columnNumber))
       pageOf(sortedRows)
     }
     result match {
-      case Good(page) ⇒ Good(page)
-      case x if x.isEmpty      ⇒ Good(Page.empty)
-      case bad        ⇒ bad
+      case Good(page) => Good(page)
+      case x if x.isEmpty      => Good(Page.empty)
+      case bad        => bad
     }
   }
 

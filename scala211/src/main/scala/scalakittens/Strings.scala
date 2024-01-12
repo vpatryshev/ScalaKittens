@@ -54,7 +54,7 @@ trait Strings {
     * @param chars the characters to remove
     * @return string trimmer
     */
-  def dropLeading(chars: String) = (s: String) ⇒ s dropWhile (chars contains _)
+  def dropLeading(chars: String) = (s: String) => s dropWhile (chars contains _)
 
   /**
     * I could not figure out how to do multiline match in scala; so had to write this.
@@ -62,9 +62,9 @@ trait Strings {
     * @param Reg the regex to match
     * @return the group found (works with one group only
     */
-  def multilineMatch(Reg: Regex): String ⇒ Option[String] =
-    text ⇒ Reg.findFirstIn(text).flatMap({case Reg(value) ⇒ Some(value)
-    case _         ⇒ None
+  def multilineMatch(Reg: Regex): String => Option[String] =
+    text => Reg.findFirstIn(text).flatMap({case Reg(value) => Some(value)
+    case _         => None
     })
 
   /**
@@ -74,15 +74,15 @@ trait Strings {
     * @return the value; if not found, an empty string (missing value, right?)
     */
   def valueOf(prefix: String) = {
-    (text: String) ⇒ prefixSearch(prefix)(text).getOrElse("")
+    (text: String) => prefixSearch(prefix)(text).getOrElse("")
   }
 
   def prefixSearch(prefix: String) = multilineMatch((".*" + prefix.replaceAll("\\.", "\\\\.") + " *([^\\n]*)").r)
 
   val DIGITS = "^(\\d+)$".r
   def digits(s: String) = s match {
-    case DIGITS(value) ⇒ Some(value)
-    case _ ⇒ None
+    case DIGITS(value) => Some(value)
+    case _ => None
   }
 }
 

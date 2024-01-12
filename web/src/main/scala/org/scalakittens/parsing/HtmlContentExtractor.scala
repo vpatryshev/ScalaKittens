@@ -19,7 +19,7 @@ trait HtmlContentExtractor {
 
   val PropertyFormat = "(\\w+)\\b*:\\b*(.+)"
 
-  def transformer:(String⇒String) = identity
+  def transformer:(String=>String) = identity
 
   /**
     * This function is supposed to be a universal props extractor. Imagine you have a table
@@ -54,8 +54,8 @@ trait HtmlContentExtractor {
     val t2 = t1.transpose
     val cleanedUp = t2.filter(!_.forall(_.isEmpty)).transpose
     val width = cleanedUp.head.size
-    val mainHeaders         = (1 until width) map    {i ⇒ (0 until numHeaderRows) map    (cleanedUp(_:Int)(i)) map stripKey mkString "."}
-    val someHeadersAreEmpty = (1 until width) exists (i ⇒ (0 until numHeaderRows) exists (cleanedUp(_: Int)(i).isEmpty))
+    val mainHeaders         = (1 until width) map    {i => (0 until numHeaderRows) map    (cleanedUp(_:Int)(i)) map stripKey mkString "."}
+    val someHeadersAreEmpty = (1 until width) exists (i => (0 until numHeaderRows) exists (cleanedUp(_: Int)(i).isEmpty))
     if (someHeadersAreEmpty) return Result.error(s"Headers should not have empty components: ${mainHeaders mkString ","}")
 
     def isSubheaderRow(row: Seq[String]) = row.forall(_.trim.endsWith(":"))
@@ -63,10 +63,10 @@ trait HtmlContentExtractor {
     var headers = mainHeaders
     val lol = for (row ← contentRows) yield {
       if (isSubheaderRow(row)) {
-        headers = (mainHeaders zip row) map (p ⇒ p._1 + "." + stripKey(p._2))
+        headers = (mainHeaders zip row) map (p => p._1 + "." + stripKey(p._2))
         IndexedSeq[(String, String)]()
       }
-      else (1 until width). map (j ⇒ (headers(j - 1) + "." + stripKey(row.head)) → row(j).trim)
+      else (1 until width). map (j => (headers(j - 1) + "." + stripKey(row.head)) → row(j).trim)
     }
     val propsList = lol.flatten
 
@@ -154,8 +154,8 @@ trait HtmlContentExtractor {
       val almostReady = extractProps(xml)
       val EndsWithColon = "(.*):$".r
       val propsNoColon = almostReady.transformKeys {
-        case EndsWithColon(k0) ⇒ k0.trim
-        case k1                ⇒ k1.trim
+        case EndsWithColon(k0) => k0.trim
+        case k1                => k1.trim
       }
       val dirtyProps = propsNoColon.transformKeys(transformer)
       val cleanProps = dirtyProps.transformKeys(Linguist.normalize)
@@ -163,9 +163,9 @@ trait HtmlContentExtractor {
       val result = SuccessfullyParsed(cleanProps, html)
       result
     } catch {
-      case oome: OutOfMemoryError ⇒
+      case oome: OutOfMemoryError =>
         FailedToParse("Out of memory in HtmlParser", html)
-      case e: Exception ⇒
+      case e: Exception =>
         e.printStackTrace()
         FailedToParse("Got exception in HtmlParser " + e, html)
 
@@ -184,7 +184,7 @@ trait HtmlContentExtractor {
       x == y || x.label == y.label ||
         commonKeys.nonEmpty
     }
-    val groupIt:List[PropBuffer] ⇒ Stream[List[PropBuffer]] = groupByRelationship(relatedSegments)
+    val groupIt:List[PropBuffer] => Stream[List[PropBuffer]] = groupByRelationship(relatedSegments)
     groupIt(segments).toList
   }
 
@@ -192,7 +192,7 @@ trait HtmlContentExtractor {
     val keySets = segments map (_.allProperties.fullKeys)
     val allKeys = (Set.empty[String]/:keySets)(_ ++ _)
     val allKeysAreDistinct = allKeys.size == keySets .map (_.size) .sum
-    def enumerate(segments:List[PropBuffer]): List[PropBuffer] = segments.zipWithIndex map { case (s, i) ⇒ s addNumber (i+1)}
+    def enumerate(segments:List[PropBuffer]): List[PropBuffer] = segments.zipWithIndex map { case (s, i) => s addNumber (i+1)}
     val newSegments = if (allKeysAreDistinct || segments.size < 2) segments
     else enumerate(segments)
     newSegments
@@ -204,7 +204,7 @@ trait HtmlContentExtractor {
     val debugHtml  = BIG_DEBUG ?  html.toString | ""
     val debugIndex = BIG_DEBUG ? index.toString | ""
 
-    val extractor = (node:Node) ⇒ extractNodeProps(index, prefixes)(node)
+    val extractor = (node:Node) => extractNodeProps(index, prefixes)(node)
     val extracted = html map extractor
     val segments: List[PropBuffer] = extracted filter (!_.isEmpty) toList
     val segmentGroups: List[List[PropBuffer]] = groupSegments(segments)
@@ -231,24 +231,24 @@ trait HtmlContentExtractor {
   import Html._
   def plainText(nodes:Node*): String = cleanupText(
     nodes collect {
-      case Text(value) ⇒ value
-      case <a>{x@_*}</a> ⇒ plainText(x:_*)
+      case Text(value) => value
+      case <a>{x@_*}</a> => plainText(x:_*)
 
-      case span@ <span>{x@_*}</span> ⇒ textOfElement(span)
+      case span@ <span>{x@_*}</span> => textOfElement(span)
     } mkString " " trim
   )
 
   def extractPropsFromDL(nodes: Seq[Node]): Props = {
     val pairs = nodes.filter(Set("dd", "dt") contains _.label).toList.sliding(2,2).toList
     val kvs = pairs.collect {
-      case (<dt>{key@_*}</dt>)::(<dd>{value@_}</dd>)::Nil ⇒ plainText(key:_*) → plainText(value:_*)
+      case (<dt>{key@_*}</dt>)::(<dd>{value@_}</dd>)::Nil => plainText(key:_*) → plainText(value:_*)
     }
     val complicatedData = pairs.collect {
-      case (<dt>{key@_*}</dt>)::(<dd>{value@_*}</dd>)::Nil ⇒ (extractProps(key), extractProps(value))
+      case (<dt>{key@_*}</dt>)::(<dd>{value@_*}</dd>)::Nil => (extractProps(key), extractProps(value))
     }
-    val complicatedDataFound = complicatedData.forall(p ⇒ !p._1.isEmpty || !p._2.isEmpty)
+    val complicatedDataFound = complicatedData.forall(p => !p._1.isEmpty || !p._2.isEmpty)
     if (complicatedDataFound) {
-      val result = Props.accumulate(complicatedData map (p ⇒ p._1 ++p._2))
+      val result = Props.accumulate(complicatedData map (p => p._1 ++p._2))
       result
     } else {
       val goodKeysOnly = kvs.filter(!_._2.isEmpty)
@@ -298,7 +298,7 @@ trait HtmlContentExtractor {
   }
 
   case class TD(private val _source:Node)
-    extends Cell(_source) { self ⇒
+    extends Cell(_source) { self =>
     override def withIndex(i: Int) = {
       val indexPrefix = numberKey(i)
 
@@ -312,7 +312,7 @@ trait HtmlContentExtractor {
     }
   }
 
-  case class TH(private val _source:Node) extends Cell(_source) { self ⇒
+  case class TH(private val _source:Node) extends Cell(_source) { self =>
     override def withIndex(i:Int) = new TH(_source) {
       override lazy val data:PropBuffer =
         new PropBuffer(self.data.label,
@@ -324,20 +324,20 @@ trait HtmlContentExtractor {
   }
 
   private def cellOf(cell: Node) = cell.label match {
-    case "td" ⇒ TD(cell)
-    case "th" ⇒ TH(cell)
-    case _    ⇒ throw new IllegalArgumentException(s"unexpected cell node $cell")
+    case "td" => TD(cell)
+    case "th" => TH(cell)
+    case _    => throw new IllegalArgumentException(s"unexpected cell node $cell")
   }
 
-  private def rowsOf(table:NodeSeq): Seq[Node] = table.theSeq collect { case t @ <tr>{r@ _*}</tr> ⇒ t }
+  private def rowsOf(table:NodeSeq): Seq[Node] = table.theSeq collect { case t @ <tr>{r@ _*}</tr> => t }
 
   def cellsOf(htmlRows: NodeSeq): List[Row] = {
     val rawRows: Seq[Node] = rowsOf(htmlRows)
-    val res = rawRows map (tr ⇒
+    val res = rawRows map (tr =>
       Row(
         tr.child collect {
-          case node@(<td>{x@_*}</td>) ⇒ cellOf(node)
-          case node@(<th>{x@_*}</th>) ⇒ cellOf(node)
+          case node@(<td>{x@_*}</td>) => cellOf(node)
+          case node@(<th>{x@_*}</th>) => cellOf(node)
         } toList, tr)
       ) toList
 
@@ -353,7 +353,7 @@ trait HtmlContentExtractor {
     }
 
     def isColumnEmpty(columnNumber: Int): Boolean = {
-      val isColEmpty = matrix.forall((e: ArrayBuffer[Cell]) ⇒ e(columnNumber).saysItsEmpty)
+      val isColEmpty = matrix.forall((e: ArrayBuffer[Cell]) => e(columnNumber).saysItsEmpty)
       isColEmpty
     }
 
@@ -466,7 +466,7 @@ trait HtmlContentExtractor {
     * @return List[Rows]
     */
   def cleanEmptyRows(rowsIn: List[Row]): List[Row] = {
-    val rows = rowsIn filterNot (row ⇒ isRowEmpty(row.source))
+    val rows = rowsIn filterNot (row => isRowEmpty(row.source))
     rows
   }
 
@@ -489,11 +489,11 @@ trait HtmlContentExtractor {
   }
 
   def extractPropsFromVerticalTable(rows: Seq[Row]): PropBuffer = {
-    val innerPropsInCells = rows.flatMap(row ⇒ row.cells.map(_.data.properties))
+    val innerPropsInCells = rows.flatMap(row => row.cells.map(_.data.properties))
     val p2 = rows.map(_.buildProps)
     val innerPropsWithPrefixes = Props.accumulate(p2)
     val innerProps = Props.accumulate(innerPropsInCells)
-    val rowsWithProps = rows map (row ⇒ row.trimToSize(row.size/2*2)) filter (_.size > 1)
+    val rowsWithProps = rows map (row => row.trimToSize(row.size/2*2)) filter (_.size > 1)
     val matrix = rowsWithProps map (_.cells)
     val cleanedUpRows =
       try {
@@ -501,7 +501,7 @@ trait HtmlContentExtractor {
         val empties = transposedMatrix .filter(_._1.forall(_.isEmpty)) .map(_._2)
         rowsWithProps map (_.deleteCellsAt(empties))
       } catch {
-        case e:Exception ⇒ rowsWithProps
+        case e:Exception => rowsWithProps
       }
     val pairs:Seq[(String, String)] = cleanedUpRows flatMap (_.kvPairs)
     val map = pairs.toMap filter (!_._2.isEmpty)
@@ -517,17 +517,17 @@ trait HtmlContentExtractor {
   }
 
   def cellKind(cell:Node) = cellWidth(cell) match {
-    case 1 ⇒
+    case 1 =>
       val text = cell.text.trim
       if (isThStyle(cell)) "th" else if (text.isEmpty) "-" else cell.label
-    case n if n%2 == 0 ⇒ ""
-    case _ ⇒ "..."
+    case n if n%2 == 0 => ""
+    case _ => "..."
   }
 
   private def rowIsGoodForVerticalFormat(r:Node) = {
     val collected = r.child collect {
-      case cell@(<th>{x@_*}</th>) ⇒ cellKind(cell)
-      case cell@(<td>{x@_*}</td>) ⇒ cellKind(cell)
+      case cell@(<th>{x@_*}</th>) => cellKind(cell)
+      case cell@(<td>{x@_*}</td>) => cellKind(cell)
     }
     val desc = collected.mkString("")
     val answer =
@@ -541,7 +541,7 @@ trait HtmlContentExtractor {
   }
 
   def stylesOf(column: Seq[Node]): Set[String] = {
-    column .map (cell ⇒ ""+cell.attribute("style")+cell.attribute("class")) .toSet
+    column .map (cell => ""+cell.attribute("style")+cell.attribute("class")) .toSet
   }
 
   def isRowEmpty(row: Node) = row.text.trim.isEmpty
@@ -549,7 +549,7 @@ trait HtmlContentExtractor {
   def weHaveTwoUniformColumns(rows: Seq[Node]) = {
 
     val matrix = rows filterNot isRowEmpty collect {
-      case row ⇒ row.child.theSeq.toList
+      case row => row.child.theSeq.toList
     }
 
     val isUniform = matrix.map(_.size).toSet.size == 1
@@ -558,8 +558,8 @@ trait HtmlContentExtractor {
       val styles = columns map stylesOf
       styles.size == 2 && styles.forall(_.size == 1) && {
         styles match {
-          case s1::s2::Nil ⇒ s1 != s2
-          case oops ⇒ false
+          case s1::s2::Nil => s1 != s2
+          case oops => false
         }
       }
     }
@@ -568,9 +568,9 @@ trait HtmlContentExtractor {
   def isHeaders(htmlRows:NodeSeq) = {
     val rows = rowsOf(htmlRows)
     val itIs = rows match {
-      case row::Nil ⇒
+      case row::Nil =>
         row.child forall (_.label == "th")
-      case _ ⇒ false
+      case _ => false
     }
     itIs
   }
@@ -605,7 +605,7 @@ trait HtmlContentExtractor {
 
   def extractPropsFromMassachusetts(table:List[Row]): PropBuffer = {
     val propMap = table map (_.kvMassachusettsStyle) collect {
-      case Good(kv) ⇒ kv
+      case Good(kv) => kv
     } toMap
 
     new PropBuffer("table", props(propMap))
@@ -613,7 +613,7 @@ trait HtmlContentExtractor {
 
   def extractPropsFromNorthDakota(table:List[Row]): PropBuffer = {
     val propsRows = table map (_.kvNorthDakotaStyle) collect {
-      case Good(kvs) ⇒ kvs
+      case Good(kvs) => kvs
     }
 
     val propMap = propsRows.flatten.toMap
@@ -626,10 +626,10 @@ trait HtmlContentExtractor {
     val pairSignatures = signatures.grouped(2)
     val yes = table.length %2 == 0 && table.length > 2 && pairSignatures.forall {
       // the case where header rows are followed by values rows
-      case h::v::Nil ⇒
+      case h::v::Nil =>
         val isOurCase = h._1 == "th" && h._2 == v._2 && v._1 == "td" && h._2 > 1
         isOurCase
-      case otherwise ⇒ false
+      case otherwise => false
     }
     yes
   }
@@ -642,7 +642,7 @@ trait HtmlContentExtractor {
     val rowPairs:List[List[List[String]]] = textMatrix.grouped(2).toList
 
     val propRows = rowPairs collect {
-      case (keys:List[String])::(values:List[String])::Nil ⇒
+      case (keys:List[String])::(values:List[String])::Nil =>
         val map = keys.zip(values).toMap
         props(map)
     }
@@ -653,7 +653,7 @@ trait HtmlContentExtractor {
   }
 
   def isaBunchOfKeyValuePairs(rows: Seq[Row]): Boolean = {
-    val allCells = rows flatMap (row ⇒ row.cells)
+    val allCells = rows flatMap (row => row.cells)
     val cellsWithData = allCells filter (!_.isEmpty)
     val total = cellsWithData.size
     val cellsWithKeys = cellsWithData filter (_.text endsWith ":")
@@ -663,19 +663,19 @@ trait HtmlContentExtractor {
 
   def extractKeyValuePairs(rows: Seq[Row]): PropBuffer = {
     val allCells: Seq[(Int,Int,Cell)] =
-      rows.zipWithIndex flatMap { case (row, i) ⇒
-        row.cells.zipWithIndex map { case (cell, j) ⇒ (i, j, cell)}
+      rows.zipWithIndex flatMap { case (row, i) =>
+        row.cells.zipWithIndex map { case (cell, j) => (i, j, cell)}
       }
 
     val cellsWithData: Seq[(Int,Int,Cell)] = allCells filter (!_._3.isEmpty)
 
     val (cellsWithKeys, cellsWithValues) = cellsWithData.partition(_._3.text endsWith ":")
-    val valueMap = cellsWithValues .map(t ⇒ (t._1,t._2)→t._3.text) toMap
+    val valueMap = cellsWithValues .map(t => (t._1,t._2)→t._3.text) toMap
     val kvs = cellsWithKeys map {
-      case (i,j,cell) ⇒
+      case (i,j,cell) =>
         valueMap.get((i,j+1)) orElse valueMap.get((i+1,j)) map (cell.text.dropRight(1) → _)
     } collect {
-      case Some(kv) ⇒ kv
+      case Some(kv) => kv
     }
 
     new PropBuffer("table", props(kvs toMap), Nil)
@@ -708,8 +708,8 @@ trait HtmlContentExtractor {
 
   protected[parsing] def extractPropsFromTableRows(allRows:Seq[Row]): PropBuffer = {
     val rows = allRows.filter(!_.text.trim.isEmpty) // ignore spacer rows
-    val headerHeight = rows.takeWhile(r ⇒ r.size == 1 ||r.cells.tail.exists((_:Cell).width > 1)).size + 1
-    val stylesPerRow = rows map (r ⇒ r.cells.map(_.style))
+    val headerHeight = rows.takeWhile(r => r.size == 1 ||r.cells.tail.exists((_:Cell).width > 1)).size + 1
+    val stylesPerRow = rows map (r => r.cells.map(_.style))
     val varietyOfStyles = stylesPerRow.toSet
     if (varietyOfStyles.toSet.size == 1 && rows.head.isaKeyFollowedByValues) {
       val propsOfRows = rows map (_.keyFollowedByValues)
@@ -724,25 +724,25 @@ trait HtmlContentExtractor {
     val haveEmptyHeaderCell = headerRows.exists(_(0).isEmpty)
     val haveHorizontalTable = !haveEmptyHeaderCell && {
       val cellsOfFirstDataRow = dataRows.head.cells
-      val styles = cellsOfFirstDataRow.map(cell ⇒ cell.style
+      val styles = cellsOfFirstDataRow.map(cell => cell.style
         /*TODO(vlad): ignore class; some tables have a variety of classes but still are horizontal in nature + " " + html.attribute("class")*/)
       val havePropsInside = cellsOfFirstDataRow.exists(_.text.matches(PropertyFormat))
       !havePropsInside /*&& styles.tail.forall(styles.head ==)*/
     }
 
     val titleWidth = if (haveHorizontalTable) 0 else headerRows find(_.size > 1) map(_(0).width) getOrElse 1
-    val headersInRows:Seq[ColDesc] = headerRows.map(row ⇒ row.cells.flatMap(cell ⇒ List.fill(cell.width)((cell.text, cell.height))))
+    val headersInRows:Seq[ColDesc] = headerRows.map(row => row.cells.flatMap(cell => List.fill(cell.width)((cell.text, cell.height))))
     def mergeRows(row1: ColDesc, row2:ColDesc):ColDesc = { val res =
       if (row2.isEmpty) row1 else row1 match { // on empty: try to return Nil? ***
-        case Nil    ⇒ row2
-        case h1::t1 ⇒
+        case Nil    => row2
+        case h1::t1 =>
           if(h1._2 == 1) row2.head :: mergeRows(t1, row2.tail) else (h1._1, h1._2-1) :: mergeRows(t1, row2)
 
       }
       res
     }
 
-    val normalizedHeaders = ((headersInRows.head::Nil) /: headersInRows.tail)( (x, y) ⇒ mergeRows(x.head,y)::x) .reverse
+    val normalizedHeaders = ((headersInRows.head::Nil) /: headersInRows.tail)( (x, y) => mergeRows(x.head,y)::x) .reverse
     if (normalizedHeaders.isEmpty) return EmptyTable
     val nh0 = normalizedHeaders.head.size
     if (normalizedHeaders.exists(_.size != nh0)) return EmptyTable
@@ -751,7 +751,7 @@ trait HtmlContentExtractor {
     val dataWidthReportedByHeaders = headers.size
     val names = extractRowNames(dataRows, titleWidth)
 
-    val explicitNamePrefixes = names.reverse map(row ⇒ row.map(_._1.replaceFirst(":$", "")).mkString("."))
+    val explicitNamePrefixes = names.reverse map(row => row.map(_._1.replaceFirst(":$", "")).mkString("."))
     val dataWidthReportedByDataRows = dataRows.map(_.width).max - titleWidth
 
     val dataWidth = {
@@ -761,7 +761,7 @@ trait HtmlContentExtractor {
     } // this is strange, what if we have outstanding data?
     val rowsGrouped:List[List[Row]] = groupPrefix(dataRows)(_.size >= dataWidth)
     val rowsWithExtraData: List[(Row, Props)] = rowsGrouped collect {
-      case (row:Row)::(tail:List[Row]) ⇒ (row, {
+      case (row:Row)::(tail:List[Row]) => (row, {
         val rowsWithProps = tail
         val propsList = rowsWithProps map (_.buildProps)
         val props = Props.accumulate(propsList)
@@ -778,7 +778,7 @@ trait HtmlContentExtractor {
 
     def nameRecord(row: Row, width: Int): ColDesc = {
       val seq = row.cells take width
-      (seq map ((cell: Cell) ⇒ (cell.text, cell.height))).toList
+      (seq map ((cell: Cell) => (cell.text, cell.height))).toList
     }
 
     def updateNameRec(rec1: ColDesc, rec2: ColDesc): ColDesc = {
@@ -800,18 +800,18 @@ trait HtmlContentExtractor {
       updated._1
     }
     val first = nameRecord(dataRows.head, titleWidth)
-    val names = ((first :: Nil) /: dataRows.tail)((x: List[ColDesc], y: Row) ⇒ {
+    val names = ((first :: Nil) /: dataRows.tail)((x: List[ColDesc], y: Row) => {
       updateNameRec(x.head, nameRecord(y, titleWidth)) :: x
     }).toList
     names
   }
 
   def buildNamePrefixesForTableData(rowsWithContent: Seq[Row], dataWidth: Int, explicitNamePrefixes: Seq[String]): Seq[String] = {
-    val column1 = rowsWithContent map (row ⇒ row(row.size - dataWidth).text)
+    val column1 = rowsWithContent map (row => row(row.size - dataWidth).text)
 
     val namePrefixes = if (column1.forall(_ contains ":")) {
       explicitNamePrefixes zip column1 map {
-        case (name, cell) ⇒ name + "." + trimKey(cell.split(":").head)
+        case (name, cell) => name + "." + trimKey(cell.split(":").head)
       }
     } else explicitNamePrefixes
     namePrefixes
@@ -827,7 +827,7 @@ trait HtmlContentExtractor {
 
   def buildPropertiesFromTableRows(rowsWithContent: Seq[(Row, Props)], namePrefixes: Seq[String], dataWidth: Int, headers: Seq[String]): PropBuffer = {
     val needEnumerateRows = rowsWithContent.length > 1 && (namePrefixes forall (_.isEmpty)) // TODO(vlad): this is suspicious actually; what's the difference, one row or two rows
-    val rowKeyPrefix = if (needEnumerateRows) (rowNumber: Int) ⇒ Props.numberKey(rowNumber) + "." else (rowNumber: Int) ⇒ ""
+    val rowKeyPrefix = if (needEnumerateRows) (rowNumber: Int) => Props.numberKey(rowNumber) + "." else (rowNumber: Int) => ""
 
     def buildKey(rowNumber: Int, header: String, rowName: String) = {
       rowKeyPrefix(rowNumber) + header + "." + trimKey(rowName)
@@ -854,7 +854,7 @@ trait HtmlContentExtractor {
 
   def withTransformer(map: String Map String):HtmlContentExtractor = withTransformer(transformerFromMap(map) _)
 
-  def withTransformer(keyTransformer: String ⇒ String):HtmlContentExtractor = new HtmlContentExtractor {
+  def withTransformer(keyTransformer: String => String):HtmlContentExtractor = new HtmlContentExtractor {
     override def transformer = keyTransformer
   }
 }
@@ -866,13 +866,13 @@ object HtmlContentExtractor extends HtmlContentExtractor {
   var BIG_DEBUG = true
 
   sealed trait ParsingResult {
-    def map(f:Props ⇒ Props):ParsingResult = this
+    def map(f:Props => Props):ParsingResult = this
     def toResult: Result[Props]
     def toResultKeepingSource: Result[(Props, String)]
   }
 
   final case class SuccessfullyParsed(props:Props, source:String) extends ParsingResult {
-    override def map(f:Props ⇒ Props) = SuccessfullyParsed(f(props), s"(mapped via $f from) " + source)
+    override def map(f:Props => Props) = SuccessfullyParsed(f(props), s"(mapped via $f from) " + source)
     override def toResult = Good(props)
     override def toResultKeepingSource = Good(props, source)
   }
@@ -892,8 +892,8 @@ object HtmlContentExtractor extends HtmlContentExtractor {
   }
 
   def traverse(results: Seq[ParsingResult]): Result[Seq[Props]] = {
-    val goodOnes = results.collect {case SuccessfullyParsed(props, _) ⇒ props}
-    val failures = results.collect {case FailedToParse(x, _) ⇒ x; case NothingToParse(x) ⇒ x}
+    val goodOnes = results.collect {case SuccessfullyParsed(props, _) => props}
+    val failures = results.collect {case FailedToParse(x, _) => x; case NothingToParse(x) => x}
     if (failures.isEmpty) Good(goodOnes) else Result.error(failures)
   }
 }
@@ -913,24 +913,24 @@ private[parsing] final case class ArrayContainer(node:Node, index: String Map St
 
   override def parse(prefixes:List[String]): PropBuffer = {
     val out:PropBuffer = node match {
-      case <ul>{ x@ _*}</ul> ⇒
+      case <ul>{ x@ _*}</ul> =>
         val listElements:Seq[Node] = node.child filter isaLi
 
         val contentList = listElements map extractNodeProps(index)
 
         if (contentList.forall(!_.hasData)) {
           contentList match {
-            case Nil      ⇒ justPrefixes("ul", prefixes)
-            case one::Nil ⇒ extractProperties(prefixes)()
-            case keyNode::valueNode::Nil if !keyNode.prefixes.mkString.endsWith(".") ⇒
+            case Nil      => justPrefixes("ul", prefixes)
+            case one::Nil => extractProperties(prefixes)()
+            case keyNode::valueNode::Nil if !keyNode.prefixes.mkString.endsWith(".") =>
               val key = keyNode.prefixes mkString " "
               val value = valueNode.prefixes mkString " "
               val pa = new PropBuffer("ul", props(key → value), prefixes)
               pa
 
-            case moreThanOne ⇒
+            case moreThanOne =>
               val newMap: Map[String, String] = contentList.zipWithIndex collect {
-                case (row, i) ⇒ Props.numberKey(i + 1) → (row.prefixes mkString " ")
+                case (row, i) => Props.numberKey(i + 1) → (row.prefixes mkString " ")
               } toMap
               val goodNewMap = newMap filter (!_._2.isEmpty)
               val pb = new PropBuffer("ul", props(goodNewMap), prefixes)
@@ -939,7 +939,7 @@ private[parsing] final case class ArrayContainer(node:Node, index: String Map St
 
         } else {
           val segments:Seq[PropBuffer] = contentList.zipWithIndex map {
-            case (row, i) ⇒ row prependPrefix Props.numberKey(i+1)
+            case (row, i) => row prependPrefix Props.numberKey(i+1)
           }
 
           val result = (justPrefixes("", prefixes) /: segments)(_ merge _)
@@ -977,7 +977,7 @@ private[parsing] final case class Regular(node:Node, index:String Map String) ex
   import ExtractorOps._
 
   def parseMeta(prefixes:List[String]) = {
-    val attrs = Props(node.attributes.asAttrMap.map{case (k,v) ⇒ k.toLowerCase → v})
+    val attrs = Props(node.attributes.asAttrMap.map{case (k,v) => k.toLowerCase → v})
     def attr(name:String):Result[String] = (attrs @@ name) filter (!_.isEmpty)
     val newBuffer =
       for (kvPair ← attr("name") andAlso attr("content"))
@@ -988,32 +988,32 @@ private[parsing] final case class Regular(node:Node, index:String Map String) ex
 
   override def parse(prefixes:List[String]): PropBuffer = {
     val out:PropBuffer = node match {
-      case <dl>{     x@ _*}</dl>      ⇒
+      case <dl>{     x@ _*}</dl>      =>
         val propsFromDL = extractPropsFromDL(x)
         if (propsFromDL.keysWithEmptyValues.nonEmpty) throw new IllegalArgumentException(s"Bad props from dl $x")
         new PropBuffer(node.label, propsFromDL, prefixes)
 
-      case <table><caption>{stuff}</caption><tbody>{rows @ _*}</tbody></table> ⇒
+      case <table><caption>{stuff}</caption><tbody>{rows @ _*}</tbody></table> =>
         extractPropsFromTableRows(rows) ++ prefixes
 
-      case <table><tbody>{rows @ _*}</tbody></table> ⇒
+      case <table><tbody>{rows @ _*}</tbody></table> =>
         extractPropsFromTableRows(rows) ++ prefixes
 
-      case <tbody>{       rows @ _*        }</tbody> ⇒
+      case <tbody>{       rows @ _*        }</tbody> =>
         extractPropsFromTableRows(rows) ++ prefixes
 
-      case <table>{       rows @ _*        }</table> ⇒
+      case <table>{       rows @ _*        }</table> =>
         val extracted = extractPropsFromTableRows(rows)
         extracted ++ prefixes
 
-      case <img>{x@ _*}</img> ⇒
+      case <img>{x@ _*}</img> =>
         val alt = attribute("alt") of node getOrElse ""
         if (alt.isEmpty) justPrefixes("", prefixes) else new PropBuffer("img", Props.empty, alt :: prefixes)
 
-      case <META>{x@ _*}</META> ⇒ parseMeta(prefixes)
-      case <meta>{x@ _*}</meta> ⇒ parseMeta(prefixes)
+      case <META>{x@ _*}</META> => parseMeta(prefixes)
+      case <meta>{x@ _*}</meta> => parseMeta(prefixes)
 
-      case <a>{   x@ _*}</a>  ⇒
+      case <a>{   x@ _*}</a>  =>
         val newPrefix = trimKey(x.text)
         val href = (node \ "@href") mkString " "
         if (href.startsWith("#") && href.length > 1 && index.contains(href.tail) && !newPrefix.isEmpty)
@@ -1023,7 +1023,7 @@ private[parsing] final case class Regular(node:Node, index:String Map String) ex
           justPrefixes(node.label, newPrefixes)
         }
 
-      case atom:scala.xml.Atom[_]  ⇒ new PropBuffer(node.label, Props.empty, atom.text :: prefixes)
+      case atom:scala.xml.Atom[_]  => new PropBuffer(node.label, Props.empty, atom.text :: prefixes)
 
     }
     out
@@ -1052,13 +1052,13 @@ case class Row(cells: List[Cell], source: Node) {
   def trimToSize(n: Int) = Row(cells take n, source)
 
   def deleteCellsAt(empties: Seq[Int]): Row = {
-    val goodCells = cells.zipWithIndex filter { case (cell, i) ⇒ !empties.contains(i)}
+    val goodCells = cells.zipWithIndex filter { case (cell, i) => !empties.contains(i)}
     Row(goodCells map (_._1), source)
   }
 
   def kvMassachusettsStyle: Result[(String, String)] = textSegments match {
-    case key::""::value::Nil if (key.nonEmpty && value.nonEmpty) ⇒ Good(key → value)
-    case _ ⇒ Empty
+    case key::""::value::Nil if (key.nonEmpty && value.nonEmpty) => Good(key → value)
+    case _ => Empty
   }
 
   def isMassachusettsStyle = kvMassachusettsStyle.isGood
@@ -1066,11 +1066,11 @@ case class Row(cells: List[Cell], source: Node) {
   def kvNorthDakotaStyle: Result[Seq[(String, String)]] = {
 
     def kvp(seq:List[String]): Result[List[(String, String)]] = seq match {
-      case k::v::tail if k.endsWith(":") ⇒
-        kvp(tail) map (t ⇒ (k.dropRight(1)→v)::t)
-      case Nil ⇒
+      case k::v::tail if k.endsWith(":") =>
+        kvp(tail) map (t => (k.dropRight(1)→v)::t)
+      case Nil =>
         Good(Nil)
-      case somethingElse ⇒
+      case somethingElse =>
         val bs = somethingElse
         Result.error(s"Not from North Dakota: $somethingElse")
     }
@@ -1090,8 +1090,8 @@ case class Row(cells: List[Cell], source: Node) {
   def hasData = cells.exists(_.hasData)
   def contentKind = {
     val collected = cells collect {
-      case TH(src) ⇒ "th"
-      case TD(src) ⇒ "td"
+      case TH(src) => "th"
+      case TD(src) => "td"
     }
     collected.toSet
   }
@@ -1105,22 +1105,22 @@ case class Row(cells: List[Cell], source: Node) {
 
     val cp = cx sliding(2, 2) toList
 
-    val prefixedProperties:List[(String, Props)] = cp collect { case head :: tail :: Nil ⇒ (head.text, tail.data.allProperties)} filter {_._2.nonEmpty} //toList
+    val prefixedProperties:List[(String, Props)] = cp collect { case head :: tail :: Nil => (head.text, tail.data.allProperties)} filter {_._2.nonEmpty} //toList
 
     val acceptablePrefixedProperties = prefixedProperties .map {
-      case (k, p) ⇒ (k.split(":")(0), p)
+      case (k, p) => (k.split(":")(0), p)
     }filter (_._1.nonEmpty)
 
-    val properties = acceptablePrefixedProperties map { case(prefix, props) ⇒ props.addPrefix(prefix)}
+    val properties = acceptablePrefixedProperties map { case(prefix, props) => props.addPrefix(prefix)}
 
     Props.accumulate(properties)
   }
 
-  private lazy val allKvPairs:Seq[(String, String)] = cellPairs collect{case head::tail::Nil ⇒
+  private lazy val allKvPairs:Seq[(String, String)] = cellPairs collect{case head::tail::Nil =>
     val ht = (head.text, tail.plainText)
     ht
   } toList
-  lazy val kvPairs = allKvPairs map { case(k, v) ⇒ (k.split(":")(0), v)} filter(_._1.nonEmpty)
+  lazy val kvPairs = allKvPairs map { case(k, v) => (k.split(":")(0), v)} filter(_._1.nonEmpty)
   def isaKeyFollowedByValues = {
     val style = cells map (_.style)
     val firstColumnStyle = style.head
@@ -1133,11 +1133,11 @@ case class Row(cells: List[Cell], source: Node) {
   }
 
   private def isAllHeaders: Boolean = {
-    isThStyle(source) || (cells.map(cell ⇒ cellKind(cell.source)) forall ("th"==))
+    isThStyle(source) || (cells.map(cell => cellKind(cell.source)) forall ("th"==))
   }
 
   private def isAllValues: Boolean = {
-    cells.map(cell ⇒ cellKind(cell.source)) forall (kind ⇒ kind == "td" || kind == "" || kind == "-")
+    cells.map(cell => cellKind(cell.source)) forall (kind => kind == "td" || kind == "" || kind == "-")
   }
 
   lazy val signature = {

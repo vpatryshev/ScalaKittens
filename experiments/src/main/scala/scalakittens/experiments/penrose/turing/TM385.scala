@@ -24,7 +24,7 @@ case class TM385(name: String, src: String) extends Machine(name) {
       val d = move.substring(0, 1)
       val target = move.split("/")(1)
       try {(s, d.toInt) → compile(target) } catch {
-        case x: Exception ⇒ throw new IllegalArgumentException(move, x)
+        case x: Exception => throw new IllegalArgumentException(move, x)
       }
     }
 

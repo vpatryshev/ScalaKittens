@@ -34,9 +34,9 @@ trait Money {
 
   private[types] def plainDollars(s0: String) = {
     s0.replaceAll("[ ,]", "") match {
-      case MoneyRegex(s, t) if s.replaceAll("[^\\d]", "").nonEmpty ⇒
+      case MoneyRegex(s, t) if s.replaceAll("[^\\d]", "").nonEmpty =>
         Result.forValue(dollarAmountToBigDecimal(s), s"failed to extract dollar amount from $s")
-      case nothingLikeThat ⇒
+      case nothingLikeThat =>
         Result.error(s"Does not look like money: <<$s0>>")
     }
   }
@@ -48,10 +48,10 @@ trait Money {
   def dollars(digits: String): Result[BigDecimal] =
     if (digits.isEmpty) Good(ZeroDollars) else {
       digits match {
-        case NegativeFormat1(value) ⇒ plainDollars(value) map (-_)
-        case NegativeFormat2(value) ⇒ plainDollars(value) map (-_)
-        case NegativeFormat3(value) ⇒ plainDollars(value) map (-_)
-        case value                  ⇒ plainDollars(value)
+        case NegativeFormat1(value) => plainDollars(value) map (-_)
+        case NegativeFormat2(value) => plainDollars(value) map (-_)
+        case NegativeFormat3(value) => plainDollars(value) map (-_)
+        case value                  => plainDollars(value)
       }
     }
 
@@ -76,21 +76,21 @@ trait Money {
   private def dollarAmountToBigDecimal(digits: String): BigDecimal = {
     val trimmed = digits.replaceAll("[\\(\\)\\/$\\s+, +]", "").trim
     trimmed match {
-      case "-" ⇒ ZeroDollars
-      case ""  ⇒ throw new IllegalArgumentException("Cannot convert an empty string to dollar amount")
-      case MoneyPattern(sValue, _) ⇒
+      case "-" => ZeroDollars
+      case ""  => throw new IllegalArgumentException("Cannot convert an empty string to dollar amount")
+      case MoneyPattern(sValue, _) =>
         try {
           val v1 = new java.math.BigDecimal(sValue, MathContext.DECIMAL64).setScale(2)
           val v2 = new scala.math.BigDecimal(v1)
           v2
         } catch {
-          case e: Exception ⇒   // see "Scala in Depth", page 184: "Carefully catching exceptions"
+          case e: Exception =>   // see "Scala in Depth", page 184: "Carefully catching exceptions"
             error(s"dollarAmountToBigDecimal can't convert <<$digits>>")
             throw e
            // TODO(vlad): get rid of exceptions
         }
 
-      case basura ⇒
+      case basura =>
         error(s"dollarAmountToBigDecimal can't convert <<$digits>>"); throw new IllegalArgumentException(s"dollarAmountToBigDecimal can't convert <<$digits ($basura)>>")
 
     }

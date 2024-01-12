@@ -41,7 +41,7 @@ class ContainsTest extends Specification {
       }
       class B(val name: String) extends A(name) {
         override def toString = "B(" + name + ")"}
-      val b1= new B("1")
+      val b1 = new B("1")
       val b2 = new B("2")
       val b3 = new B("3")
       val listB = b1 :: b2 :: EmptyList

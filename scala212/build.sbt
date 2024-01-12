@@ -14,13 +14,30 @@ scalacOptions ++= Seq("-feature", "-deprecation", "-encoding", "UTF-8", "-featur
 
 javacOptions ++= Seq("-Xlint:deprecation", "-Xlint:unchecked", "-source", "1.8", "-target", "1.8", "-g:vars")
 
-resolvers ++= Seq(
-  "Lightbend Releases" at "http://repo.typesafe.com/typesafe/releases"
-)
-
 artifactName := { (sv: ScalaVersion, module: ModuleID, artifact: Artifact) =>
   artifact.name + "-" + module.revision + "." + artifact.extension
 }
+
+//resolvers ++= Seq(
+//  "snapshots"                  at "http://oss.sonatype.org/content/repositories/snapshots",
+//  "releases"                   at "http://oss.sonatype.org/content/repositories/releases",
+//  "scalaz-bintray"             at "http://dl.bintray.com/scalaz/releases",
+//  "Secured Central Repository" at "https://repo1.maven.org/maven2")
+//
+//libraryDependencies ++= Seq(
+//  "org.scala-lang" % "scala-compiler" % WhichScala,
+//  "org.scala-lang" % "scala-library"  % WhichScala,
+//  "org.scala-lang" % "scala-reflect"  % WhichScala,
+//  "org.scalaz" %% "scalaz-core" % "7.1.4" withSources(),
+//  "org.apache.httpcomponents" % "httpclient" % "4.3.6",
+//  "org.apache.httpcomponents" % "httpmime"   % "4.3.6"
+//)
+
+resolvers ++= Seq(
+  "mvn"            at "https://mvnrepository.com/artifact",
+  "snapshots"      at "http://oss.sonatype.org/content/repositories/snapshots",
+  "releases"       at "http://oss.sonatype.org/content/repositories/releases",
+  "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases")
 
 libraryDependencies ++= Seq(
   "org.scalatest"  %% "scalatest"     % "3.0.1" % "test" withSources(),
@@ -29,16 +46,12 @@ libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % WhichScala,
   "org.scala-lang.modules" % "scala-parser-combinators_2.12" % "1.0.5",
   "org.scalaz" % "scalaz-effect_2.12" % "7.3.0-M10",
-  "org.apache.httpcomponents" % "httpclient" % "4.3.6",
-  "org.apache.httpcomponents" % "httpmime"   % "4.3.6",
+  "org.apache.httpcomponents" % "httpclient" % "4.5.14",
+  "org.apache.httpcomponents" % "httpmime"   % "4.5.14",
   "org.specs2" %% "specs2-core" % "3.8.8" % "test",
   "org.scalacheck" %% "scalacheck" % "1.13.4" % "test"
 
 )
-
-resolvers ++= Seq("snapshots" at "http://oss.sonatype.org/content/repositories/snapshots",
-  "releases"  at "http://oss.sonatype.org/content/repositories/releases",
-  "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases")
 
 logLevel := Level.Warn
 

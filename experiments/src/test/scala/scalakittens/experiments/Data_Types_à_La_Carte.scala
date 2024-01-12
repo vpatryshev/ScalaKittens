@@ -63,7 +63,7 @@ object Data_Types_à_La_Carte {
   object `3. Evaluation` {
 
     trait Functor[F[_]] {
-      def fmap[X, Y](f: X ⇒ Y): F[X] ⇒ F[Y]
+      def fmap[X, Y](f: X => Y): F[X] => F[Y]
     }
 
     sealed trait Expr[f[_]]
@@ -71,11 +71,11 @@ object Data_Types_à_La_Carte {
     //    case class In[f[Expr[_]]](f0: f) extends Expr[f]
 
     //    case class Val[V](v: V) extends Functor[Val] {
-    //      def fmap[X, Y](f: X⇒Y): Val[V] ⇒ Val[V] = identity[Val[V]]
+    //      def fmap[X, Y](f: X=>Y): Val[V] => Val[V] = identity[Val[V]]
     //    }
 
     //    case class Add[e](e1: e, e2: e) extends Functor[Add] {
-    //      override def fmap[X, Y](f: (X) ⇒ Y): (Add[X]) ⇒ Add[Y] = Add(f(e1), f(e2))
+    //      override def fmap[X, Y](f: (X) => Y): (Add[X]) => Add[Y] = Add(f(e1), f(e2))
     //    }
 
   }

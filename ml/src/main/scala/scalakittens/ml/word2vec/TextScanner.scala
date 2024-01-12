@@ -45,7 +45,7 @@ trait TextScanner {
 
     var i: Int = -1
     wordStream(source) foreach {
-      w ⇒ {
+      w => {
         i+= 1
         inverseIndex(w) = i::inverseIndex(w)
       }
@@ -53,7 +53,7 @@ trait TextScanner {
 
     require(inverseIndex.size > 1, s"Weird text, empty inverse index; added ${i+1} words actually")
 
-    val frequencies = inverseIndex.toList.map{case (w,l) ⇒ (w, l.size)}.sortBy(_._2).zipWithIndex
+    val frequencies = inverseIndex.toList.map{case (w,l) => (w, l.size)}.sortBy(_._2).zipWithIndex
 
     require(frequencies.size > 1, s"Weird text, 0 frequencies")
 

@@ -19,7 +19,7 @@ import scalakittens.ml.GradientDescentEngine.Evaluator
 sealed case class GradientDescentEngine[State <: Mutable, Tangent](evaluator: Evaluator[State, Tangent], maxEpochs: Int, valuePrecision: Double, stepPrecision: Double) {
 
   val DEBUG = false
-  def debug(m: ⇒String): Unit = if (DEBUG) println(m)
+  def debug(m: =>String): Unit = if (DEBUG) println(m)
 
   // TODO: move it into a config class or something
   // the rate at which step decreases on success
@@ -35,7 +35,7 @@ sealed case class GradientDescentEngine[State <: Mutable, Tangent](evaluator: Ev
     }
 
     def enoughProgress: Boolean = {
-      counter >= maxJumpsAlongGradient || (progress exists (p ⇒ math.abs(p) < 1 + valuePrecision))
+      counter >= maxJumpsAlongGradient || (progress exists (p => math.abs(p) < 1 + valuePrecision))
     }
   }
   
@@ -43,7 +43,7 @@ sealed case class GradientDescentEngine[State <: Mutable, Tangent](evaluator: Ev
     val tracker = new Tracker
     debug(s"===fAG at $position, is=$initState")
     val result = Stream.iterate(initState) {
-      s ⇒
+      s =>
         debug(s"@$s:\n  $position / $gradient →")
         evaluator.nudge(position, gradient, -s.step)
         debug(s" $position")
@@ -61,7 +61,7 @@ sealed case class GradientDescentEngine[State <: Mutable, Tangent](evaluator: Ev
     debug(s"1. $result")
 
     val finalResult = result.progress map {
-      p ⇒
+      p =>
         val maxP = math.min(p, maxProgress)
         val lastStep = result.step * maxP / (1.0 - maxP)
         evaluator.nudge(position, gradient, -lastStep)
@@ -88,24 +88,24 @@ sealed case class GradientDescentEngine[State <: Mutable, Tangent](evaluator: Ev
   def find(point: State, initStep: Double): Option[(Double, Int)] = {
 
     Stream.iterate((Cursor(evaluator.targetFunction(point), initStep), None: Option[Tangent], false, initStep, 0)) {
-      case (s, previousGradient, sameGradient, step, epoch) ⇒
-        val gradient = previousGradient filter (_ ⇒ sameGradient) getOrElse evaluator.gradientAt(point)
+      case (s, previousGradient, sameGradient, step, epoch) =>
+        val gradient = previousGradient filter (_ => sameGradient) getOrElse evaluator.gradientAt(point)
         debug(s"---at $point (${evaluator.targetFunction(point)}), grad=$gradient, epoch $epoch, step $step, status $s")
         val r0 = findAlongGradient(point, gradient, s).copy(step = s.step * stepDecreaseQ)
         val newEpoch = epoch + r0.counter
-        def tentativeStep = previousGradient map ((g: Tangent) ⇒ {
+        def tentativeStep = previousGradient map ((g: Tangent) => {
           val cos = evaluator.cos(g, gradient)
           debug(s"cos = $cos, prog=${s.progress}")
           (1 + 0.3 * cos) * step
         }) getOrElse step
-        val newStep = s.progress map (_ ⇒ tentativeStep) getOrElse r0.step
+        val newStep = s.progress map (_ => tentativeStep) getOrElse r0.step
 
         val r = r0.copy(progress = None, counter = 0, step = newStep)
         debug(s"===new state=$r @$point")
         (r, Some(gradient), r0.progress.isEmpty, newStep, newEpoch)
     }. 
-    find { case (s, gradient, sameGrad, newStep, epoch) ⇒ epoch >= maxEpochs || s.enough }. 
-    map  { case (s, gradient, sameGrad, newStep, epoch) ⇒ (s.functionValue, epoch) }
+    find { case (s, gradient, sameGrad, newStep, epoch) => epoch >= maxEpochs || s.enough }.
+    map  { case (s, gradient, sameGrad, newStep, epoch) => (s.functionValue, epoch) }
   }
 }
 
@@ -168,7 +168,7 @@ object GradientDescentEngine {
     override def toString: String = "" + x
   }
 
- def numericEvaluator(f: Double ⇒ Double, `f'`: Double ⇒ Double): Evaluator[DoubleVar, DoubleVal] 
+ def numericEvaluator(f: Double => Double, `f'`: Double => Double): Evaluator[DoubleVar, DoubleVal]
  = new Evaluator[DoubleVar, DoubleVal] {
 
     override def targetFunction(position: DoubleVar, maxValue: Double) = f(position())
@@ -188,7 +188,7 @@ object GradientDescentEngine {
     = math.signum(previousGradient() * gradient())
   }
 
-  def vectorEvaluator[Space <: VectorSpace](s: Space)(f: s.MutableVector ⇒ Double, `f'`: s.MutableVector ⇒ s.Vector): Evaluator[s.MutableVector, s.Vector] = new Evaluator[s.MutableVector, s.Vector] {
+  def vectorEvaluator[Space <: VectorSpace](s: Space)(f: s.MutableVector => Double, `f'`: s.MutableVector => s.Vector): Evaluator[s.MutableVector, s.Vector] = new Evaluator[s.MutableVector, s.Vector] {
 
     override def targetFunction(position: s.MutableVector, maxValue: Double): Double
     = f(position)

@@ -58,7 +58,7 @@ trait Strings {
     }
   }
 
-  def oneOf(cases: String*): String = cases find (!_.isEmpty) getOrElse ""
+  def oneOf(cases: String*): String = cases find (_.nonEmpty) getOrElse ""
 
   // 000123 → 123
   def trimLeftLeading0(s: String): String = s.trim.dropWhile('0' ==).trim
@@ -76,17 +76,25 @@ trait Strings {
     * @param chars the characters to remove
     * @return string trimmer
     */
-  def dropLeading(chars: String): String ⇒ String = (s: String) ⇒ s dropWhile (chars contains _)
+  def dropLeading(chars: String): String => String = (s: String) => s dropWhile (chars contains _)
+
+  def escape(s: String) = s //*this part is good for debugging*/ map (c => ((c < 128) ? (""+c) | (c.toInt.formatted("\\u%04x") ))) mkString ""
+
+  def spaces(n: Int): String = " " * n
+
+  private val Q = "\""
+
+  def quote(s: String): String = Q + escape(s) + Q
 
   /**
-    * I could not figure out how to do multiline match in scala; so had to write this.
+    * I could not figure out how to do multiline match in Scala; so had to write this.
     *
     * @param Reg the regex to match
     * @return the group found (works with one group only
     */
-  def multilineMatch(Reg: Regex): String ⇒ Option[String] =
-    text ⇒ Reg.findFirstIn(text).flatMap({ case Reg(value) ⇒ Some(value)
-    case _ ⇒ None
+  def multilineMatch(Reg: Regex): String => Option[String] =
+    text => Reg.findFirstIn(text).flatMap({ case Reg(value) => Some(value)
+    case _ => None
     })
 
   /**
@@ -95,18 +103,18 @@ trait Strings {
     * @param prefix what precedes the value
     * @return the value; if not found, an empty string (missing value, right?)
     */
-  def valueOf(prefix: String): String ⇒ String = {
-    (text: String) ⇒ prefixSearch(prefix)(text).getOrElse("")
+  def valueOf(prefix: String): String => String = {
+    (text: String) => prefixSearch(prefix)(text).getOrElse("")
   }
 
-  def prefixSearch(prefix: String): String ⇒ Option[String]
+  def prefixSearch(prefix: String): String => Option[String]
   = multilineMatch((".*" + prefix.replaceAll("\\.", "\\\\.") + " *([^\\n]*)").r)
 
   private val DIGITS = "^(\\d+)$".r
 
   def digits(s: String): Option[String] = s match {
-    case DIGITS(value) ⇒ Some(value)
-    case _ ⇒ None
+    case DIGITS(value) => Some(value)
+    case _ => None
   }
 
   private val accented = Set("aàáâäæãåā", "cçćč", "eèéêëēėę", "iîïíīįì", "lł", "nñń", "oôöòóœøōõ", "sßśš", "uûüùúū", "yÿ", "zžźż", "'’")
@@ -129,7 +137,7 @@ trait Strings {
     s7
   }
 
-  val isStop = Set(
+  val isStop: Set[String] = Set(
     "", 
     "a", "about", "add", "adds", "added", "after", "against", "ah", "all", "along", 
       "already", "also", "always", "am", "among", "an", "and", "another", "any", "are", "as", 
