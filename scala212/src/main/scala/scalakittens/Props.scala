@@ -1,19 +1,26 @@
 package scalakittens
 
-import Props._
 import Result.Outcome
+import org.scalakittens.ReadsJson
 
 import scala.io.Source
-import scala.language.{implicitConversions, postfixOps}
+import scala.languageFeature.{implicitConversions, postfixOps}
 import scala.util.parsing.combinator.RegexParsers
-import Strings._
+import scalakittens.types.Strings._
+import org.json4s._
+import org.json4s.native.JsonMethods
+import org.json4s.native.JsonMethods._
+import scalakittens.Props.{PropMap, props}
+
+import scala.util.matching.Regex
 
 /**
   * LDAP-like storage of properties with multilevel (dot-separated) keys
   */
 case class Props(private val innerMap: PropMap) extends PartialFunction[String, String] { self =>
-  def filterValues(predicate: String => Boolean) = props(innerMap.filter {case (k,v) => predicate(v)})
-  def toMap = Map[String,String]() ++ innerMap
+  def filterValues(predicate: String => Boolean): Props =
+    props(innerMap.filter {case (k,v) => predicate(v)})
+  def toMap: Map[String, String] = Map[String,String]() ++ innerMap
   import Props._
 
   private def keyAsArray(k: String):Array[String] = k split "\\."
@@ -53,32 +60,32 @@ case class Props(private val innerMap: PropMap) extends PartialFunction[String, 
 
 
 
-  lazy val pfOpt = (key:String) => {
+  lazy val pfOpt: String => Option[String] = (key:String) => {
     val kOpt = findKey(key)
     val vOpt = kOpt flatMap innerMap.get
     vOpt
   }
 
-  def apply(key: String) = innerMap(key)
-  def find(collectionOfKeys: String*) = collectionOfKeys find isDefinedAt map apply
-  def forSomeKey(collectionOfKeys: String*) = Result(find(collectionOfKeys:_*)) orCommentTheError s"Failed to find a prop for keys (${collectionOfKeys mkString ","})"
+  def apply(key: String): String = innerMap(key)
+  def find(collectionOfKeys: String*): Option[String] = collectionOfKeys find isDefinedAt map apply
+  def forSomeKey(collectionOfKeys: String*): Result[String] = Result(find(collectionOfKeys:_*)) orCommentTheError s"Failed to find a prop for keys (${collectionOfKeys mkString ","})"
   def findIgnoringKeyOrder(keys: String):Option[String] = findKeyAnyOrder(keys) map apply
   def isDefinedAt(key: String): Boolean = innerMap.isDefinedAt(key)
   def get(key: String): Option[String] = pfOpt(key)
   def oneOf(keys: String*): Option[String] = keys .map (get) .dropWhile (_.isEmpty) .headOption .flatten
-  def mapValues[U](f:String=>U) = innerMap andThen f
+  def mapValues[U](f:String=>U): PartialFunction[String, U] = innerMap andThen f
   def applyOrElse(key: String, otherwise: String => String): String = innerMap.applyOrElse(key, otherwise)
-  def getOrElse(key: String, otherwise: String) = applyOrElse(key, (_:String) => otherwise)
+  def getOrElse(key: String, otherwise: String): String = applyOrElse(key, (_:String) => otherwise)
 
   def isEmpty:Boolean = innerMap.isEmpty
-  def nonEmpty = !isEmpty
+  def nonEmpty: Boolean = !isEmpty
 
-  def dropIndexes = Props(dropIndexKeys(innerMap))
+  def dropIndexes: Props = Props(dropIndexKeys(innerMap))
 
-  def toFormattedString = formatted(0)
+  def toFormattedString: String = formatted(0)
   private def formatPf(pad:Int) = {
     val keysAndValues = innerMap.map(kv => (escape(kv._1), escape(kv._2))).toList.sorted
-    val pairsFormatted = keysAndValues map { case(k,v) => "\"" + k + "\" → \"" + v + "\""}
+    val pairsFormatted = keysAndValues map { case(k,v) => "\"" + k + "\" -> \"" + v + "\""}
     pairsFormatted.mkString("Map(\n" + spaces(pad+2), "\n" + spaces(pad+2), "")
   }
   protected def formatted(pad: Int):String = spaces(pad) + (
@@ -86,32 +93,32 @@ case class Props(private val innerMap: PropMap) extends PartialFunction[String, 
     ) + ")"
 
   private def toStringPf = {
-    val keysAndValues = innerMap.map(kv => quote(kv._1) + " → " + quote(kv._2)).toList.sorted
+    val keysAndValues = innerMap.map(kv => quote(kv._1) + " -> " + quote(kv._2)).toList.sorted
 
     "Map(" + keysAndValues.mkString(", ") + ")"
   }
 
-  override def toString = if (isEmpty) "Empty()" else s"fp($toStringPf)"
+  override def toString: String = if (isEmpty) "Empty()" else s"fp($toStringPf)"
 
-  override def equals(other:Any) = other match {
+  override def equals(other:Any): Boolean = other match {
     case props: Props => props.innerMap == self.innerMap
     case _ => false
   }
 
-  def getOr(key: Any, onError: Props => String) = Result(pfOpt("" + key), {
+  def getOr(key: Any, onError: Props => String): Result[String] = Result(pfOpt("" + key), {
     onError(self)
   })
 
-  def hasKey(key: String) = findKey(key).isDefined
+  def hasKey(key: String): Boolean = findKey(key).isDefined
 
-  def @@ (key: Any) = getOr(key, props => s"Missing '$key' in $props")
+  def @@ (key: Any): Result[String] = getOr(key, props => s"Missing '$key' in $props")
   def @@ (k1: Any, k2: Any)     : Result[String] = @@ (""+k1+"."+k2)
   def @@ (k1: Any, k2: Any, k3: Any) : Result[String] = @@ (""+k1+"."+k2+"."+k3)
   def @@ (k1: Any, k2: Any, k3: Any, k4: Any): Result[String] = @@ (""+k1+"."+k2+"."+k3+"."+k4)
   def @@ (key: (Any, Any))          : Result[String] = @@ (""+key._1+"."+key._2)
   def @@ (key: (Any, Any, Any))     : Result[String] = @@ (""+key._1+"."+key._2+"."+key._3)
   def @@ (key: (Any, Any, Any, Any)): Result[String] = @@ (""+key._1+"."+key._2+"."+key._3+"."+key._4)
-  def @?(key: String)(implicit defaultT: String) = Good(get(key).getOrElse(defaultT))
+  def @?(key: String)(implicit defaultT: String): Good[String] = Good(get(key).getOrElse(defaultT))
 
   def valueOf (key: Any)                 : Result[String] = @@(key)
   def valueOf (k1: Any, k2: Any)          : Result[String] = @@(k1,k2)
@@ -128,7 +135,7 @@ case class Props(private val innerMap: PropMap) extends PartialFunction[String, 
     Result.zip(valueOf(key1), valueOf(key2), valueOf(key3), valueOf(key4), valueOf(key5), valueOf(key6))
 
 
-  def guaranteedValueOf(key: String)(implicit defaultT: String) = @?(key)(defaultT)
+  def guaranteedValueOf(key: String)(implicit defaultT: String): Good[String] = @?(key)(defaultT)
   def intValueOf(key: Any): Result[Int] = @@(key) map(_.toInt)
   //  import DateAndTime._
   // TODO(vlad): implement date extraction some time in the future
@@ -139,7 +146,7 @@ case class Props(private val innerMap: PropMap) extends PartialFunction[String, 
     def remap(key: String) = {
       keyAsArray(key) map mapper mkString "."
     }
-    Props(innerMap map { case(k,v) => remap(k) → v })
+    Props(innerMap map { case(k,v) => remap(k) -> v })
   }
 
   def translate(dictionary:Traversable[(String, String)]):Props = if (isEmpty) this else {
@@ -157,7 +164,7 @@ case class Props(private val innerMap: PropMap) extends PartialFunction[String, 
     newMap
   }
 
-  def subtree(key: String) = if (key.isEmpty) this else {
+  def subtree(key: String): Props = if (key.isEmpty) this else {
     Props(subtreeOfMap(innerMap, key))
   }
 
@@ -313,7 +320,7 @@ case class Props(private val innerMap: PropMap) extends PartialFunction[String, 
       else newOrder map keys mkString "."
     }
 
-    Props(innerMap map { case(k,v) => remap(k) → v })
+    Props(innerMap map { case(k,v) => remap(k) -> v })
   }
 
   def addPrefixes(ps: Seq[String]): Props = if (isEmpty) self else ps.foldRight(self)((p, t) => t.addPrefix(p))
@@ -402,7 +409,7 @@ trait PropsOps {
     }
   }
 
-  def props(map: Map[_, _]): Props = props(map map {case (k,v) => k.toString→v.toString})
+  def props(map: Map[_, _]): Props = props(map map {case (k,v) => k.toString->v.toString})
 
   def props(pairs: (String, String)*)(implicit keyTransformer: String=>String): Props = {
     props(pairs.toMap)(keyTransformer)
@@ -413,7 +420,7 @@ trait PropsOps {
       case List(x, y)  => (x, y)
       case Array(x, y) => (x, y)
       case (x, y)      => (x, y)
-    } .map ({case (k,v) => ("" + k) → ("" + v)}).
+    } .map ({case (k,v) => ("" + k) -> ("" + v)}).
       toMap[String, String]
     props(raw)(keyTransformer)
   }
@@ -428,13 +435,13 @@ trait PropsOps {
     })
 
     props(cleanedUp._1.reverse.grouped(2) .collect{
-      case k::v::Nil => k.toLowerCase.replaceAll(" ", "") → v
+      case k::v::Nil => k.toLowerCase.replaceAll(" ", "") -> v
     }.toMap)(keyTransformer)
   }
 
   // opportunistically extract props from sequence of strings, some of them being empty etc
   def fromStrings(source: Seq[String], separator: String=":"): Props = {
-    props(source map (_.split(separator, 2)) filter (_.length == 2) map (kv => kv(0).trim→kv(1).trim) toMap)
+    props(source map (_.split(separator, 2)) filter (_.length == 2) map (kv => kv(0).trim->kv(1).trim) toMap)
   }
 
   private lazy val PropertyFormat = "([\\w\\.]+) *= *(.*)".r
@@ -454,7 +461,7 @@ trait PropsOps {
     def trim(s: String) = unquote(s.trim)
     val map = lines.
       filter(line => !line.startsWith("#") && !line.isEmpty).
-      collect { case PropertyFormat(key, value) => key → trim(value) }.
+      collect { case PropertyFormat(key, value) => key -> trim(value) }.
       toMap
 
     props(map)
@@ -467,9 +474,9 @@ trait PropsOps {
     result.filter((p:Props) => missing.isEmpty, s"Missing column(s) (${missing mkString ","}) in ${names mkString ","}")
   }
 
-  def fromList(source:List[String]) = propsFromTable(source.zipWithIndex map { case (a, i) => numberKey(i+1) → a})
+  def fromList(source:List[String]): Props = propsFromTable(source.zipWithIndex map { case (a, i) => numberKey(i+1) -> a})
 
-  def isPrimitive(x: Any) = x match {
+  def isPrimitive(x: Any): Boolean = x match {
     case u: Unit    => true
     case z: Boolean => true
     case b: Byte    => true
@@ -483,8 +490,8 @@ trait PropsOps {
   }
 
   private[scalakittens] def parsePair(k:Any, v:Any):Result[Props] = v match {
-    case s:String            => Good(props(k.toString → s))
-    case x if isPrimitive(x) => Good(props(k.toString → v.toString))
+    case s:String            => Good(props(k.toString -> s))
+    case x if isPrimitive(x) => Good(props(k.toString -> v.toString))
     case other               => fromTree(other) map(_ addPrefix k.toString)
   }
 
@@ -499,12 +506,14 @@ trait PropsOps {
 
 }
 
-object Props extends PropsOps {
+object Props extends PropsOps with ReadsJson[Props] {
 
-  val sNumberKey = "\\[\\[(\\d+)\\]\\]"
-  val NumberKeyPattern = sNumberKey.r
-  lazy val empty = Props(Map.empty)
-  val isNumberKey = (s:String) => s matches sNumberKey
+  var DEPTH_COUNTER = 0
+
+  private val sNumberKey = "\\[\\[(\\d+)\\]\\]"
+  private val NumberKeyPattern = sNumberKey.r
+  lazy val empty: Props = Props(Map.empty)
+  private val isNumberKey = (s:String) => s matches sNumberKey
 
   //  def unapply(fp: Props): Option[PropMap] = Some(fp.innerMap)
 
@@ -521,7 +530,7 @@ object Props extends PropsOps {
   }
 
   def accumulate(pp: TraversableOnce[Props]): Props = (Props.empty /: pp)(_++_)
-  def fold(collection: TraversableOnce[Props]) = (empty /: collection)(_++_)
+  def fold(collection: TraversableOnce[Props]): Props = (empty /: collection)(_++_)
 
   def foldWithIndex(pss: TraversableOnce[Props]): Props = accumulate(pss.toList.zipWithIndex.map { case (ps, i) => ps.addNumber(i)})
 
@@ -541,6 +550,18 @@ object Props extends PropsOps {
       Good(props)
 
     case x => Result.error(s"Failed to retrieve props from table: $x in $source")
+  }
+
+  private def sameKeyBundle(theKeyWeHave: String, suggestedAnyCase: String) = {
+    val suggested = suggestedAnyCase.toLowerCase
+    val ourKey = theKeyWeHave.toLowerCase
+
+    ourKey == suggested || {
+      val keys = ourKey.split("\\.").toSet
+      val suggestedKeys = suggested.split("\\.") .map (_.replaceAll("\\?", ".")) .toSet
+
+      keys == suggestedKeys
+    }
   }
 
   private def containsKeyBundle(theKeyWeHave: String, suggestedAnyCase: String) = {
@@ -569,7 +590,7 @@ object Props extends PropsOps {
   }
 
   private def mapify(seq: Seq[Any]) = seq.zipWithIndex map {
-    case (x, i) => numberKey(i+1) → x
+    case (x, i) => numberKey(i+1) -> x
   } toMap
 
   def fromMap(source: Map[_, _]): Props = {
@@ -580,19 +601,29 @@ object Props extends PropsOps {
           case null        => Props.empty
           case m:Map[_, _] => fromMap(m).addPrefix(k)
           case s:Seq[_]    => fromMap(mapify(s)).addPrefix(k)
-          case x: Any      => props(k → (""+x))
+          case x: Any      => props(k -> (""+x))
         }
     }
     accumulate(collection)
   }
 
-  val parse = new RegexParsers {
+  def parseJson(source: String): Result[Props] = {
+    Result.forValue(JsonMethods.parse(source)) map {
+      case value => value match {
+          case m:Map[_, _] => fromMap(m)
+          case a:Seq[Any]  => fromMap(mapify(a))
+          case x           => props("_" -> (""+x))
+        }
+    }
+  }
+
+  object parse extends RegexParsers {
     override def skipWhitespace = false
-    def number = "\\d+".r
-    def numbers = "(" ~> repsep(number, ",") <~ ")"
-    def text = "\"" ~> "[^\"]+".r <~ "\""
-    def mapPair:Parser[(String, String)] = text ~ " → " ~ text ^^ {
-      case k ~ _ ~ v => k → v
+    def number: Regex = "\\d+".r
+    def numbers: Parser[List[String]] = "(" ~> repsep(number, ",") <~ ")"
+    def text: Parser[String] = "\"" ~> "[^\"]+".r <~ "\""
+    def mapPair:Parser[(String, String)] = text ~ " -> " ~ text ^^ {
+      case k ~ _ ~ v => k -> v
     }
 
     def mapContents:Parser[List[(String, String)]] = (mapPair ~ rep(",\\s*".r ~> mapPair)) ^^ {
@@ -607,19 +638,19 @@ object Props extends PropsOps {
 
     def propMapExp: Parser[Props] = "fp\\s*\\(\\s*".r ~> mapExp <~ "\\s*".r <~ rep(eol) <~")" ^^ props
 
-    def withDictionary = " with dictionary " ~> mapExp
+    def withDictionary: Parser[_root_.scalakittens.Props.PropMap] = " with dictionary " ~> mapExp
 
-    def withReorder = " with reordering " ~> numbers ^^ {_ map (_.toInt)}
+    def withReorder: Parser[List[Int]] = " with reordering " ~> numbers ^^ {_ map (_.toInt)}
 
     def optionally[X, Y](opt: Option[Y], f: Y => X => X): (X => X) = opt map f getOrElse identity[X]
 
-    def propExp = propMapExp ~ (withDictionary ?) ~ (withReorder ?) ^^ {
+    def propExp: Parser[Props] = propMapExp ~ (withDictionary ?) ~ (withReorder ?) ^^ {
       case props ~ dictionaryOpt ~ reorderOpt =>
         val withDictionary = (dictionaryOpt fold props) (props translate)
         (reorderOpt fold withDictionary) (withDictionary reorder)
     }
 
-    def apply(s0: String) = {
+    def apply(s0: String): Result[Props] = {
       val noNL = s0.replaceAll("\\n", " ").trim
       parseAll(propExp, noNL) match {
         case Success(result, _) => Good(result)
@@ -642,14 +673,14 @@ object Props extends PropsOps {
     found.nonEmpty
   }
 
-  def keyMatches(suggestedAnyCase: String)(theKeyWeHave: String) = {
+  def keyMatches(suggestedAnyCase: String)(theKeyWeHave: String): Boolean = {
     val suggested = suggestedAnyCase.toLowerCase
     val ourKey = theKeyWeHave.toLowerCase
 
     ourKey == suggested || looseMatch(suggested, ourKey)
   }
 
-  def keyContains(suggestedAnyCase: String)(theKeyWeHave: String) = {
+  def keyContains(suggestedAnyCase: String)(theKeyWeHave: String): Boolean = {
     val suggested = suggestedAnyCase.toLowerCase
     val ourKey = theKeyWeHave.toLowerCase
 
@@ -669,4 +700,39 @@ object Props extends PropsOps {
     }
   }
 }
+
+/**
+ * Type-safe JSON serializer for Props objects
+ *
+ * ===Example Usage===
+ * {{{
+ *    import net.liftweb.json.Serialization.read
+ *    implicit val formats = Serialization.formats(NoTypeHints) + new PropsJsonSerializer
+ *    val claimProps = read[Result[Props]](json)
+ *
+ * }}}
+ */
+class PropsJsonSerializer extends Serializer[Props]{
+  val PropsClass: Class[Props] = classOf[Props]
+  override def deserialize(implicit format: Formats): PartialFunction[(TypeInfo, JValue), Props] = {
+    case (TypeInfo(PropsClass, _), JObject(jsonList)) =>
+      val pp = jsonList.foldLeft(Props.empty)((pp, jfield) => {
+        jfield match {
+          case JField(key:String, JString(value)) => pp ++ Props(Map(key->value))
+          case JField(key:String, jsonVal) =>
+            val subMap = jsonVal.extract[Props]
+            pp ++ subMap.addPrefix(key)
+          case _ => pp
+        }
+      })
+      pp
+  }
+
+  override def serialize(implicit format: Formats): PartialFunction[Any, JValue] = {
+    case props:Props =>
+      // TODO(Haroon) Add lift-json support
+      parse(props.toJsonString)
+  }
+}
+
 

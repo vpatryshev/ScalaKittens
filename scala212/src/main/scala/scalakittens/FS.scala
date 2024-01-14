@@ -1,6 +1,6 @@
 package scalakittens
 
-import scala.language.implicitConversions
+import scala.languageFeature.implicitConversions
 import io.{Source => ioS}
 import java.io._
 import java.nio.channels.{Channels, ReadableByteChannel}

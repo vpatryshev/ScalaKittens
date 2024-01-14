@@ -1,11 +1,10 @@
-package scalakittens
+package scalakittens.types
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.util.Base64
 import java.util.zip._
-
 import scala.io.Source
-import scala.language.postfixOps
+import scala.languageFeature.postfixOps
 import scala.util.matching.Regex
 
 trait Strings {
@@ -60,10 +59,10 @@ trait Strings {
 
   def oneOf(cases: String*): String = cases find (_.nonEmpty) getOrElse ""
 
-  // 000123 → 123
+  // 000123 -> 123
   def trimLeftLeading0(s: String): String = s.trim.dropWhile('0' ==).trim
 
-  // (abcd,ab) → (cd)
+  // (abcd,ab) -> (cd)
   def dropPrefix(s: String, prefix: String): String = {
     val leftPos = s.toUpperCase.indexOf(prefix.toUpperCase)
     (if (leftPos >= 0) s.substring(leftPos + prefix.length) else s).trim
@@ -121,7 +120,7 @@ trait Strings {
 
   private val accentCharMap = {
     for {entry ← accented
-         variant ← entry.tail} yield variant → entry.head
+         variant ← entry.tail} yield variant -> entry.head
   } toMap
 
   def eliminateAccent(c: Char): Char = accentCharMap.getOrElse(c, c)

@@ -1,6 +1,6 @@
 package scalakittens
 
-import scala.language.implicitConversions
+import scala.languageFeature.implicitConversions
 
 import util.control.ControlThrowable
 

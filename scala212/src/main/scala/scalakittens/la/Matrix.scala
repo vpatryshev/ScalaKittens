@@ -2,7 +2,7 @@ package scalakittens.la
 
 import java.util
 
-import language.postfixOps
+import languageFeature.postfixOps
 
 /**
   * Matrix defined on vector spaces over real numbers (Doubles, in Scala).

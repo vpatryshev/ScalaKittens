@@ -1,10 +1,12 @@
 package scalakittens
 
-import scala.language.{implicitConversions, postfixOps}
+import scala.languageFeature.{implicitConversions, postfixOps}
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 import Result.{Errors, NoResult}
-import scalakittens.Strings.powerString
+import scalakittens.types.Strings.powerString
+import net.liftweb.json.JsonAST.{JArray, JField, JObject, JString}
+import net.liftweb.json._
 
 
 sealed trait Result[+T] extends Container[T] {
@@ -97,13 +99,13 @@ sealed trait NoGood[T] extends NothingInside[T] { self:Result[T] =>
   def tag: String = s"${ts2b32(timestamp)}"
   override def toString = s"Error: ~$tag($errors)"
 
-  private def base32map = "abdeghjklmnopqrstvxyz.".zipWithIndex.map{case (c,i) => ('a'+i).toChar → c}.toMap.withDefault(identity)
+  private def base32map = "abdeghjklmnopqrstvxyz.".zipWithIndex.map{case (c,i) => ('a'+i).toChar -> c}.toMap.withDefault(identity)
 
   /**
    * Transforms a timestamp to a string
    * First, takes timestamp mod year length, in seconds
    * Then transforms it to base32, skipping probably offending letters (bad words all contain c,f,u letters
-   * e.g. 08/28/2015 @ 12:35am (UTC) → 1440722109 → "molly"
+   * e.g. 08/28/2015 @ 12:35am (UTC) -> 1440722109 -> "molly"
    *
    * @param n time (millis)
    * @return a string
@@ -205,7 +207,7 @@ object Result {
     throw new UnsupportedOperationException("This is not a good result, and we can never produce it")
   }
 
-  private def base32map = "bdeghijklmnopqrstvxyz".zipWithIndex.map{case (c,i) => ('a'+i).toChar → c}.toMap.withDefault(identity)
+  private def base32map = "bdeghijklmnopqrstvxyz".zipWithIndex.map{case (c,i) => ('a'+i).toChar -> c}.toMap.withDefault(identity)
 
   def fiveCharsIn32(n: Long): String = {
     val s0 = java.lang.Long.toString(n, 32)
@@ -317,7 +319,8 @@ object Result {
   def error[T](message: => Any): Bad[T] = bad[T](recordEvent(message)::Nil)
 
   def exception[T](x: Throwable): Bad[T] = bad(x::Nil)
-  def exception[T](x: Throwable, comment: Any): Bad[T] = exception[T](x) orCommentTheError comment
+  def exception[T](x: Throwable, comment: Any): Bad[T] =
+    exception[T](x) orCommentTheError comment
 
   def partition[T](results: TraversableOnce[Result[T]]): (List[T], List[Errors]) = {
     val (goodOnes, badOnes) = ((List.empty[T], List.empty[Errors]) /: results)((collected, current) =>
@@ -412,6 +415,7 @@ object Result {
   }
   def OKif(cond: => Boolean): Outcome = OK filter(_ => cond)
   def OKif(cond: => Boolean, onError: => String): Outcome = OK filter (_ => cond, _ => onError)
+  def OKunless(cond: => Boolean, onError: => String): Outcome = OK filterNot(_ => cond, _ => onError)
   def BadIf(cond: => Boolean): Outcome = OK filterNot (_ => cond)
   def Oops[T](complaint: Any): Bad[T] = error(complaint)
   def NotImplemented[T]: Bad[T] = Oops[T]("not implemented")
@@ -420,5 +424,33 @@ object Result {
   implicit class RuntimeTyped(x: Any) {
     def typed[T]: Result[T] = Result.forValue(x.asInstanceOf[T])
   }
+
+  def parseJson(source: String): Result[Props] = {
+    import net.liftweb._
+    val resultJSON = json.parse(source)
+    resultJSON match {
+      case JObject(List(JField("Value", JObject(keyValueFields)))) =>
+        val mp = for {JField(key, JString(value)) <- keyValueFields}
+          yield key -> value
+
+        Good(Props(Map(mp: _*)))
+      case JObject(List(JField("Errors", JArray(lst)))) =>
+        val errs = for {JString(err) <- lst} yield err
+
+        errs match {
+          case List() => Empty
+          case many => bad(many map recordEvent)
+        }
+      case _ =>
+        error(s"Invalid JSON or Results could not be extracted from JSON ")
+    }
+
+  }
+
+  def negate(outcome: Outcome) = outcome match {
+    case OK => Empty
+    case bad => OK
+  }
+
 }
 

@@ -8,7 +8,7 @@ import scala.reflect.ClassTag
  * Unfortunately, Result's foreach returns itself, which contradicts the foreach contract in traversable. This should be fixed... or use tap instead
  * Created by vpatryshev on 10/18/15.
  */
-trait TraversabilityOfResult[+T] extends GenTraversableOnce[T] with Container[T] {
+trait Traversability[+T] extends GenTraversableOnce[T] with Container[T] {
 
   override def toStream: Stream[T] = toList.toStream
 
@@ -33,7 +33,7 @@ trait TraversabilityOfResult[+T] extends GenTraversableOnce[T] with Container[T]
 //  override def to[Col[_]](implicit cbf: CanBuildFrom[Nothing, T, Col[T]]): Col[T] = ???
 }
 
-trait EmptyTraversability[T] extends TraversabilityOfResult[T] with NothingInside[T] {
+trait EmptyTraversability[T] extends Traversability[T] with NothingInside[T] {
   I: NoGood[T] =>
   override def foldLeft[B](z: B)(op: (B, T) => B): B = z
 
@@ -94,11 +94,11 @@ trait EmptyTraversability[T] extends TraversabilityOfResult[T] with NothingInsid
   override def find(pred: (T) => Boolean): Option[T] = None
 
   override def :\[B](z: B)(op: (T, B) => B): B = z
-  
+
   override def exists(pred: (T) => Boolean): Boolean = false
 }
 
-trait NonemptyTraversability[T] extends TraversabilityOfResult[T] with SomethingInside[T] { me: Good[T] =>
+trait NonemptyTraversability[T] extends Traversability[T] with SomethingInside[T] { me: Good[T] =>
 
   override def toList = {
     val list: List[T] = List(value)

@@ -1,6 +1,6 @@
 package scalakittens.la
 
-import language.{implicitConversions, postfixOps}
+import scala.languageFeature.{implicitConversions, postfixOps}
 import java.util
 
 import ArrayOps._

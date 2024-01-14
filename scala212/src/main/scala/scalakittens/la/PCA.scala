@@ -1,6 +1,6 @@
 package scalakittens.la
 
-import language.existentials
+import languageFeature.existentials
 import Norm.l2
 /**
   * Created by vpatryshev on 5/17/17.

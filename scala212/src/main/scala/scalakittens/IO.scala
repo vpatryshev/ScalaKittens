@@ -1,6 +1,6 @@
 package scalakittens
 
-import language.{implicitConversions, postfixOps}
+import languageFeature.{implicitConversions, postfixOps}
 import java.io._
 import scala.io.{Codec, Source}
 import java.net.URL
@@ -32,22 +32,6 @@ trait IO { self =>
 
   implicit def stringWritable(s: String): CanWrite = bytesWritable(s.getBytes)
 
-
-  def withFile_old[T](file:File)(f: FileInputStream => T): Result[T] = {
-    try {
-      val in = new FileInputStream(file)
-      try {
-        Good(f(in))
-      } catch {
-        case x: Exception => Result.exception(x)
-      } finally {
-        try {in.close()}catch{case _:Any=> }
-      }
-    } catch {
-      case y: Exception => Result.exception(y)
-    }
-  }
-
   def using[T](file:File)(f: FileInputStream => T): Result[T] = Result(Try {
     val in = new FileInputStream(file)
     (Try (f(in)), Try (in.close()))._1
@@ -56,10 +40,6 @@ trait IO { self =>
   def startsWith(prefix: Array[Byte])(file: File):Boolean = {
     using (file) (in => { prefix forall (in.read == _) }) getOrElse false
   }
-
-  def startsWith_old(prefix: Array[Byte])(file: File): Boolean =
-    file.canRead &&
-    withFile_old(file)(in => prefix forall (in.read ==)).asOption .exists (identity)
 
   val MinFileLength = 10
 

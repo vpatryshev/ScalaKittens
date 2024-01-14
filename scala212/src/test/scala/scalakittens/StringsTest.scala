@@ -1,6 +1,7 @@
 package scalakittens
 
 import org.specs2.mutable.Specification
+import scalakittens.types.Strings
 
 /**
  * Test cases for Strings class
