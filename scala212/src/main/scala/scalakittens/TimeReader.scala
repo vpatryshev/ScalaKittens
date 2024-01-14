@@ -9,6 +9,7 @@ import org.joda.time.{DateTime, DateTimeZone}
 import scalakittens.types.Strings
 
 import scala.concurrent.duration.Duration
+import scala.language.postfixOps
 import scala.languageFeature.postfixOps
 import scala.util.matching.Regex
 
@@ -26,12 +27,12 @@ trait TimeReader {
 
     flowOfTime.next // the first drop, may be stale
     val end = flowOfTime.next + ttl
-    flowOfTime takeWhile (end >)
+    flowOfTime takeWhile (_ < end)
   }
 
   def interval(ttl: Duration): Iterator[Long] = interval(ttl.toMillis)
 
-  private[scalakittens] def int(s: String) = s.trim.dropWhile(0==).toInt
+  private[scalakittens] def int(s: String) = s.trim.toInt
 
   def now:java.sql.Timestamp = new java.sql.Timestamp(currentTime)
 
@@ -93,10 +94,11 @@ trait TimeReader {
   def yearAgoShortString: String = shortFormatter.format(yearAgo.toDate.getTime)
 
   // Sets proper time (Noon)
-  def stringToValidDate(format:  String,
-    whatIsIt:String = "Date",
-    earliest:Long   = minTimestamp,
-    latest  :Long   = maxTimestamp): String => Result[Date] = (s: String) => {
+  def stringToValidDate(
+    format  : String,
+    whatIsIt: String = "Date",
+    earliest: Long   = minTimestamp,
+    latest  : Long   = maxTimestamp): String => Result[Date] = (s: String) => {
     val parsed = parseDate(format)(s)
     val result = parsed filter ((d:Date) => {
       val t = d.getTime
@@ -111,7 +113,7 @@ trait TimeReader {
 }
 
 case class DateFormat(fmt: String) {
-  private lazy val parseCurrent: String => Result[Date] =
+  lazy val parseCurrent: String => Result[Date] =
     s => stringToValidDate(fmt, "Date/time")(s)
 
   def isValid(s: String): Boolean = parseCurrent(s).isGood
@@ -135,29 +137,31 @@ trait DateAndTime {
   def dateOption(s: String): Option[java.util.Date] = extractDate(s).asOption
 
   // May not set proper time (Noon) if time is present
-  def extractDate(s:String)(implicit zone: TimeZone = UTC): Result[java.util.Date] =
+  def extractDate(s:String): Result[java.util.Date] =
   {
     val r0 = Result.forValue(s) map (_.trim)
     val r1: Result[String] = r0 filter (_.nonEmpty)
     val filtered = r1 orCommentTheError "date missing"
+    type DateData = (Int, Int, Int, Int, Int, Int, Int)
 
-    def fromMMMddyyyy(sm:String,sd:String,sy:String) =
-      if (months.contains (sm take 3 toLowerCase))
-        Good(months(sm take 3 toLowerCase)+1, int(sd), int(sy), 12, 0, 0, 0)
-      else Result.error(s"Failed to parse date")
+    def fromMMMddyyyy(sm:String, sd:String, sy:String): Result[DateData] = {
+      val shortMonth = (sm take 3).toLowerCase
 
-    def fromMMddyy(sm:String, sd: String, sy: String) = {
+      if (months.contains (shortMonth)) {
+        val date: DateData = (months(shortMonth)+1, int(sd), int(sy), 12, 0, 0, 0)
+        Good(date)
+      } else Result.error(s"Failed to parse date")
+    }
+
+    def fromMMddyy(sm:String, sd: String, sy: String): Good[DateData] = {
       val y0 = int(sy)
       val y = if (y0 < Y2K) y0+2000 else if (y0 < 1900) y0+1900 else y0
       Good((int(sm),int(sd),y, 12, 0, 0, 0))
     }
 
     // Sets proper time (Noon)
-    def fromMMMyy(sm:String, sy: String) = {
-      if (months.contains (sm take 3 toLowerCase))
-        Good(months(sm take 3 toLowerCase)+1, int("01"), int("20"+sy), 12, 0, 0, 0)
-      else Result.error(s"Failed to parse date")
-    }
+    def fromMMMyy(sm:String, sy: String): Result[DateData] =
+      fromMMMddyyyy(sm, "01", "20"+sy)
 
     /**
       * This is a special kind of format, we don't know whether it is
@@ -169,7 +173,7 @@ trait DateAndTime {
       * @param syORm this may be month, or may be year, nobody knows
       * @return sextuples: m,d,y,h,m,s
       */
-    def fromXxyyzz(smORy:String, sd: String, syORm: String) = {
+    def fromXxyyzz(smORy:String, sd: String, syORm: String): Result[DateData] = {
       val y0 = int(syORm)
       val m0 = int(smORy)
       if (y0 > 0 && y0 < 13 && m0 > 0 && m0 < 13) Result.error(s"Could not figure out whether it is $m0/$sd/20$y0 or $y0/$sd/20$m0")
@@ -178,9 +182,16 @@ trait DateAndTime {
       Good((m1,int(sd),y, 12, 0, 0, 0))
     }
 
-    def fromMMddyyyy(sm:String, sd: String, sy: String) = Good((int(sm),int(sd),int(sy), 12, 0, 0, 0))
+    def fromMMddyyyy(sm:String, sd: String, sy: String): Result[DateData] = Good((int(sm),int(sd),int(sy), 12, 0, 0, 0))
 
-    def fromyyyMMddhms(sm:String, sd: String, sy: String, sh: String, smin: String, ssec: String, fraction: Option[String] = Some("0")) = {
+    def fromyyyMMddhms(
+      sm:String,
+      sd: String,
+      sy: String,
+      sh: String,
+      smin: String,
+      ssec: String,
+      fraction: Option[String] = Some("0")): Result[DateData] = {
       val smsi = fraction map(f => int(f.tail + "000" take 3)) getOrElse 0
       Good((int(sm),int(sd),int(sy), int(sh), int(smin), int(ssec), smsi))
     }

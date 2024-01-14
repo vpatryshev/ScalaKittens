@@ -7,15 +7,15 @@ import scalakittens.types.Percentage._
 
 import java.io.InputStream
 import java.util.Date
-import scala.languageFeature.implicitConversions
+import scala.language.implicitConversions
 
 /**
  * All general purpose implicit transformations should be stored here
  */
 trait Metamorphoses extends PropsOps {
-  implicit def aka(x:Option[BigDecimal]) = new {
-    def aka(name: String): String = x.map(name + "=" + _.toString) getOrElse ""
-  }
+//  implicit def aka(x:Option[BigDecimal]) = new {
+//    def aka(name: String): String = x.map(name + "=" + _.toString) getOrElse ""
+//  }
 
   implicit def byteStream(s: String): InputStream = new java.io.ByteArrayInputStream(s.getBytes("UTF-8"))
 

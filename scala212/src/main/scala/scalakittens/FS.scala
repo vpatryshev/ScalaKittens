@@ -1,6 +1,6 @@
 package scalakittens
 
-import scala.languageFeature.implicitConversions
+import scala.language.implicitConversions
 import io.{Source => ioS}
 import java.io._
 import java.nio.channels.{Channels, ReadableByteChannel}
@@ -33,12 +33,12 @@ trait FS { fs =>
   sealed protected class Entry(val file: File) {
     require(file != null)
 
-    lazy val canonicalFile = file.getCanonicalFile.getAbsoluteFile
-    lazy val absolutePath = canonicalFile.getAbsolutePath
-    def parent = Folder(canonicalFile.getParentFile)
-    def delete = file.delete
-    def exists = fs.exists(file)
-    override def toString = canonicalFile.toString
+    lazy val canonicalFile: File = file.getCanonicalFile.getAbsoluteFile
+    lazy val absolutePath: String = canonicalFile.getAbsolutePath
+    def parent: Folder = Folder(canonicalFile.getParentFile)
+    def delete: Boolean = file.delete
+    def exists: Boolean = fs.exists(file)
+    override def toString: String = canonicalFile.toString
     def size: Long = 0
   }
 
@@ -46,7 +46,7 @@ trait FS { fs =>
     require(exists, "File " + f + " must exist")
   }
 
-  def isAbsolute(name: String) = {
+  def isAbsolute(name: String): Boolean = {
     val sepAt = name indexOf File.separatorChar
     sepAt == 0 ||
       sepAt > 0 && name(sepAt - 1) == ':'
@@ -59,9 +59,9 @@ trait FS { fs =>
     def /(name: String)    = new File(path, name)
     def file(path: Seq[String]): TextFile = new TextFile((canonicalFile /: path) (new File(_, _)))
     def file(path: String): TextFile = new TextFile(file(path split "/"))
-    def mkdirs = path.mkdirs
+    def mkdirs: Boolean = path.mkdirs
 
-    def isSubfolderOf(parent: Folder) = {
+    def isSubfolderOf(parent: Folder): Boolean = {
       absolutePath == parent.absolutePath ||
         (absolutePath startsWith (parent.absolutePath + File.separatorChar))
     }
@@ -74,7 +74,7 @@ trait FS { fs =>
     }
 
     def existingFile(name: String) = new ExistingFile(file(name).file)
-    def contains(name: String) = fs.exists(new File(path, name))
+    def contains(name: String): Boolean = fs.exists(new File(path, name))
     def listFiles: List[File] = Option(canonicalFile.listFiles).toList.flatMap(_.toList)
     def files: List[ExistingFile] = listFiles.filter(_.isFile).map(f => existingFile(f.getName))
     def subfolders: List[Folder]  = listFiles.filter(_.isDirectory).map(Folder)
@@ -82,21 +82,26 @@ trait FS { fs =>
 
     override def size: Long = entries.map(_.size).sum
 
-    override def equals(x: Any) = x.isInstanceOf[Folder] && canonicalFile == x.asInstanceOf[Folder].canonicalFile
+    override def equals(x: Any): Boolean = x.isInstanceOf[Folder] && canonicalFile == x.asInstanceOf[Folder].canonicalFile
   }
 
 
   class TextFile(file: File) extends Entry(file) {
     override def size: Long = file.length
 
-    def text = ioS.fromFile(file).mkString
+    def text: String = {
+      val src = ioS.fromFile(file)
+      val text = src.mkString
+      src.close()
+      text
+    }
 
-    def text_=(content: AnyRef) {
+    def text_=(content: AnyRef): Unit = {
       val out = new PrintWriter(file, "UTF-8")
       try{ out.print(content) } finally{ out.close() }
     }
 
-    def text_+=(content: AnyRef) {
+    def text_+=(content: AnyRef): Unit = {
       val out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file, true), "UTF-8"))
       try{ out.print(content) } finally{ out.close() }
     }
@@ -107,41 +112,41 @@ trait FS { fs =>
       ()
     }
 
-    def write(in: ReadableByteChannel, length: Long) {
+    def write(in: ReadableByteChannel, length: Long): Unit = {
       writeAt(new FileOutputStream(file, false), 0)(in, length)
     }
 
-    def append(in: ReadableByteChannel, length: Long) {
+    def append(in: ReadableByteChannel, length: Long): Unit = {
       writeAt(new FileOutputStream(file, true), file.length)(in, length)
     }
 
-    def write(in: InputStream, length: Long) {
+    def write(in: InputStream, length: Long): Unit = {
       write(Channels.newChannel(in), length)
     }
 
-    def append(in: InputStream, length: Long) {
+    def append(in: InputStream, length: Long): Unit = {
       append(Channels.newChannel(in), length)
     }
 
     // careful with this method, input stream may not show the full size via available()
-    def <<<(in: InputStream) {
+    def <<<(in: InputStream): Unit = {
       write(in, in.available)
     }
 
     // careful with this method, input stream may not show the full size via available()
-    def +<<(in: InputStream) {
+    def +<<(in: InputStream): Unit = {
       append(in, in.available)
     }
 
-    def textOr(default: String) = try { text } catch { case _:Exception => default }
+    def textOr(default: String): String = try { text } catch { case _:Exception => default }
     def probablyText: Either[Any, String] = try { Right(text) } catch { case x: Exception => Left(x) }
   }
 
   // TODO(vlad): make it efficient - use channels
-  def cp(from: TextFile, to: TextFile) { to.text = from.text }
+  def cp(from: TextFile, to: TextFile): Unit = { to.text = from.text }
 
   // For casual java usage
-  def subfolder(parent: File, path: String) = folder(parent).subfolder(path).canonicalFile
+  def subfolder(parent: File, path: String): File = folder(parent).subfolder(path).canonicalFile
 }
 
 object FS extends FS

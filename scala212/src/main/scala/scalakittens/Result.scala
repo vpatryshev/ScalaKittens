@@ -1,6 +1,6 @@
 package scalakittens
 
-import scala.languageFeature.{implicitConversions, postfixOps}
+import scala.language.{implicitConversions, postfixOps}
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 import Result.{Errors, NoResult}

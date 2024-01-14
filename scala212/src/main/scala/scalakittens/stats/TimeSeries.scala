@@ -2,7 +2,7 @@ package scalakittens.stats
 
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration._
-import scala.languageFeature.postfixOps
+import scala.language.postfixOps
 import scalakittens.{DateAndTime, TimeReader}
 
 /**

@@ -4,7 +4,7 @@ import Result.Outcome
 import org.scalakittens.ReadsJson
 
 import scala.io.Source
-import scala.languageFeature.{implicitConversions, postfixOps}
+import scala.language.{implicitConversions, postfixOps}
 import scala.util.parsing.combinator.RegexParsers
 import scalakittens.types.Strings._
 import org.json4s._
@@ -552,18 +552,6 @@ object Props extends PropsOps with ReadsJson[Props] {
       Good(props)
 
     case x => Result.error(s"Failed to retrieve props from table: $x in $source")
-  }
-
-  private def sameKeyBundle(theKeyWeHave: String, suggestedAnyCase: String) = {
-    val suggested = suggestedAnyCase.toLowerCase
-    val ourKey = theKeyWeHave.toLowerCase
-
-    ourKey == suggested || {
-      val keys = ourKey.split("\\.").toSet
-      val suggestedKeys = suggested.split("\\.") .map (_.replaceAll("\\?", ".")) .toSet
-
-      keys == suggestedKeys
-    }
   }
 
   private def containsKeyBundle(theKeyWeHave: String, suggestedAnyCase: String) = {

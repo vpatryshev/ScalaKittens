@@ -1,6 +1,6 @@
 package scalakittens
 
-import scala.languageFeature.implicitConversions
+import scala.language.implicitConversions
 import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.TimeUnit
 import ref.{WeakReference, Reference, SoftReference}
@@ -30,12 +30,10 @@ import annotation.tailrec
  *
  * CacheUnit's apply() method returns the fresh value; if the value stored in current Container is not fresh, it's reevaluated.
  *
- * You can find use cases in the test. Here's one:
- * <codee of bumping the counter.
  */
 trait Caching {
   var debugme = false
-  def debug(s: => String) = if (debugme) println(s"$now](${Thread.currentThread.getId})$s")
+  def debug(s: => String): Unit = if (debugme) println(s"$now](${Thread.currentThread.getId})$s")
   // indirection that is good for applying cake pattern: see the object below and the test where time is mocked
   protected def now: Long // expecting nanos
 
@@ -43,7 +41,7 @@ trait Caching {
     if (validUntil_nano < 0) throw new Exception("wtf, negative validUntil")
     debug("Creating new " + this + " valid until " + (if (validUntil_nano >= Long.MaxValue/2) "forever" else validUntil_nano))
     private lazy val value: T = fun()
-    def stillValid = now < validUntil_nano
+    def stillValid: Boolean = now < validUntil_nano
     def get: Option[T] = if (stillValid) Some(value) else None
   }
 
@@ -88,7 +86,7 @@ trait Caching {
      * @param timeout units are specified further down
      * @return a half-way object that needs a time unit to produce a cache unit (hope you follow me)
      */
-    def validFor(timeout: Long) = new {
+    case class validFor private(timeout: Long) {
       def NANOSECONDS  = apply(TimeUnit.NANOSECONDS)
       def MICROSECONDS = apply(TimeUnit.MICROSECONDS)
       def MILLISECONDS = apply(TimeUnit.MILLISECONDS)
@@ -109,18 +107,18 @@ trait Caching {
   private object WeakFactory extends RefFactory { def apply[X <: AnyRef](x: X) = new WeakReference[X](x) }
 
   private class HardReference[+X <: AnyRef](x:X) extends Reference[X] {
-    def apply() = x
-    def get = Some(x)
+    def apply(): X = x
+    def get: Option[X] = Some(x)
     def isEnqueued() = false
     def enqueue() = false
-    def clear() {}
+    def clear(): Unit = {}
   }
 
   def cache[T](fun: () => T) = new CacheUnit[T](fun, Long.MaxValue, HardFactory) // by default it's valid forever
 }
 
 object Caching extends Caching {
-  protected def now = System.nanoTime
+  protected def now: Long = System.nanoTime
 
   implicit def currentValue[T](cu: CacheUnit[T]): T = cu.apply()
 }

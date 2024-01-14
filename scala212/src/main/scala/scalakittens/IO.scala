@@ -1,6 +1,6 @@
 package scalakittens
 
-import languageFeature.{implicitConversions, postfixOps}
+import language.{implicitConversions, postfixOps}
 import java.io._
 import scala.io.{Codec, Source}
 import java.net.URL
@@ -14,20 +14,11 @@ trait IO { self =>
     def #>(f: File): Result[File]
   }
 
-  implicit def bytesWritable(buf: Array[Byte]): CanWrite = new CanWrite {
-    /**
-     * Writes an array of bytes to a file.
-     * Has a side-effect
-      *
-      * @param f Any [[File]]
-     * @return [[Result]]
-     */
-    def #>(f: File): Result[File] = {
-      val out = new FileOutputStream(f)
-      val result = Result.attempt({out.write(buf); Good(f)}, s"Failed to write to ${f.getAbsolutePath}")
-      out.close()
-      result
-    }
+  implicit def bytesWritable(buf: Array[Byte]): CanWrite = (f: File) => {
+    val out = new FileOutputStream(f)
+    val result = Result.attempt({ out.write(buf); Good(f) }, s"Failed to write to ${f.getAbsolutePath}")
+    out.close()
+    result
   }
 
   implicit def stringWritable(s: String): CanWrite = bytesWritable(s.getBytes)
@@ -44,18 +35,24 @@ trait IO { self =>
   val MinFileLength = 10
 
   def ensureFileIsOk(path: String): Result[File] = {
-    Good(path).filter((path:String) => !path.isEmpty, "Empty file path, that's wrong.").flatMap(path => Result.attempt(ensureFileIsOk(new File(path).getAbsoluteFile.getCanonicalFile)))
+    Good(path).filter((path:String) => path.nonEmpty, "Empty file path, that's wrong.").
+      flatMap(path => Result.attempt(ensureFileIsOk(new File(path).getAbsoluteFile.getCanonicalFile)))
   }
 
-  def ensureFileIsOk(f: File):Result[File] = {
-    Good(f).
-      filter(!(_:File).getName.isEmpty,              s"Empty file name, that's wrong.").
-      filter( (_:File).exists,                  f => s"File not found: $f").
-      filter( (_:File).isFile,                  f => s"Expected a file, but it is not: $f").
-      filter( (_:File).length >= MinFileLength, f => s"The file $f is too small (<$MinFileLength bytes).")
+  /**
+    * Check that a file is ok - it is file, it exists, and it is not too short
+    * @param file the file
+    * @return the same file wrapped in [[Result]]
+    */
+  def ensureFileIsOk(file: File):Result[File] = {
+    Good(file).
+      filter((_: File).getName.nonEmpty,       s"Empty file name, that's wrong.").
+      filter((_:File).exists,                  f => s"File not found: $f").
+      filter((_:File).isFile,                  f => s"Expected a file, but it is not: $f").
+      filter((_:File).length >= MinFileLength, f => s"The file $f is too small (<$MinFileLength bytes).")
   }
 
-  def copyToFile(url: URL, file: File) {
+  def copyToFile(url: URL, file: File): Unit = {
     file.delete()
     val out = new FileOutputStream(file).getChannel
     val in: InputStream = url.openStream()
@@ -71,29 +68,23 @@ trait IO { self =>
   }
 
 
-  def onSource(s:Source)(op: String => Unit) = s.getLines().takeWhile(!_.isEmpty) foreach op
+  def onSource(s:Source)(op: String => Unit): Unit = s.getLines().takeWhile(_.nonEmpty) foreach op
 
-  def onStream(i: InputStream)(op: String => Unit) = onSource(Source.fromInputStream(i))(op)
+  def onStream(i: InputStream)(op: String => Unit): Unit = onSource(Source.fromInputStream(i))(op)
 
-  def onInput(op: String => Unit) = onStream(System.in)(op)
+  def onInput(op: String => Unit): Unit = onStream(System.in)(op)
 
-  def resource(url: String) = Result.forValue(self.getClass.getResource(url.replaceAll("%20", " "))) orCommentTheError s"Resource not found: $url"
+  def resource(url: String): Result[URL] = Result.forValue(self.getClass.getResource(url.replaceAll("%20", " "))) orCommentTheError s"Resource not found: $url"
 
   def fromResource(url: String): Result[InputStream] = resource(url) map (_.openStream())
 
-  def linesFromResource(path: String, codec:Codec = Codec.UTF8) = fromResource(path) flatMap (in => Result.forValue {
+  def linesFromResource(path: String, codec:Codec = Codec.UTF8): Result[Iterator[String]] = fromResource(path) flatMap (in => Result.forValue {
     Source.fromInputStream(in)(codec).getLines()
   })
   
-  def readResource(path: String, codec:Codec = Codec.UTF8) = {
+  def readResource(path: String, codec:Codec = Codec.UTF8): Result[String] = {
     linesFromResource(path, codec).map(_.mkString)
   }
-    /*
-    fromResource(path) flatMap (in => Result.forValue {
-    val text = Source.fromInputStream(in)(codec).mkString
-    in.close()
-    text
-  })*/
 
   def bytesOf(inputStream: InputStream): Result[Array[Byte]] = Result.forValue {
     val in = new BufferedInputStream(inputStream)
@@ -107,7 +98,7 @@ trait IO { self =>
     bytes
   })
 
-  def grabResource(path:String, codec:Codec = Codec.UTF8) =
+  def grabResource(path:String, codec:Codec = Codec.UTF8): String =
     readResource(path, codec).getOrElse(throw new FileNotFoundException(s"Resource not found: $path"))
 
   implicit class BetterFile(val f:File) { self =>
@@ -120,7 +111,7 @@ trait IO { self =>
               extensionOpt.fold(f.getName + ".")(f.getName dropRight _.length) + ext
       )
 
-    def extension = extensionOpt getOrElse ""
+    def extension: String = extensionOpt getOrElse ""
     def extension_=(ext:String):Result[BetterFile] = {
       val g = self withExtension ext
       val newOne = if (f renameTo g) g else f
@@ -128,7 +119,7 @@ trait IO { self =>
     }
   }
 
-  def saveToFile(s:String, name: String = "") = {
+  def saveToFile(s:String, name: String = ""): Result[File] = {
     Result.attempt ({
       val tmp = new File("tmp")
       tmp.mkdir

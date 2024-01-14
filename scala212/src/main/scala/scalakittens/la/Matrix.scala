@@ -2,7 +2,7 @@ package scalakittens.la
 
 import java.util
 
-import languageFeature.postfixOps
+import language.postfixOps
 
 /**
   * Matrix defined on vector spaces over real numbers (Doubles, in Scala).
@@ -13,7 +13,7 @@ import languageFeature.postfixOps
   * 
   * For categorical reasons, the first type argument is domain, the second is codomain.
   * 
-  * Created by vpatryshev on 5/15/17.
+  * Created by Vlad Patryshev on 5/15/17.
   */
 abstract class  Matrix[Domain <: VectorSpace, Codomain <: VectorSpace](
     val domain: Domain, val codomain: Codomain) extends ((Int, Int) => Double) with Iterable[Double] {
@@ -85,14 +85,14 @@ abstract class  Matrix[Domain <: VectorSpace, Codomain <: VectorSpace](
 
 
   def allElements: IndexedSeq[Double] = for {
-    i ← rowRange
-    j ← columnRange
+    i <- rowRange
+    j <- columnRange
   } yield this(i, j)
 
   def iterator: Iterator[Double] = {
     for {
-      i ← rowRange
-      j ← columnRange
+      i <- rowRange
+      j <- columnRange
     } yield this(i, j)
   } iterator
   
@@ -104,8 +104,8 @@ abstract class  Matrix[Domain <: VectorSpace, Codomain <: VectorSpace](
     */
   def foreach(op: Int => Int => Unit): this.type = {
     for {
-      i ← rowRange
-      j ← columnRange
+      i <- rowRange
+      j <- columnRange
     } op(i)(j)
     this
   }
@@ -142,7 +142,7 @@ abstract class  Matrix[Domain <: VectorSpace, Codomain <: VectorSpace](
     * A difference of two matrices
     *
     * @param other another matrix
-    * @return the diference (virtual matrix, no space taken)
+    * @return the difference (virtual matrix, no space taken)
     */
   def -(other: Matrix[Domain, Codomain]): Matrix[Domain, Codomain] = {
     new Matrix.OnFunction(domain, codomain, (i, j) => this(i, j) - other(i, j))
@@ -161,8 +161,8 @@ abstract class  Matrix[Domain <: VectorSpace, Codomain <: VectorSpace](
     
     val data = new Array[Double](nRows * that.nCols)
     for {
-      i ← this.rowRange
-      j ← that.columnRange
+      i <- this.rowRange
+      j <- that.columnRange
     } data(i*that.nCols + j) = columnRange map (k => this(i, k) * that(k, j)) sum
 
     val product = Matrix[NewDomain, Codomain](that.domain, codomain, data)
@@ -207,7 +207,7 @@ abstract class  Matrix[Domain <: VectorSpace, Codomain <: VectorSpace](
   override def toString: String = {
     val out = new StringBuilder
     out append "["
-    for (i ← rowRange) {
+    for (i <- rowRange) {
       out append "["
       out.append(row(i) mkString ",")
       out append "]\n"
@@ -229,7 +229,7 @@ abstract class MutableMatrix[Domain <: VectorSpace, Codomain <: VectorSpace](
     * @param j column umber
     * @param value value to set
     */
-  def update(i: Int, j: Int, value: Double)
+  def update(i: Int, j: Int, value: Double): Unit
 
   /**
     * copies values of another matrix into this one
@@ -282,7 +282,7 @@ object Matrix {
       i*nCols+j
     }
 
-    protected def index(i: Int, j: Int): Int = {
+    private def index(i: Int, j: Int): Int = {
       checkIndexes(i, j)
       internalIndex(i, j)
     }
@@ -290,10 +290,6 @@ object Matrix {
     override def update(i: Int, j: Int, value: Double): Unit = {
       val idx = index(i, j)
       data(idx) = value
-    }
-
-    protected def internalUpdate(i: Int, j: Int, value: Double): Unit = {
-      data(internalIndex(i,j)) = value
     }
 
     override def apply(i: Int, j: Int): Double = {

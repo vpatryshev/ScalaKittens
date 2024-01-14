@@ -1,7 +1,7 @@
 package scalakittens
 
 import scala.io.Source
-import scala.languageFeature.reflectiveCalls
+import scala.languageFeature.{reflectiveCalls, postfixOps}
 
 import scalakittens.Result.OK
 import scalakittens.testing.TestBase

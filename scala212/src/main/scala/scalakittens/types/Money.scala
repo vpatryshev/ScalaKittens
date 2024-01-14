@@ -3,7 +3,8 @@ package scalakittens.types
 import scalakittens.{Empty, Good, Result}
 
 import java.math.MathContext
-import scala.languageFeature.{implicitConversions, postfixOps}
+import scala.language.implicitConversions
+import scala.language.{implicitConversions, postfixOps}
 
 trait Money {
   sealed class SmartMoney(value:BigDecimal) {
@@ -20,7 +21,7 @@ trait Money {
 
   private lazy val MoneyRegex = "[^\\$\\d\\.]*(\\$?-?\\$?\\d*(\\.\\d{0,2})?).*".r
   val ZeroBucks = "0.00"
-  private lazy val ZeroDollars:BigDecimal = dollarAmountToBigDecimal("0.00").iHope
+  lazy val ZeroDollars:BigDecimal = dollarAmountToBigDecimal(ZeroBucks).iHope
 
   def MaxMoneyValue: BigDecimal = BigDecimal("99999999999999.99")
 

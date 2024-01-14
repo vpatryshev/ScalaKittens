@@ -1,6 +1,6 @@
 package scalakittens.la
 
-import scala.languageFeature.{implicitConversions, postfixOps}
+import scala.language.{implicitConversions, postfixOps}
 import java.util
 
 import ArrayOps._
@@ -9,7 +9,7 @@ import scala.util.{Random, Try}
 /**
   * Making vectors path-dependent.
   * @see [[https://stackoverflow.com/questions/44588231/path-dependent-types-without-a-path]]
-  * Created by vpatryshev on 6/8/17.
+  * Created by Vlad Patryshev on 6/8/17.
   */
 case class VectorSpace(dim: Int) { space =>
 
