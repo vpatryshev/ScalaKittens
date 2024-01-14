@@ -12,6 +12,8 @@ import org.json4s.native.JsonMethods
 import org.json4s.native.JsonMethods._
 import scalakittens.Props.{PropMap, props}
 
+import scala.annotation.tailrec
+import scala.language.postfixOps
 import scala.util.matching.Regex
 
 /**
@@ -589,33 +591,34 @@ object Props extends PropsOps with ReadsJson[Props] {
     withNewKeys
   }
 
-  private def mapify(seq: Seq[Any]) = seq.zipWithIndex map {
-    case (x, i) => numberKey(i+1) -> x
-  } toMap
-
-  def fromMap(source: Map[_, _]): Props = {
+  private def fromMap(source: Map[_, _]): Props = {
     val collection: Iterable[Props] = source map {
-      case (k0, v) =>
-        val k = k0.toString
-        v match {
-          case null        => Props.empty
-          case m:Map[_, _] => fromMap(m).addPrefix(k)
-          case s:Seq[_]    => fromMap(mapify(s)).addPrefix(k)
-          case x: Any      => props(k -> (""+x))
-        }
+      case (k0, v) => fromJsonWithPrefix(k0.toString, v)
     }
     accumulate(collection)
   }
 
-  def parseJson(source: String): Result[Props] = {
-    Result.forValue(JsonMethods.parse(source)) map {
-      case value => value match {
-          case m:Map[_, _] => fromMap(m)
-          case a:Seq[Any]  => fromMap(mapify(a))
-          case x           => props("_" -> (""+x))
-        }
+  private def mapify(seq: Seq[Any]) = seq.zipWithIndex map {
+    case (x, i) => numberKey(i + 1) -> x
+  } toMap
+
+  private def fromSeq(s:Seq[Any]): Props = fromMap(mapify(s))
+
+  @tailrec
+  private def fromJsonWithPrefix(prefix: String, value: Any): Props = {
+    value match {
+      case null => Props.empty
+      case map: Map[_, _] => fromMap(map).addPrefix(prefix)
+      case seq: Seq[_]    => fromSeq(seq).addPrefix(prefix)
+      case jo: JObject    => fromJsonWithPrefix(prefix, jo.values)
+      case ja: JArray     => fromJsonWithPrefix(prefix, ja.values)
+      case js: JValue     => props(prefix -> js.values.toString)
+      case x: Any         => props(prefix -> ("" + x))
     }
   }
+
+  def parseJson(source: String): Result[Props] =
+    Result.forValue(fromJsonWithPrefix("", JsonMethods.parse(source)))
 
   object parse extends RegexParsers {
     override def skipWhitespace = false

@@ -374,7 +374,7 @@ class Props_Test extends TestBase
 
   "Parser" >> {
     "parse simple sample as text" >> {
-      val sutOpt = Props parse "fp(Map(\"a\" -> \"b\"))"
+      val sutOpt = Props parse """fp(Map("a" -> "b"))"""
       sutOpt match {
         case Good(sut) =>
           sut @@ "a" must_== Good("b")
@@ -512,8 +512,36 @@ class Props_Test extends TestBase
         "item.size" -> "790523"
     ))
 
-    "check quotes" >> {
-      parseAndCheck maps ("{ \"v\":\"ab\\\"c\"}" -> props("v" -> "ab\"c"))
+    "check json with quotes in string" >> {
+      val (source, expected) = """{ "v":"ab\"c"}""" -> props("v" -> """ab"c""")
+      val propOpt = Props.parseJson(source)
+      propOpt match {
+        case Good(p) => p shouldEqual expected
+        case bad => failure(s"Failed to parse <<$source>> got $bad"); ???
+      }
+
+      ok
+    }
+
+    "check json with long timestamp" >> {
+      val (source, expected) = """{"date" : 1405445271804}""" -> props("date" -> "1405445271804")
+      val propOpt = Props.parseJson(source)
+      propOpt match {
+        case Good(p) => p shouldEqual expected
+        case bad => failure(s"Failed to parse <<$source>> got $bad"); ???
+      }
+
+      ok
+    }
+
+    "check json with objects in array" >> {
+      val (source, expected) =
+        """[{"a":1},{"b":2},[3,4]]""" -> props("[[1]].a" -> "1", "[[2]].b" -> "2", "[[3]].[[1]]" -> "3", "[[3]].[[2]]" -> "4")
+      val propOpt = Props.parseJson(source)
+      propOpt match {
+        case Good(p) => p shouldEqual expected
+        case bad => failure(s"Failed to parse <<$source>> got $bad")
+      }
       ok
     }
 
@@ -524,16 +552,16 @@ class Props_Test extends TestBase
         //bad json lib        "{\t\"v\":\"1\"\\n}"  -> props("v" -> "1"),
         //bad json lib        "{\t\"v\":\"1\"\\r\\n}"  -> props("v" -> "1"),
         //bad json lib        "{\"v\":123456789123456789123456789}" -> props("v" -> "123456789123456789123456789"),
-        "{ \"v\":1}" -> props("v" -> "1.0"), // why?!
-        "[ 1,2,3,4]" -> props("[[1]]" -> "1.0", "[[2]]" -> "2.0", "[[3]]" -> "3.0", "[[4]]" -> "4.0"),
-        "[ \"1\",\"2\",\"3\",\"4\"]" -> props("[[1]]" -> "1", "[[2]]" -> "2", "[[3]]" -> "3", "[[4]]" -> "4"),
-        "[ { }, { },[]]" -> Props.empty,
-        "{\"a\":null}" -> Props.empty,
-        "{\"a\":true}" -> props("a" -> "true"),
-        "{\"x\":[1,2,3]}" -> props("x.[[1]]" -> "1.0", "x.[[2]]" -> "2.0", "x.[[3]]" -> "3.0"),
-        "[{\"a\":1},{\"b\":2},[3,4]]" -> props("[[1]].a" -> "1.0", "[[2]].b" -> "2.0", "[[3]].[[1]]" -> "3.0", "[[3]].[[2]]" -> "4.0"),
-        "{\"a\":{\"b\":\"c\"}}" -> props("a.b" -> "c"),
-        "{\"a\":[],\"b\":{},\"c\":{\"p\":\"q\"}}" -> props("c.p" -> "q"),
+        """{ "v":1}""" -> props("v" -> "1"), // why?!
+        """[ 1,2,3,4]""" -> props("[[1]]" -> "1", "[[2]]" -> "2", "[[3]]" -> "3", "[[4]]" -> "4"),
+        """[ "1","2","3","4"]""" -> props("[[1]]" -> "1", "[[2]]" -> "2", "[[3]]" -> "3", "[[4]]" -> "4"),
+        """[ { }, { },[]]""" -> Props.empty,
+        """{"a":null}""" -> Props.empty,
+        """{"a":true}""" -> props("a" -> "true"),
+        """{"x":[1,2,3]}""" -> props("x.[[1]]" -> "1", "x.[[2]]" -> "2", "x.[[3]]" -> "3"),
+        """[{"a":1},{"b":2},[3,4]]""" -> props("[[1]].a" -> "1", "[[2]].b" -> "2", "[[3]].[[1]]" -> "3", "[[3]].[[2]]" -> "4"),
+        """{"a":{"b":"c"}}""" -> props("a.b" -> "c"),
+        """{"a":[],"b":{},"c":{"p":"q"}}""" -> props("c.p" -> "q"),
         """{
           "type" : "Attachment",
           "date" : 1405445271804,
@@ -550,30 +578,30 @@ class Props_Test extends TestBase
                   "uid" : "",
                   "userID" : 10204,
                   "name" : "statement.pdf",
-                  "attachedOn" : 1405445271000,
+                  "attachedOn" : 1405445271804,
                   "mimeType" : "application\\/pdf",
-                  "updatedAt" : 1405445271000,
-                  "updatedMS" : 1405445271000,
+                  "updatedAt" : 1405445271804,
+                  "updatedMS" : 1405445271804,
                   "size" : 790523
           }
           }""" -> props(
           "type" -> "Attachment",
-          "date" -> "1.405445271804E12",
-          "frameType" -> "2.0",
+          "date" -> "1405445271804",
+          "frameType" -> "2",
           "message" -> "OK",
-          "httpCode" -> "200.0",
+          "httpCode" -> "200",
           "affectedIDs.[[1]]" -> "11620",
-          "item.ID" -> "11620.0",
-          "item.EOBID" -> "0.0",
+          "item.ID" -> "11620",
+          "item.EOBID" -> "0",
           "item.subsID" -> "",
           "item.uid" -> "",
-          "item.userID" -> "10204.0",
+          "item.userID" -> "10204",
           "item.name" -> "statement.pdf",
-          "item.attachedOn" -> "1.405445271E12", // pretty dumb eh
-          "item.updatedAt" -> "1.405445271E12",
+          "item.attachedOn" -> "1405445271804", // pretty dumb eh
+          "item.updatedAt" -> "1405445271804",
           "item.mimeType" -> "application\\/pdf",
-          "item.updatedMS" -> "1.405445271E12",
-          "item.size" -> "790523.0"
+          "item.updatedMS" -> "1405445271804",
+          "item.size" -> "790523"
         ))
 
       parseAndCheck maps ((samples++extraSamples).toArray:_*)
@@ -583,6 +611,7 @@ class Props_Test extends TestBase
     }
 
     "generate" >> {
+      props("v" -> """ab"c""").toJsonString must_== """{"v": "ab\"c"}"""
       props("[[1]]" -> "1", "[[2]]" -> "2", "[[3]]" -> "3", "[[4]]" -> "4").toJsonString must_== """["1", "2", "3", "4"]"""
 
       val generate = Function[Props, String]("json stringifier",

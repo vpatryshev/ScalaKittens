@@ -77,13 +77,15 @@ trait Strings {
     */
   def dropLeading(chars: String): String => String = (s: String) => s dropWhile (chars contains _)
 
-  def escape(s: String) = s //*this part is good for debugging*/ map (c => ((c < 128) ? (""+c) | (c.toInt.formatted("\\u%04x") ))) mkString ""
+  def escape(s: String) = s.replaceAll("\"", "\\\\\"") //*this part is good for debugging*/ map (c => ((c < 128) ? (""+c) | (c.toInt.formatted("\\u%04x") ))) mkString ""
 
   def spaces(n: Int): String = " " * n
 
   private val Q = "\""
 
-  def quote(s: String): String = Q + escape(s) + Q
+  def quote(s: String): String = {
+    Q + escape(s) + Q
+  }
 
   /**
     * I could not figure out how to do multiline match in Scala; so had to write this.
