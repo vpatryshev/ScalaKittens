@@ -1,16 +1,15 @@
 package scalakittens.la
 
 import org.specs2.mutable.Specification
-
 import scalakittens.la.Matrix.OnFunction
 
 /**
-  * Created by vpatryshev on 5/7/17.
+  * Created by Vlad Patryshev on 5/7/17.
   */
 class MatrixTest extends Specification {
   import Spaces._
   
-  private def nxm(n: Int, m: Int, f: Int => Int => Double) = {
+  private def nxm(n: Int, m: Int, f: Int => Int => Double): Array[Array[Double]] = {
     ((0 until n) map { i =>
       ((0 until m) map { j =>
         f(i)(j)
@@ -24,7 +23,7 @@ class MatrixTest extends Specification {
     extends MutableMatrix[Dom, Codom](domain, codomain) {
     override def nRows: Int = codomain.dim
     override def nCols: Int = domain.dim
-    val d = nxm(nRows, nCols, f)
+    private val d = nxm(nRows, nCols, f)
     override def update(i: Int, j: Int, value: Double): Unit = {
       val row = d(i)
       row(j) = value
@@ -88,9 +87,9 @@ class MatrixTest extends Specification {
 
       val data = new Array[Double](3 * 5)
       for {
-        i ← 0 until 3
-        j ← 0 until 5
-      } data(i * 5 + j) = (0 until 4) map (k => sut1(i, k) * sut2(k, j)) sum
+        i <- 0 until 3
+        j <- 0 until 5
+      } data(i * 5 + j) = (0 until 4).map(k => sut1(i, k) * sut2(k, j)).sum
 
       data === Array(4.0, 2.0, 4.0, 2.0, 4.0, 24.0, 22.0, 24.0, 22.0, 24.0, 44.0, 42.0, 44.0, 42.0, 44.0)
 
@@ -98,7 +97,6 @@ class MatrixTest extends Specification {
 
       product === expected
 
-//      R4.mult(sut1, sut2) aka s"$sut1\n*\n$sut2" must_== expected
     }
 
     "multiply by a vector" in {
@@ -157,16 +155,16 @@ class MatrixTest extends Specification {
       Matrix(R3, R2).nRows === 2
       val sut = build(R10, R7, i => j => 1.0+i+j)
       sut.nRows === 7
-      build(R2, R0, i => j => 1.0).nRows === 0
-      build(R0, R7, i => j => 1.0).nRows === 7
+      build(R2, R0, _ => _ => 1.0).nRows === 0
+      build(R0, R7, _ => _ => 1.0).nRows === 7
     }
 
     "have correct number of columns" in {
       Matrix(R3, R2).nCols === 3
       val sut = build(R7, R10, i => j => 1.0+i+j)
       sut.nCols === 7
-      build(R2, R0, i => j => 1.0).nCols === 2
-      build(R0, R7, i => j => 1.0).nCols === 0
+      build(R2, R0, _ => _ => 1.0).nCols === 2
+      build(R0, R7, _ => _ => 1.0).nCols === 0
     }
 
     "have apply()" in {
@@ -299,11 +297,11 @@ class MatrixTest extends Specification {
       val sut = source.triangle
       sut(5,5) must_== 51.0
       sut(5,9) must_== 107.0
-      val sucp = sut.copy
-      sucp(5,5) must_== 51.0
-      sucp(5,9) must_== 107.0
-      sucp must_== source
-      source.transpose.copy must_== sucp
+      val copy = sut.copy
+      copy(5,5) must_== 51.0
+      copy(5,9) must_== 107.0
+      copy must_== source
+      source.transpose.copy must_== copy
       source must_== sut
       source.transpose must_== sut
     }
@@ -311,9 +309,12 @@ class MatrixTest extends Specification {
     "properly check compatibility" in {
       val m1: Matrix[R2.type, R3.type] = 
         new OnFunction[R2.type, R3.type](R2, R3, (i: Int, j: Int) => 1 + i * i + j * j)
-
+      m1.nRows === 3
+      m1.nCols === 2
       val m2: Matrix[R5.type, R6.type] =
         new OnFunction[R5.type, R6.type](R5, R6, (i: Int, j: Int) => 1 - i * i - j * j)
+      m2.nRows === 6
+      m2.nCols === 5
 
       // the following line should not compile
       // val badMatrix: Matrix[VectorSpace, VectorSpace] = m1 + m2

@@ -62,11 +62,6 @@ trait Money {
     }
   }
 
-  private def extractDollarsFromString(s: String) = {
-    val trimmed = s.replaceAll("\\(", "").replaceAll("\\)","").replaceAll("\\$","").trim
-    if (trimmed.isEmpty || trimmed == "-") ZeroDollars else dollarAmountToBigDecimal(trimmed)
-  }
-
   // TODO(vlad): cf MoneyRegex
   lazy val MoneyPattern = "([-]?[\\d,]+(\\.\\d\\d?)?|\\.\\d+).*"r
 

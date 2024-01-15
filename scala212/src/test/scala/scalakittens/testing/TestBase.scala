@@ -8,7 +8,7 @@ import org.specs2.execute.{Failure, FailureException}
 import org.specs2.matcher._
 import org.specs2.mutable.Specification
 
-import scala.languageFeature.{implicitConversions, postfixOps}
+import scala.languageFeature.{implicitConversions, postfixOps} // before "fixing" it check that it will compile for you
 
 /**
  * Use this class as a base for your tests.
@@ -17,7 +17,6 @@ import scala.languageFeature.{implicitConversions, postfixOps}
 trait TestBase extends Specification {
   actual =>
 
-//  implicit def np(u:Unit): MatchResult[Any] = ok
   def oops(what:Any): MatchResult[Boolean] = false aka what.toString must beTrue
 
   class StringChecker(s: String) {
@@ -34,6 +33,7 @@ trait TestBase extends Specification {
     def mustBeGood(tag: String): MatchResult[Any]
 
     def mustBeBad: MatchResult[Any]
+    def mustBeBad(tag: String): MatchResult[Any]
   }
 
   implicit def expectingGood(r: Result[_]): Expecting = new Expecting {
@@ -44,6 +44,8 @@ trait TestBase extends Specification {
     def mustBeBad: MatchResult[Any] = {
       r.isGood aka r.listErrors.mkString("; ") must_== false
     }
+
+    def mustBeBad(tag: String): MatchResult[Any] = if (r.isGood) throw FailureException(Failure(s"$tag: Expected a bad result, got $r")) else ok
   }
 
   private implicit def akaMust2[T](tm: Expectable[T]): MustExpectable[T] = MustThrownExpectations.akaMust[T](tm) // jumping through implicit loops
@@ -84,7 +86,7 @@ trait TestBase extends Specification {
       op(x) aka ("False positive on \"" + x + "\"") must_== false
     }
 
-    def maps(samples: X*): Unit = passesOn(samples: _*)
+    def maps(samples: X*): MatchResult[Any] = passesOn(samples: _*)
   }
 
   implicit def validates[X](p2: predicate[X]): ValidatingPredicate[X] = new ValidatingPredicate[X](p2)
@@ -138,7 +140,7 @@ trait TestBase extends Specification {
       res
     }
 
-    def maps(samples: (X, Y)*): Unit =  passesOn(samples: _*)
+    def maps(samples: (X, Y)*): MatchResult[Any] =  passesOn(samples: _*)
   }
 
   implicit def p2validates[X, Y](p2: predicate2[X, Y]): ValidatingPredicate2[X, Y] = new ValidatingPredicate2[X, Y](p2)

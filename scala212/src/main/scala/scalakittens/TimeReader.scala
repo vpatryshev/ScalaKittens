@@ -10,7 +10,6 @@ import scalakittens.types.Strings
 
 import scala.concurrent.duration.Duration
 import scala.language.postfixOps
-import scala.languageFeature.postfixOps
 import scala.util.matching.Regex
 
 /**

@@ -9,8 +9,6 @@ import scalakittens.testing.TestBase
 import org.specs2.matcher.MatchResult
 import scalakittens.{Good, Result}
 
-import scala.language.reflectiveCalls
-
 // TODO(vlad): fill it in, add as many tests as there are functions
 class Money_Test extends TestBase {
   def bd(s: String): Result[BigDecimal] = {

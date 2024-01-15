@@ -1,7 +1,7 @@
 package scalakittens
 
 import scala.io.Source
-import scala.languageFeature.{reflectiveCalls, postfixOps}
+import scala.languageFeature.postfixOps // better not touch, since it compiles this way
 
 import scalakittens.Result.OK
 import scalakittens.testing.TestBase
@@ -22,8 +22,11 @@ class Props_Test extends TestBase
   "Props.@@" >> {
     "not crash on four parameters" >> {
       val pf = props("a.b.c.d" -> "<<A B C D>>")
-      val res = pf valueOf ("x", "b", "c", "d")
-      OK mustBeGood
+      pf.valueOf("a", "b", "c", "d") === Good("<<A B C D>>")
+
+      pf.valueOf("x", "b", "c", "d") mustBeBad
+
+      ok
     }
 
     "pass a negative real-life case" >> {
@@ -204,7 +207,6 @@ class Props_Test extends TestBase
       val replaced = sut1.findAndReplace("c", "<<ABCDZZ>>")
       replaced == sut2 must beTrue
       sut1.findAndReplace("ab", "oh really?!") must_== sut1
-      val parser = Props.parse
 
       val sut3 = Props parse "fp(Map(\"Back to Transaction History.Account #2014151 Details.Health Net ID#\" -> \"R0000000-00\", \"Back to Transaction History.Account #20140101 Details.Name\" -> \"SCOTT GRISCHY\"))"
       sut3 match {
@@ -717,6 +719,7 @@ class Props_Test extends TestBase
             sut(i)(s"[[1]].key$i$j") must_== s"val$i$j"
           }
           val serviceTypes = sut map (_.getOrElse("[[1]].key", "oops..."))
+          serviceTypes.nonEmpty must beTrue
         case basura => failure(s"Oops, not good: $basura")
       }
       ok

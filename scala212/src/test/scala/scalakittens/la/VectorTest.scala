@@ -16,7 +16,9 @@ class VectorTest extends Specification {
 
     "not fail miserably on types incompatibility" in {
       val v1: VectorSpace#Vector = R2 OnFunction (i => 1.0 + i * 2)
+      v1.length === 2
       val v2: VectorSpace#Vector = R3 OnFunction (i => 1.0 - i * 2)
+      v2.length === 3
       // val oops = v1 + v2 // should not compile
       ok
     }

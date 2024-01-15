@@ -1,6 +1,5 @@
 package scalakittens
 
-import scala.language.reflectiveCalls
 import java.io.{File, FileOutputStream, OutputStreamWriter}
 
 import scalakittens.IO._

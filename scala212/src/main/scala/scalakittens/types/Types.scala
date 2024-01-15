@@ -3,7 +3,7 @@ package scalakittens.types
 import scalakittens.{Good, Result}
 import scalakittens.Result._
 
-import scala.languageFeature.{implicitConversions, postfixOps}
+import scala.language.{implicitConversions, postfixOps}
 
 // makes sense to declare common types somewhere... e.g. here
 trait Types {

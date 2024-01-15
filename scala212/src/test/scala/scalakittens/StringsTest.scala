@@ -2,6 +2,7 @@ package scalakittens
 
 import org.specs2.mutable.Specification
 import scalakittens.types.Strings
+import scalakittens.types.Strings._
 
 /**
  * Test cases for Strings class
@@ -12,6 +13,14 @@ import scalakittens.types.Strings
 class StringsTest extends Specification {
 
   "Strings" should {
+
+    "check common prefix" in {
+      commonPrefix("a", "b") === ""
+      commonPrefix("abc", "") === ""
+      commonPrefix("", "xyz") === ""
+      commonPrefix("x = 123", "x = 456") === "x = "
+
+    }
 
     "normalize" in {
       val sut1 = "Buonapartes. But I warn you, if you don’t tell me that this means war,"
