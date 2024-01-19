@@ -5,6 +5,7 @@ import java.util
 
 import ArrayOps._
 import scala.util.{Random, Try}
+import scala.collection.parallel.CollectionConverters._
 
 /**
   * Making vectors path-dependent.
@@ -30,10 +31,10 @@ case class VectorSpace(dim: Int) { space =>
   lazy val hyperplane = new Hyperplane
 
   def projectToHyperplane(v: Vector): hyperplane.Vector =
-    hyperplane.OnFunction(i => v(i+1)).asInstanceOf[hyperplane.Vector] // no need for casting
+    hyperplane.OnFunction(i => v(i+1))
 
   def projectToHyperplane(m: SquareMatrix): hyperplane.SquareMatrix =
-    hyperplane.squareMatrix((i, j) => m(i + 1, j + 1)).asInstanceOf[hyperplane.SquareMatrix] // weird, why upcast?
+    hyperplane.squareMatrix((i, j) => m(i + 1, j + 1))
 
   def injectFromHyperplane(v: hyperplane.Vector): Vector = {
     OnFunction(i => if (i == 0) 0.0 else v(i-1))
@@ -169,7 +170,7 @@ case class VectorSpace(dim: Int) { space =>
   /**
     * Mutable version of vector
     */
-  trait MutableVector extends Vector with Mutable {
+  trait MutableVector extends Vector {
 
     /**
       * sets the i-th component value of this vector
@@ -185,7 +186,7 @@ case class VectorSpace(dim: Int) { space =>
       * @param other vector
       */
     def decreaseBy(other: Vector): Unit = {
-      for (i ← range) this(i) = math.min(this(i), other(i))
+      for (i <- range) this(i) = math.min(this(i), other(i))
     }
 
     /**
@@ -193,7 +194,7 @@ case class VectorSpace(dim: Int) { space =>
       * @param other vector
       */
     def increaseBy(other: Vector): Unit = {
-      for (i ← range) this(i) = math.max(this(i), other(i))
+      for (i <- range) this(i) = math.max(this(i), other(i))
     }
 
     /**
@@ -203,7 +204,7 @@ case class VectorSpace(dim: Int) { space =>
       * @return this, now all its values are multiplied by scalar
       */
     def *=(scalar: Double): Unit = {
-      for (i ← range) this(i) *= scalar
+      for (i <- range) this(i) *= scalar
     }
 
     /**
@@ -213,7 +214,7 @@ case class VectorSpace(dim: Int) { space =>
       * @return this, now all its values are divided by scalar
       */
     def /=(scalar: Double): Unit = {
-      for (i ← range) this(i) /= scalar
+      for (i <- range) this(i) /= scalar
     }
 
     /**
@@ -223,7 +224,7 @@ case class VectorSpace(dim: Int) { space =>
       * @return this vector, its value is now the sum of this and another
       */
     def +=(other: Vector): Unit = {
-      for (i ← range) this(i) += other(i)
+      for (i <- range) this(i) += other(i)
     }
 
     /**
@@ -233,7 +234,7 @@ case class VectorSpace(dim: Int) { space =>
       * @return this vector, its value is now the difference of this and another
       */
     def -=(other: Vector): Unit = {
-      for (i ← range) this(i) -= other(i)
+      for (i <- range) this(i) -= other(i)
     }
 
     /**
@@ -308,7 +309,7 @@ case class VectorSpace(dim: Int) { space =>
       other match {
         case o: OnArray => this += o
         case _ =>
-          for (i ← range) data(i) += other(i)
+          for (i <- range) data(i) += other(i)
       }
     }
 
@@ -322,7 +323,7 @@ case class VectorSpace(dim: Int) { space =>
       other match {
         case o: OnArray => this -= o
         case _ =>
-          for (i ← range) data(i) -= other(i)
+          for (i <- range) data(i) -= other(i)
       }
     }
 
@@ -337,7 +338,7 @@ case class VectorSpace(dim: Int) { space =>
     override def nudge(other: Vector, coeff: Double): Unit = {
       other match {
         case o: OnArray => ArrayOps.nudge(data, o.data, coeff)
-        case _ => for (i ← range) {
+        case _ => for (i <- range) {
             data(i) += other(i) * coeff
           }
       }
@@ -356,7 +357,7 @@ case class VectorSpace(dim: Int) { space =>
     }
 
     def nudge(other: OnArray, coeff: Double): Unit = {
-      for (i ← range) data(i) += other.data(i) * coeff
+      for (i <- range) data(i) += other.data(i) * coeff
     }
 
     override def iterator: Iterator[Double] = range.iterator map (data(_))
@@ -422,7 +423,7 @@ case class VectorSpace(dim: Int) { space =>
     def build(n: Int): Array[MutableVector] = {
       val array = new Array[space.MutableVector](n)
 
-      for {i ← array.indices} array(i) = apply().copy
+      for {i <- array.indices} array(i) = apply().copy
 
       array
     }
@@ -450,7 +451,7 @@ case class VectorSpace(dim: Int) { space =>
     private val rnd = new Random(seed)
 
     override private[VectorSpace] def fill(v: MutableVector): Unit = {
-      for {i ← 0 until dim} v(i) = rnd.nextDouble() * 2 - 1
+      for {i <- 0 until dim} v(i) = rnd.nextDouble() * 2 - 1
     }
   }
 
@@ -470,8 +471,8 @@ case class VectorSpace(dim: Int) { space =>
         Norm.l2(v)
       } .find {1.0 <}
 
-      for {i ← 0 until dim
-           norm ← s2
+      for {i <- 0 until dim
+           norm <- s2
       } v(i) = v(i) / norm
     }
   }
@@ -486,7 +487,7 @@ case class VectorSpace(dim: Int) { space =>
     * @param vectors the vectors
     * @return the vector whose components are minimum of all given vectors
     */
-  def inf(vectors: TraversableOnce[Vector]): Vector = {
+  def inf(vectors: IterableOnce[Vector]): Vector = {
     val acc: MutableVector = const(Double.MaxValue).copy
     vectors foreach acc.decreaseBy
     acc
@@ -497,7 +498,7 @@ case class VectorSpace(dim: Int) { space =>
     * @param vectors the vectors
     * @return the vector whose components are maximum of all given vectors
     */
-  def sup(vectors: TraversableOnce[Vector]): Vector = {
+  def sup(vectors: IterableOnce[Vector]): Vector = {
     val acc: MutableVector = const(Double.MinValue).copy
     vectors foreach acc.increaseBy
     acc
@@ -524,8 +525,8 @@ case class VectorSpace(dim: Int) { space =>
 
     val data = new Array[Double](second.nRows * first.nCols)
     for {
-      i ← second.rowRange
-      j ← first.columnRange
+      i <- second.rowRange
+      j <- first.columnRange
     } data(i*second.nCols + j) = first.columnRange map (k => first(i, k) * second(k, j)) sum
 
     new Matrix.OnArray[Domain, Codomain](first.domain, second.codomain, data)
@@ -533,8 +534,8 @@ case class VectorSpace(dim: Int) { space =>
   
   type LocalMatrix = Matrix[space.type, space.type]
 
-  def squareMatrix(f: (Int, Int) => Double): this.SquareMatrix =
-    new Matrix.OnFunction[space.type, space.type](space, space, f) with this.SquareMatrix
+  def squareMatrix(f: (Int, Int) => Double): SquareMatrix =
+    new Matrix.OnFunction[space.type, space.type](space, space, f) with SquareMatrix
 
   def squareMatrixFrom(values: Double*): SquareMatrix = {
     require(values.length == dim * dim, s"Bad data length ${values.size}, expected $dim ⨯ $dim")
@@ -632,7 +633,7 @@ case class VectorSpace(dim: Int) { space =>
     }
 
     private def fillRow(i: Int): Unit = {
-      for { j ← 0 to i } {
+      for { j <- 0 to i } {
         val aij = source(i, j)
         data(internalIndex(i, j)) = aij
       }
@@ -668,7 +669,7 @@ case class VectorSpace(dim: Int) { space =>
   def unitCube(vectors: Iterable[Vector]): (Vector => Vector) = {
     val lowerLeft = inf(vectors)
     val upperRight = sup(vectors)
-    val array = (for (i ← 0 until dim) yield {
+    val array = (for (i <- 0 until dim) yield {
       val d = upperRight(i) - lowerLeft(i)
       if (d > Double.MinPositiveValue) 1 / d else 0
     }).toArray
@@ -738,10 +739,10 @@ case class VectorSpace(dim: Int) { space =>
     vs(0) = v.normalize(Norm.l2).copy
 
     for {
-      i ← 1 until v.length
+      i <- 1 until v.length
     } {
       val v1: MutableVector = unit(if (i < whereMax) i-1 else i).copy
-      for (j ← 0 until i) {
+      for (j <- 0 until i) {
         v1 -= vs(j).project(v1)
       }
       vs(i) = v1.normalize(Norm.l2).copy

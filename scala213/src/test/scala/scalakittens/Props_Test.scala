@@ -21,7 +21,7 @@ class Props_Test extends TestBase
 
   "Props.@@" >> {
     "not crash on four parameters" >> {
-      val pf = props("a.b.c.d" -> "<<A B C D>>")
+      val pf = props("h.e.a.d" -> "<<A B C D>>")
       pf.valueOf("a", "b", "c", "d") === Good("<<A B C D>>")
 
       pf.valueOf("x", "b", "c", "d") mustBeBad
@@ -156,7 +156,7 @@ class Props_Test extends TestBase
     }
 
     "@@ behave on four parameters" >> {
-      val pf = props("a.b.c.d" -> "<<A B C D>>")
+      val pf = props("h.e.a.d" -> "<<A B C D>>")
       pf valueOf ("a", "b", "c", "d") must_== Good("<<A B C D>>")
       (pf valueOf ("x", "b", "c", "d")) mustBeBad
     }
@@ -169,7 +169,7 @@ class Props_Test extends TestBase
     }
 
     "reorder params" >> {
-      val pf = props("a.b.c.d" -> "<<A B C D>>") ++ props("a1.b1.c1.d1" -> "<<A1 B1 C1 D1>>")
+      val pf = props("h.e.a.d" -> "<<A B C D>>") ++ props("a1.b1.c1.d1" -> "<<A1 B1 C1 D1>>")
       val reordered = pf reorder(4,2,1,3)
       reordered valueOf ("c", "b", "d", "a") must_== Good("<<A B C D>>")
       reordered valueOf ("c1", "b1", "d1", "a1") must_== Good("<<A1 B1 C1 D1>>")
@@ -177,7 +177,7 @@ class Props_Test extends TestBase
     }
 
     "reorder params, heterogeneous" >> {
-      val pf = props("a.b.c.d" -> "<<A B C D>>")
+      val pf = props("h.e.a.d" -> "<<A B C D>>")
       val sut = (pf reorder(4,2,1,3)) ++ props("clue" -> "treasure")
       val res = sut valueOf ("c", "b", "d", "a")
       res must_== Good("<<A B C D>>")
@@ -186,25 +186,25 @@ class Props_Test extends TestBase
     }
 
     "dropPrefix work on four parameters" >> {
-      val pf = props("a.b.c.d" -> "<<ABCD>>", "x" -> "<<X>>")
+      val pf = props("h.e.a.d" -> "<<HEAD>>", "x" -> "<<X>>")
       val dp = pf.dropPrefix
-      dp @@ ("b", "c", "d") must_== Good("<<ABCD>>")
+      dp @@ ("e", "a", "d") must_== Good("<<HEAD>>")
       (dp @@ "x").isBad must beTrue
     }
 
     "find having" >> {
-      val sut = props("a.b.c.d" -> "<<ABCD>>", "x" -> "<<X>>", "a.d.x.y" -> "<<ADXY>>", "1.k" -> "K1", "k.48" -> "K1")
-      sut.findHaving("c") must_== Good("<<ABCD>>")
-      sut.findHaving("a").isBad must beTrue
+      val sut = props("h.e.a.d" -> "<<HEAD>>", "x" -> "<<X>>", "a.m.e.n" -> "<<AMEN>>", "1.k" -> "K1", "k.48" -> "K1")
+      sut.findHaving("a") must_== Good("<<HEAD>>")
+      sut.findHaving("h").isBad must beTrue
       sut.findHaving("ab").isBad must beTrue
-      sut.findHaving("y.d") must_== Good("<<ADXY>>")
+      sut.findHaving("n.o") must_== Good("<<AMEN>>")
       sut.findHaving("k") must_== Good("K1")
     }
 
     "find and replace" >> {
-      val sut1 = props("a.b.c.d" -> "<<ABCD>>", "x" -> "<<X>>", "a.d.x.y" -> "<<ADXY>>")
-      val sut2 = props("a.b.c.d" -> "<<ABCDZZ>>", "x" -> "<<X>>", "a.d.x.y" -> "<<ADXY>>")
-      val replaced = sut1.findAndReplace("c", "<<ABCDZZ>>")
+      val sut1 = props("h.e.a.d" -> "<<HEAD>>", "x" -> "<<X>>", "a.m.e.n" -> "<<AMEN>>")
+      val sut2 = props("h.e.a.d" -> "<<HEAD01>>", "x" -> "<<X>>", "a.m.e.n" -> "<<AMEN>>")
+      val replaced = sut1.findAndReplace("c", "<<HEAD01>>")
       replaced == sut2 must beTrue
       sut1.findAndReplace("ab", "oh really?!") must_== sut1
 
@@ -220,13 +220,13 @@ class Props_Test extends TestBase
     }
 
     "discard empty subtrees" >> {
-      val sut = props("a.b.c.d" -> "<<ABCD>>", "x" -> "<<X>>", "a.d.x.y" -> "<<ADXY>>")
-      sut.findAllHaving("d").toString must_== """fp(Map("a.b.c.d" -> "<<ABCD>>", "a.d.x.y" -> "<<ADXY>>"))"""
+      val sut = props("h.e.a.d" -> "<<HEAD>>", "x" -> "<<X>>", "a.m.e.n" -> "<<AMEN>>")
+      sut.findAllHaving("d").toString must_== """fp(Map("h.e.a.d" -> "<<HEAD>>", "a.m.e.n" -> "<<AMEN>>"))"""
     }
 
     "extract one by subkey" >> {
-      val sut = props("a.b.[[1]].c.d" -> "<<ABCD>>", "a.b.[[1]].c.y" -> "<<ABCY>>", "x" -> "<<X>>")
-      sut.extractAllNumberedHaving("d").toList.toString must_== """List(fp(Map("c.d" -> "<<ABCD>>", "c.y" -> "<<ABCY>>")))"""
+      val sut = props("a.b.[[1]].c.d" -> "<<HEAD>>", "a.b.[[1]].c.y" -> "<<ABCY>>", "x" -> "<<X>>")
+      sut.extractAllNumberedHaving("d").toList.toString must_== """List(fp(Map("c.d" -> "<<HEAD>>", "c.y" -> "<<ABCY>>")))"""
     }
     "trim prefixes wisely" >> {
       val p = props("a.b.c" -> "ABC")
@@ -358,9 +358,9 @@ class Props_Test extends TestBase
 
   "From Map " >> {
     "drop indexes" >> {
-      val sut0 = props("a.b.[[1]].c.d" -> "<<ABCD>>", "a.b.[[1]].c.y" -> "<<ABCY>>", "x" -> "<<X>>")
+      val sut0 = props("a.b.[[1]].c.d" -> "<<HEAD>>", "a.b.[[1]].c.y" -> "<<ABCY>>", "x" -> "<<X>>")
       val sut = sut0.dropIndexes
-      sut @@ "a.b.c.d" must_== Good("<<ABCD>>")
+      sut @@ "h.e.a.d" must_== Good("<<HEAD>>")
       sut @@ "a.b.c.y" must_== Good("<<ABCY>>")
       sut @@ "x"       must_== Good("<<X>>")
     }
@@ -429,7 +429,7 @@ class Props_Test extends TestBase
     }
 
     "parse simple sample with reordering as text" >> {
-      val sutOpt = Props parse "fp(Map(\"a.b.c.d\" -> \"cdba\")) with reordering (3,4,2,1)"
+      val sutOpt = Props parse "fp(Map(\"h.e.a.d\" -> \"cdba\")) with reordering (3,4,2,1)"
       sutOpt match {
         case Good(sut) =>
           sut @@ "d.c.a.b" must_== Good("cdba")
@@ -439,7 +439,7 @@ class Props_Test extends TestBase
     }
 
     "parse simple sample with dictionary and reordering as text" >> {
-      val sutOpt = Props parse "fp(Map(\"a.b.c.d\" -> \"cdba\")) with dictionary Map(\"x\" -> \"y\", \"z\" -> \"a\") with reordering (3,4,2,1)"
+      val sutOpt = Props parse "fp(Map(\"h.e.a.d\" -> \"cdba\")) with dictionary Map(\"x\" -> \"y\", \"z\" -> \"a\") with reordering (3,4,2,1)"
       sutOpt match {
         case Good(sut) =>
           sut @@ "d.c.z.b" must_== Good("cdba")
