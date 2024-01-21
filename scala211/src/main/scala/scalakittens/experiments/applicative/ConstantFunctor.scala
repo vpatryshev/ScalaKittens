@@ -9,5 +9,5 @@ import language.{higherKinds, implicitConversions}
  * @tparam T the parametric type
  */
 abstract class ConstantFunctor[T[_]] extends Functor[T] {
-  def f1[A, B](f: (A) ⇒ B) = (identity[T[Any]]_).asInstanceOf[T[A] ⇒ T[B]]
+  def f1[A, B](f: (A) => B) = (identity[T[Any]]_).asInstanceOf[T[A] => T[B]]
 }

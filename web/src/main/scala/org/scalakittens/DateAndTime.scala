@@ -19,7 +19,7 @@ trait TimeReader {
 
   def currentTime: Long = System.currentTimeMillis
 
-  def flowOfTime: Iterator[Long] = Iterator.iterate(currentTime){_ ⇒ currentTime}
+  def flowOfTime: Iterator[Long] = Iterator.iterate(currentTime){_ => currentTime}
 
   def interval(ttl: Long): Iterator[Long] = {
 
@@ -95,11 +95,11 @@ trait TimeReader {
   def stringToValidDate(format:  String,
                         whatIsIt:String = "Date",
                         earliest:Long   = minTimestamp,
-                        latest  :Long   = maxTimestamp): String ⇒ Result[Date] = (s: String) ⇒ {
+                        latest  :Long   = maxTimestamp): String => Result[Date] = (s: String) => {
     val parsed = parseDate(format)(s)
-    val result = parsed filter ((d:Date) ⇒ {
+    val result = parsed filter ((d:Date) => {
       val t = d.getTime
-      t > earliest && t < latest}, (d:Date) ⇒ s"$whatIsIt out of range: $s (${timeToString(earliest)} - ${timeToString(latest)})")
+      t > earliest && t < latest}, (d:Date) => s"$whatIsIt out of range: $s (${timeToString(earliest)} - ${timeToString(latest)})")
     result
   }
 
@@ -110,7 +110,7 @@ trait TimeReader {
 }
 
 case class DateFormat(fmt: String) {
-  lazy val parseCurrent: String ⇒ Result[Date] = s ⇒ stringToValidDate(fmt, "Date/time")(s)
+  lazy val parseCurrent: String => Result[Date] = s => stringToValidDate(fmt, "Date/time")(s)
 
   def isValid(s: String): Boolean = parseCurrent(s).isGood
 }
@@ -179,28 +179,28 @@ trait DateAndTime {
     def fromMMddyyyy(sm:String, sd: String, sy: String) = Good((int(sm),int(sd),int(sy), 12, 0, 0, 0))
 
     def fromyyyMMddhms(sm:String, sd: String, sy: String, sh: String, smin: String, ssec: String, fraction: Option[String] = Some("0")) = {
-      val smsi = fraction map(f ⇒ int(f.tail + "000" take 3)) getOrElse 0
+      val smsi = fraction map(f => int(f.tail + "000" take 3)) getOrElse 0
       Good((int(sm),int(sd),int(sy), int(sh), int(smin), int(ssec), smsi))
     }
 
-    filtered flatMap { s ⇒ // ignore cleanup!!!!!
+    filtered flatMap { s => // ignore cleanup!!!!!
       //        val sDate = if (!cleanUp) s else s.replaceAll("[^0-9\\/]","")
       val mdyhms:Result[(Int,Int,Int, Int, Int, Int, Int)] = s.trim match {
-        case YyyyMMdd(sy,sm,sd)  ⇒ fromMMddyyyy(sm, sd, sy)
-        case MMddyyyy(sm,sd,sy)  ⇒ fromMMddyyyy(sm, sd, sy)
-        case Mmddyyyy(sm,sd,sy)  ⇒ fromMMddyyyy(sm, sd, sy)
-        case MMddyy  (sm,sd,sy) ⇒ fromMMddyy(sm, sd, sy)
-        case xxyyzz  (sm,sd,sy) ⇒ fromXxyyzz(sm, sd, sy)
-        case MMMddyyyy(sm,sd,sy) ⇒ fromMMMddyyyy(sm,sd,sy)
-        case MMMyy(sm,sy) ⇒ fromMMMyy(sm,sy)
-        case FullDate(sm,sd,sy)  ⇒ fromMMMddyyyy(sm,sd,sy)
-        case ISODateAndTimeSplit(sy,sm,sd, sh, smin, ssec)  ⇒ fromyyyMMddhms(sm,sd,sy, sh, smin, ssec)
-        case PostgresDateAndTime(sy,sm,sd, sh, smin, ssec,fraction) ⇒ fromyyyMMddhms(sm,sd,sy, sh, smin, ssec, Option(fraction))
-        case _                   ⇒  Result.error(s"Bad date format: [[$s]]")
+        case YyyyMMdd(sy,sm,sd)  => fromMMddyyyy(sm, sd, sy)
+        case MMddyyyy(sm,sd,sy)  => fromMMddyyyy(sm, sd, sy)
+        case Mmddyyyy(sm,sd,sy)  => fromMMddyyyy(sm, sd, sy)
+        case MMddyy  (sm,sd,sy) => fromMMddyy(sm, sd, sy)
+        case xxyyzz  (sm,sd,sy) => fromXxyyzz(sm, sd, sy)
+        case MMMddyyyy(sm,sd,sy) => fromMMMddyyyy(sm,sd,sy)
+        case MMMyy(sm,sy) => fromMMMyy(sm,sy)
+        case FullDate(sm,sd,sy)  => fromMMMddyyyy(sm,sd,sy)
+        case ISODateAndTimeSplit(sy,sm,sd, sh, smin, ssec)  => fromyyyMMddhms(sm,sd,sy, sh, smin, ssec)
+        case PostgresDateAndTime(sy,sm,sd, sh, smin, ssec,fraction) => fromyyyMMddhms(sm,sd,sy, sh, smin, ssec, Option(fraction))
+        case _                   =>  Result.error(s"Bad date format: [[$s]]")
       }
 
       mdyhms flatMap {
-        case(m,d,y,h,min,sec, ms) ⇒
+        case(m,d,y,h,min,sec, ms) =>
           val date = datetime(y, m, d, h, min, sec, ms)
           date
          // joda.map(_.toDate)
@@ -221,13 +221,13 @@ trait DateAndTime {
   val JodaUTC: DateTimeZone = DateTimeZone.UTC
 
   // Sets proper time (Noon)
-  def parseDate(format: String, zone: DateTimeZone = JodaUTC): String ⇒ Result[Date] = {
+  def parseDate(format: String, zone: DateTimeZone = JodaUTC): String => Result[Date] = {
     val formatter = DateTimeFormat.forPattern(format).withZone(zone)
-    s0: String ⇒ {
+    s0: String => {
       val s = s0.trim
       if (Strings.isEmpty(s)) {
         Result.error("Date missing")
-      } else Result.forValue(formatter.parseDateTime(s)) map (d ⇒ {
+      } else Result.forValue(formatter.parseDateTime(s)) map (d => {
         val date = d.plusHours(12).toDate
         date
       })
@@ -242,7 +242,7 @@ trait DateAndTime {
     new java.util.Date( dt-(days*MILLIS_IN_A_DAY) )
   }
 
-  def optionalTimeToDateString(timestamp: Option[Long]):String = timestamp.fold("(Unknown)")(t ⇒ shortDate(new Date(t)))
+  def optionalTimeToDateString(timestamp: Option[Long]):String = timestamp.fold("(Unknown)")(t => shortDate(new Date(t)))
 
   val formatter = new SimpleDateFormat("MM/dd/yyyy")
 
@@ -290,7 +290,7 @@ object DateAndTime extends DateAndTime with TimeReader {
 
   val Y2K = 20 // years before 20 are ascribed to 21st century, years after - to 20th century
 
-  def time[T](op: ⇒ T): T = {
+  def time[T](op: => T): T = {
     val now = System.nanoTime()
     try {
       val res = op
@@ -302,7 +302,7 @@ object DateAndTime extends DateAndTime with TimeReader {
     }
   }
 
-  def time[T](name: String, op: ⇒ T): T = {
+  def time[T](name: String, op: => T): T = {
     val now = System.nanoTime()
     val res = op
     val dt = System.nanoTime() - now

@@ -29,7 +29,7 @@ trait Sigmoid {
   val table = {
 
     val t = for {
-      i <- 0 until size
+      i ← 0 until size
       x = i * δ
     } yield 1/(1 + math.exp(x))
   

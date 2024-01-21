@@ -66,10 +66,10 @@ trait Strings {
     s.substring(matcher.start).trim
   }
 
-  // 000123 -> 123
+  // 000123 → 123
   def trimLeftLeading0(s:String): String = s.trim.dropWhile('0'==).trim
 
-  // (abcd,ab) -> (cd)
+  // (abcd,ab) → (cd)
   def dropPrefix(s: String, prefix: String):String =
   {
     val leftPos = s.toUpperCase.indexOf(prefix.toUpperCase)
@@ -83,16 +83,16 @@ trait Strings {
    * @param chars the characters to remove
    * @return string trimmer
    */
-  def dropLeading(chars: String): String ⇒ String = (s: String) ⇒ s dropWhile (chars contains _)
+  def dropLeading(chars: String): String => String = (s: String) => s dropWhile (chars contains _)
 
   /**
    * I could not figure out how to do multiline match in scala; so had to write this.
    * @param Reg the regex to match
    * @return the group found (works with one group only
    */
-  def multilineMatch(Reg: Regex): String ⇒ Option[String] =
-    text ⇒ Reg.findFirstIn(text).flatMap({case Reg(value) ⇒ Some(value)
-                                            case _         ⇒ None
+  def multilineMatch(Reg: Regex): String => Option[String] =
+    text => Reg.findFirstIn(text).flatMap({case Reg(value) => Some(value)
+                                            case _         => None
       })
 
   /**
@@ -100,26 +100,26 @@ trait Strings {
    * @param prefix what precedes the value
    * @return the value; if not found, an empty string (missing value, right?)
    */
-  def valueOf(prefix: String): String ⇒ String = {
-    text: String ⇒ prefixSearch(prefix)(text).getOrElse("")
+  def valueOf(prefix: String): String => String = {
+    text: String => prefixSearch(prefix)(text).getOrElse("")
   }
 
-  def prefixSearch(prefix: String): String ⇒ Option[String] = multilineMatch((".*" + prefix.replaceAll("\\.", "\\\\.") + " *([^\\n]*)").r)
+  def prefixSearch(prefix: String): String => Option[String] = multilineMatch((".*" + prefix.replaceAll("\\.", "\\\\.") + " *([^\\n]*)").r)
 
   val DIGITS: Regex = "^(\\d+)$".r
   def digits(s: String): Option[String] = s match {
-    case DIGITS(value) ⇒ Some(value)
-    case _ ⇒ None
+    case DIGITS(value) => Some(value)
+    case _ => None
   }
 
 
   def extractInt(s: String, orElse: Int): Int = tryOr(s.toInt, orElse)
 
-  def indexesOf(s: String, p: Char ⇒ Boolean): List[Int] = {
-    s.zipWithIndex.filter(cn ⇒ p(cn._1)).map(_._2).toList
+  def indexesOf(s: String, p: Char => Boolean): List[Int] = {
+    s.zipWithIndex.filter(cn => p(cn._1)).map(_._2).toList
   }
 
-  def indexesWhere(ss: Seq[String], p: String⇒Boolean): List[Int] = {
+  def indexesWhere(ss: Seq[String], p: String=>Boolean): List[Int] = {
     def iw(from: Int): List[Int] = {
       val found = ss.indexWhere(p, from)
       if (found < 0) Nil else found :: iw(found + 1)
@@ -128,8 +128,8 @@ trait Strings {
   }
 
   def asString(opt: Option[_]): String = opt match {
-    case Some(x) ⇒ ""+x
-    case None    ⇒ "==undefined=="
+    case Some(x) => ""+x
+    case None    => "==undefined=="
   }
 
 }

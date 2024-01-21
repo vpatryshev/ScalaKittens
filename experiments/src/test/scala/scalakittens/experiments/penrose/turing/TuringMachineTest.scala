@@ -1,12 +1,18 @@
 package scalakittens.experiments.penrose.turing
 
+import java.io.{OutputStream, PrintStream}
+
 import org.specs2.mutable.Specification
 import scalakittens.experiments.penrose.turing.TuringMachines._
 
 class TuringMachineTest extends Specification {
   def tape(s: String): List[Int] = s.replaceAll("\\s", "").split("").map(_.toInt).toList
 
-  sequential
+  val devnull: PrintStream = new PrintStream(new OutputStream() {
+    override def write(b: Int): Unit = ()
+  })
+
+//  System.setOut(devnull)
 
   "TuringMachine" should {
     "EUC" in {
@@ -31,7 +37,7 @@ class TuringMachineTest extends Specification {
       }
 
       for {
-        i <- 0 to 256
+        i ← 0 to 256
       } plus1(i) must_== new Tape(binaryEncode(i + 1))
 
       ok
@@ -45,7 +51,7 @@ class TuringMachineTest extends Specification {
       double(1) must_== new Tape(binaryEncode(2))
 
       for {
-        i <- 0 to 256
+        i ← 0 to 256
       } double(i) must_== new Tape(binaryEncode(i * 2))
 
       double(7) must_== new Tape(binaryEncode(14))
@@ -61,7 +67,7 @@ class TuringMachineTest extends Specification {
       double(1) must_== new Tape(binaryEncode(2))
 
       for {
-        i <- 0 to 256
+        i ← 0 to 256
       } double(i) must_== new Tape(binaryEncode(i * 2))
 
       double(7) must_== new Tape(binaryEncode(14))

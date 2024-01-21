@@ -5,10 +5,10 @@ import org.specs2.matcher._
 import Functions._
 import StandardMatchResults._
 
-trait MoreExpectations extends UsefulMocks { actual: Expectations ⇒
+trait MoreExpectations extends UsefulMocks { actual: Expectations =>
 
   type Checked = MatchResult[Any]
-  type Checker[X] = X ⇒ Checked
+  type Checker[X] = X => Checked
 
   def aka(alt: Any):Expectable[Any] = actual.aka(alt.toString)
 
@@ -40,17 +40,17 @@ trait MoreExpectations extends UsefulMocks { actual: Expectations ⇒
 
   def doesNotContain(what: String)(s:String) = s mustNotContain what
 
-  implicit def functionValidator[X, Y](f: X ⇒ Y): predicate2[X, Y] =
-    (x: X, y: Y) ⇒ f(x) == y
+  implicit def functionValidator[X, Y](f: X => Y): predicate2[X, Y] =
+    (x: X, y: Y) => f(x) == y
 
   /*private[MoreExpectations]*/ class CheckThis[X, Y] {
-    protected def check(checker: (X, Y) ⇒ _, samples: (X, Y)*) {
-      samples.foreach(p ⇒ checker(p._1, p._2))
+    protected def check(checker: (X, Y) => _, samples: (X, Y)*) {
+      samples.foreach(p => checker(p._1, p._2))
     }
-    protected def check(checker: X ⇒ _, samples: X*) {
-      samples.foreach(p ⇒ checker(p))
+    protected def check(checker: X => _, samples: X*) {
+      samples.foreach(p => checker(p))
     }
-    def ck(checker: (X, Y) ⇒ _, samples: (X, Y)*) = check(checker, samples:_*)
+    def ck(checker: (X, Y) => _, samples: (X, Y)*) = check(checker, samples:_*)
   }
 
   class ValidatingPredicate[X](p: predicate[X]) extends CheckThis[X, Any] {
@@ -62,11 +62,11 @@ trait MoreExpectations extends UsefulMocks { actual: Expectations ⇒
       check(expectNegative(p), samples:_*)
     }
 
-    private def expectPositive(op: predicate[X]): Checker[X] = x ⇒ {
+    private def expectPositive(op: predicate[X]): Checker[X] = x => {
       op(x) aka ("False negative on \"" + x + "\"") must_== true
     }
 
-    private def expectNegative(op: predicate[X]): Checker[X] = x ⇒ {
+    private def expectNegative(op: predicate[X]): Checker[X] = x => {
       op(x) aka ("False positive on \"" + x + "\"") must_== false
     }
 
@@ -86,11 +86,11 @@ trait MoreExpectations extends UsefulMocks { actual: Expectations ⇒
       check(expectNegative(p2), samples:_*)
     }
 
-    private def expectPositive(op: predicate2[X, Y]): (X,Y) ⇒ Checked = (x, y) ⇒ {
+    private def expectPositive(op: predicate2[X, Y]): (X,Y) => Checked = (x, y) => {
       op(x, y) aka ("False negative on (\"" + x + "\", \"" + y + "\")") must_== true
     }
 
-    private def expectNegative(op: predicate2[X, Y]): (X,Y) ⇒ Checked = (x, y) ⇒ {
+    private def expectNegative(op: predicate2[X, Y]): (X,Y) => Checked = (x, y) => {
       op(x, y) aka ("False positive on (\"" + x + "\", \"" + y + "\")") must_== false
     }
 
@@ -103,15 +103,15 @@ trait MoreExpectations extends UsefulMocks { actual: Expectations ⇒
 
   implicit def funValidates[X, Y](f: Function[X, Y]) = new ValidatingFunction[X, Y](f.name, f)
 
-  class ValidatingFunction[X, Y](name: String, f: X ⇒ Y) extends CheckThis[X, Y] {
+  class ValidatingFunction[X, Y](name: String, f: X => Y) extends CheckThis[X, Y] {
 
-    def expectMatch(f: X ⇒ Y) = (x: X, y: Y) ⇒ {
+    def expectMatch(f: X => Y) = (x: X, y: Y) => {
       try {
         val y1 = f(x)
         y1 aka (name + "(" + x + ")=" + y) must_== y
       } catch {
-        case mfe: MatchFailureException[_] ⇒ throw mfe
-        case t: Throwable ⇒ throw new IllegalArgumentException(s"wtf, $t")
+        case mfe: MatchFailureException[_] => throw mfe
+        case t: Throwable => throw new IllegalArgumentException(s"wtf, $t")
       }
     }
 

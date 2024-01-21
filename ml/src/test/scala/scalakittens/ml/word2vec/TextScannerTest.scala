@@ -14,7 +14,7 @@ class TextScannerTest extends Specification {
       annaPavlovna aka "Anna Pavlovna" must beTrue
 
       novel.scannedText match {
-        case Good(st) ⇒
+        case Good(st) =>
 
           math.abs(st.dictionary.length - 17210) < 20 aka s"actually, ${st.dictionary.length}" must beTrue
           st.frequencies.length must_== st.dictionary.length
@@ -29,7 +29,7 @@ class TextScannerTest extends Specification {
 
           st.dictionary(st.index.head) must_== "prince" // "Eh bien, mon prince..."
 
-        case bad ⇒
+        case bad =>
           failure(bad.listErrors.toString)
       }
 
@@ -43,7 +43,7 @@ class TextScannerTest extends Specification {
       scarlett aka "Scarlett O'Hara" must beTrue
       
       novel.scannedText match {
-        case Good(st) ⇒
+        case Good(st) =>
 
           math.abs(st.dictionary.length - 16194) < 30 aka s"actually, ${st.dictionary.length}" must beTrue
           st.frequencies.length must_== st.dictionary.length
@@ -56,7 +56,7 @@ class TextScannerTest extends Specification {
 
           st.dictionary(st.index.head) must_== "scarlett" // "Eh bien, mon prince..."
 
-        case bad ⇒
+        case bad =>
           failure(bad.listErrors.toString)
       }
 

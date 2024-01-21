@@ -1,6 +1,7 @@
 
 organization := "org.scalakittens"
 
+javacOptions ++= Seq("-source", "11", "-target", "11")
 val scalaVesion = "212"
 val WhichScala = "2.12.3"
 
@@ -14,7 +15,7 @@ lazy val ml = RootProject(file("./ml"))
 lazy val experiments = RootProject(file("./experiments"))
 
 
-val main = Project(id = "all", base = file(".")).dependsOn(core, ml, experiments)
+val main = Project(id = "coe", base = file(".")).dependsOn(core)
 
 scalacOptions ++= Seq("-feature", "-deprecation", "-encoding", "UTF-8", "-feature", "-target:jvm-1.8", "-unchecked",
     "-Ywarn-adapted-args", "-Ywarn-value-discard", "-Xlint")
@@ -38,8 +39,8 @@ libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % WhichScala,
   "org.scala-lang.modules" % "scala-parser-combinators_2.12" % "1.0.5",
   "org.scalaz" % "scalaz-effect_2.12" % "7.3.0-M10",
-  "org.apache.httpcomponents" % "httpclient" % "4.3.6",
-  "org.apache.httpcomponents" % "httpmime"   % "4.3.6",
+  "org.apache.httpcomponents" % "httpclient" % "4.5.14",
+  "org.apache.httpcomponents" % "httpmime"   % "4.5.14",
   "org.specs2" %% "specs2-core" % "3.8.8" % "test",
   "org.scalacheck" %% "scalacheck" % "1.13.4" % "test",
   "org.sameersingh.scalaplot" % "scalaplot" % "0.0.4"

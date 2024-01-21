@@ -82,18 +82,18 @@ object TuringMachines {
   val `U binary`: List[Int] = (ubs + "110") map (_ - '0') toList
   val U: Machine = penroseMachine("UTM", programDecode(`U binary`))
   private val binaryEncoding = Map(
-    '0' -> List(0),
-    '1' -> List(1, 0),
-    'R' -> List(1, 1, 0),
-    'L' -> List(1, 1, 1, 0),
-    'S' -> List(1, 1, 1, 1, 0),
-    ',' -> List(1, 1, 0)) withDefaultValue Nil
+    '0' → List(0),
+    '1' → List(1, 0),
+    'R' → List(1, 1, 0),
+    'L' → List(1, 1, 1, 0),
+    'S' → List(1, 1, 1, 1, 0),
+    ',' → List(1, 1, 0)) withDefaultValue Nil
   private lazy val ubs: String = "110" + BigInt(`U Hexatrigesimal`, 36).toString(2)
 
   def penroseMachine(name: String, programSource: String): Machine = {
     val commands = (List[String]() /: programSource.replaceAll("\\s", "").reverse) {
-      case (cs, ch) if RLS(ch) ⇒ "" + ch :: cs
-      case (h :: t, ch) ⇒ ch + h :: t
+      case (cs, ch) if RLS(ch) => "" + ch :: cs
+      case (h :: t, ch) => ch + h :: t
     }
 
     PTM(name, commands.toArray: _*)
@@ -101,35 +101,35 @@ object TuringMachines {
 
   def unaryDecode(tape: List[Int]): List[Int] = {
     (List[Int]() /: tape) {
-      case (n :: t, 1) ⇒ (n + 1) :: t
-      case (xs, 0) ⇒ 0 :: xs
-      case other ⇒ throw new IllegalArgumentException(tape.mkString("."))
+      case (n :: t, 1) => (n + 1) :: t
+      case (xs, 0) => 0 :: xs
+      case other => throw new IllegalArgumentException(tape.mkString("."))
     } reverse
   }
 
   def binaryDecode(tape: List[Int]): List[Int] = {
     val chars = (List[Int]() /: tape) {
-      case (Nil, 0) ⇒ 0 :: Nil
-      case (n :: t, 0) ⇒ 0 :: n :: t
-      case (0 :: t, 1) ⇒ 1 :: t
-      case (1 :: t, 1) ⇒ 2 :: t
-      case other ⇒ throw new IllegalArgumentException(tape.mkString("."))
+      case (Nil, 0) => 0 :: Nil
+      case (n :: t, 0) => 0 :: n :: t
+      case (0 :: t, 1) => 1 :: t
+      case (1 :: t, 1) => 2 :: t
+      case other => throw new IllegalArgumentException(tape.mkString("."))
     } reverse
 
     (List[Int]() /: chars) {
-      case (Nil, n) ⇒ n :: Nil
-      case (h :: t, 0) ⇒ h * 2 :: t
-      case (h :: t, 1) ⇒ h * 2 + 1 :: t
-      case (h :: t, 2) ⇒ 0 :: h :: t
-      case other ⇒ throw new IllegalArgumentException(tape.mkString("."))
+      case (Nil, n) => n :: Nil
+      case (h :: t, 0) => h * 2 :: t
+      case (h :: t, 1) => h * 2 + 1 :: t
+      case (h :: t, 2) => 0 :: h :: t
+      case other => throw new IllegalArgumentException(tape.mkString("."))
     }.tail.reverse
   }
 
   def binaryEncode(numbers: Int*): List[Int] = {
     for {
-      n <- numbers.toList
-      char <- n.toBinaryString + ","
-      bit <- binaryEncoding(char)
+      n ← numbers.toList
+      char ← n.toBinaryString + ","
+      bit ← binaryEncoding(char)
     } yield bit
   }
 
@@ -149,10 +149,10 @@ object TuringMachines {
     val cbs = if (bits.startsWith(R)) bits ++ R else R ++ bits ++ R
 
     val counts = (List[Int]() /: cbs) {
-      case (Nil, b) ⇒ b :: Nil
-      case (h :: t, 0) ⇒ 0 :: h :: t
-      case (h :: t, 1) ⇒ h + 1 :: t
-      case other ⇒ throw new IllegalArgumentException(other.toString)
+      case (Nil, b) => b :: Nil
+      case (h :: t, 0) => 0 :: h :: t
+      case (h :: t, 1) => h + 1 :: t
+      case other => throw new IllegalArgumentException(other.toString)
     }
     counts.tail.reverse map programDecoding mkString "" trim
   }
@@ -192,5 +192,5 @@ object TuringMachines {
     //    println(n)
   }
 
-  def unaryEncode(numbers: Int*): List[Int] = numbers.toList flatMap (n ⇒ 0 :: List.fill(n)(1))
+  def unaryEncode(numbers: Int*): List[Int] = numbers.toList flatMap (n => 0 :: List.fill(n)(1))
 }

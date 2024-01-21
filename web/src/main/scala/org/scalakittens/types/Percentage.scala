@@ -18,15 +18,15 @@ trait Percentage {
       val trimmedText = text.trim
       val TrailingPercentageRegExp = "(.+)%$".r
       val candidateDigits = trimmedText match {
-        case TrailingPercentageRegExp(digits) ⇒ digits
-        case _ ⇒ trimmedText
+        case TrailingPercentageRegExp(digits) => digits
+        case _ => trimmedText
       }
 
       val number = BigDecimal(candidateDigits)
       // TODO(vlad, haroon): use the code I wrote in Frontend, it's more sophisitcated
       Result.forValue(number / 100.0)
     } catch {
-      case e: Throwable ⇒
+      case e: Throwable =>
         val msg = s"""Exception while parsing "$text" : ${e.getMessage}"""
         Result.error[BigDecimal](msg)
     }

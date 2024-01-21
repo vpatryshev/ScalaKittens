@@ -11,9 +11,7 @@ import org.specs2.mutable.Specification
 class Java8Failing extends Specification {
 
   object X {
-
     object Y {
-
       object Z
 
     }
@@ -21,27 +19,24 @@ class Java8Failing extends Specification {
   }
 
   private val xyz = X.Y.Z.getClass
+  val version: String = System.getProperty("java.version")
+  val v8 = "1.8.z"
 
   "java.lang.Class.getCanonicalName" should {
-    "fail" in {
+    "pass if done right" in {
       // this one is the right solution
       val n1 = xyz.getName.split("\\.").last.split("\\$").filter(_.nonEmpty).mkString(".")
       n1 must_== "Java8Failing.X.Y.Z"
-
-      def gcn = xyz.getCanonicalName
-
-      gcn must throwA[InternalError]
     }
   }
 
   "java.lang.Class.getSimpleName" should {
-    "fail" in {
-
-      def gsn = xyz.getSimpleName
-
-      gsn must throwA[InternalError]
+    "fail on java8 if done straight" in {
+      if (version < v8) {
+        def gcn = xyz.getCanonicalName
+        gcn must throwA[InternalError]
+      }
+      ok
     }
   }
-
-
 }
