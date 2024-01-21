@@ -37,7 +37,7 @@ class AccumulatingMoments[Space <: VectorSpace](val space: Space) {
     * TODO: make it type-safe
     */
   def collect(vectors: IterableOnce[space.Vector]): AccumulatingMoments[Space] = {
-    vectors foreach add
+    vectors.iterator foreach add
     this
   }
 }

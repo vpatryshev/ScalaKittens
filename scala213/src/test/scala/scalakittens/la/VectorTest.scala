@@ -131,19 +131,21 @@ class VectorTest extends Specification {
 
     val sampleUnitaryMatrix_3x3: R3.UnitaryMatrix = {
       R3.unitaryMatrix(
-        Array(R3.Vector(cos(alpha) * cos(beta), cos(alpha) * sin(beta), sin(alpha)),
+        List(
+          R3.Vector( cos(alpha) * cos(beta),  cos(alpha) * sin(beta), sin(alpha)),
           R3.Vector(-sin(alpha) * cos(beta), -sin(alpha) * sin(beta), cos(alpha)),
           R3.Vector(sin(beta), -cos(beta), 0)
         ))
     }
 
     val sampleUnitaryMatrix_2x2: R2.UnitaryMatrix = R2.unitaryMatrix(
-      Array(R2.Vector(cos(beta), sin(beta)),
+      List(
+        R2.Vector( cos(beta), sin(beta)),
         R2.Vector(-sin(beta), cos(beta))
       ))
 
     "check unitariness" in {
-      val u0 = R2.unitaryMatrix(Array(R2.Vector(0, 1), R2.Vector(1, 0)))
+      val u0 = R2.unitaryMatrix(List(R2.Vector(0, 1), R2.Vector(1, 0)))
       u0.isUnitary(0) aka s"delta = ${l2(u0 * u0.transpose - R2.UnitMatrix)}" must beTrue
 
       sampleUnitaryMatrix_2x2.isUnitary(0.001) aka s"delta = ${l2(sampleUnitaryMatrix_2x2 * sampleUnitaryMatrix_2x2.transpose - R2.UnitMatrix)}" must beTrue
@@ -153,9 +155,9 @@ class VectorTest extends Specification {
 
     "project matrix to hyperplane" in {
       val m = R3.squareMatrix(
-        Array(
+        List(
           1.1250000000000009, 3.6806079660838646, 1.2500000000000002,
-          3.6806079660838655, 5.375000000000001, 2.165063509461097,
+          3.6806079660838655, 5.375000000000001,  2.165063509461097,
           1.2500000000000002, 2.1650635094610973, 7.5))
       val sut = m.projectToHyperplane(sampleUnitaryMatrix_3x3)
       l2(sut - R3.hyperplane.diagonalMatrix(5, -1)) < 0.0001 aka sut.toString must beTrue
@@ -273,10 +275,10 @@ class VectorTest extends Specification {
       R3.Vector(3.0, 2.0, 1.0) .map (":) " + _) .toList === List(":) 3.0", ":) 2.0", ":) 1.0")
     }
 
-    "have /:" in {
-      (":)" /: R0.Vector())(_+_) === ":)"
-      (":)" /: R1.Vector(0))(_+_) === ":)0.0" // this sucks, but it's life... or is it?
-      (-1.0 /: R3.Vector(3.0, 2.0, 1.0))(_+_) === 5.0
+    "have foldLeft" in {
+      R0.Vector().foldLeft(":)")(_+_) === ":)"
+      R1.Vector(0).foldLeft(":)")(_+_) === ":)0.0" // this sucks, but it's life... or is it?
+      R3.Vector(3.0, 2.0, 1.0).foldLeft(-1.0)(_+_) === 5.0
     }
 
     "have copy" in {
@@ -432,8 +434,7 @@ class VectorTest extends Specification {
     )
 
     val sampleUnitaryMatrix_3x3: R3.UnitaryMatrix = {
-      R3.unitaryMatrix(
-        sampleBasisVectors)
+      R3.unitaryMatrix(sampleBasisVectors.toIndexedSeq)
     }
     
     "get built out of mutable vectors" in {

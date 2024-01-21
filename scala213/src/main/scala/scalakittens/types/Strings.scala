@@ -4,7 +4,6 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.util.Base64
 import java.util.zip._
 import scala.io.Source
-import scala.language.postfixOps
 import scala.util.matching.Regex
 
 trait Strings {
@@ -12,7 +11,7 @@ trait Strings {
   def isEmpty(s: String): Boolean = s == null || s.trim.isEmpty
 
   def commonPrefix(s1: String, s2: String): String =
-    if (s1.isEmpty || s2.isEmpty || s1(0) != s2(0)) "" else s1.head + commonPrefix(s1.tail, s2.tail)
+    if (s1.isEmpty || s2.isEmpty || s1(0) != s2(0)) "" else s"${s1.head}${commonPrefix(s1.tail, s2.tail)}"
 
   def zip(s: String): String = {
     val baos = new ByteArrayOutputStream()

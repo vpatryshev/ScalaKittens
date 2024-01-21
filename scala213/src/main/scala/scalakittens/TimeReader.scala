@@ -1,14 +1,18 @@
 package scalakittens
 
+import org.joda.time.format.DateTimeFormat
+import org.joda.time.{DateTime, DateTimeZone}
+
 import java.text.SimpleDateFormat
 import java.util.{Date, SimpleTimeZone, TimeZone}
 import scalakittens.DateAndTime._
-import org.joda.time.format.DateTimeFormat
-import org.joda.time.{DateTime, DateTimeZone}
+//import org.joda.time.format.DateTimeFormat
+//import org.joda.time.{DateTime, DateTimeZone}
 import scalakittens.types.Strings
 
 import scala.concurrent.duration.Duration
-import scala.language.postfixOps
+import scala.reflect.internal.Reporter
+import scala.reflect.internal.util.Position
 import scala.util.matching.Regex
 
 /**
@@ -301,31 +305,25 @@ object DateAndTime extends DateAndTime with TimeReader {
 
   val Y2K = 20 // years before 20 are ascribed to 21st century, years after - to 20th century
 
-  def time[T](op: => T): T = {
-    val now = System.nanoTime()
-    try {
-      op
-    } finally {
-      //val dt = System.nanoTime() - now
-      // for debugging/profiling
-      //      Logging.debug(s"Operation took " + DateAndTime.formatNano(dt))
-    }
+
+  val NullReporter: Reporter = new Reporter {
+    override protected def info0(pos: Position, msg: String, severity: Severity, force: Boolean): Unit = {}
   }
 
-  def time[T](name: String, op: => T): T = {
+  def time[T](op: => T, name: String = "Operation", reporter: Reporter = NullReporter): T = {
     val now = System.nanoTime()
     try {
       op
     } finally {
-      // val dt = System.nanoTime() - now
-      // (good for profiling/debugging)
-      //  println(s"$name took " + DateAndTime.formatNano(dt))
+       val dt = System.nanoTime() - now
+       //(good for profiling/debugging)
+       reporter.echo(s"$name took " + DateAndTime.formatNano(dt))
     }
   }
 
   import java.text._
-  val SmallFmt = new DecimalFormat("0.000")
-  def formatNano(nano: Long): String = {
+  private val SmallFmt = new DecimalFormat("0.000")
+  private def formatNano(nano: Long): String = {
     val mks = nano / 1000
     val ms = nano / 1000000
     val s = nano / 1000000000L

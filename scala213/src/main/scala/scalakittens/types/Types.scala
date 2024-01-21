@@ -3,8 +3,6 @@ package scalakittens.types
 import scalakittens.{Good, Result}
 import scalakittens.Result._
 
-import scala.language.{implicitConversions, postfixOps}
-
 // makes sense to declare common types somewhere... e.g. here
 trait Types {
   type Predicate[-P] = Function1[P, Boolean]

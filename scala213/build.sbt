@@ -3,11 +3,9 @@ ThisBuild / organization := "ScalaKittens Inc."
 
 val WhichJava = "17"
 val WhichScala = "2.13.6"
-val projectName = s"Scala Kittens Library, Scala $WhichScala"
+val name = s"Scala Kittens Library, Scala $WhichScala"
 
 // Global / excludeLintKeys projectName
-
-ThisBuild / name := projectName
 
 ThisBuild / version := "1.0.0"
 

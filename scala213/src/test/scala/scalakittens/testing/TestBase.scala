@@ -8,8 +8,6 @@ import org.specs2.execute.{Failure, FailureException}
 import org.specs2.matcher._
 import org.specs2.mutable.Specification
 
-import scala.languageFeature.{implicitConversions, postfixOps} // before "fixing" it check that it will compile for you
-
 /**
  * Use this class as a base for your tests.
  * It has a bunch of extra functionality.
@@ -108,7 +106,7 @@ trait TestBase extends Specification {
       op(x, y) aka ("False positive on (\"" + x + "\", \"" + y + "\")") must_== false
     }
 
-    def maps(samples: (X, Y)*): Unit = passesOn(samples: _*)
+    def maps(samples: (X, Y)*): MatchResult[Any] = passesOn(samples: _*)
   }
 
   class RichCheckThis[X, Y] {

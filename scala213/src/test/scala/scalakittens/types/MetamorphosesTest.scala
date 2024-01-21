@@ -4,13 +4,12 @@ import scalakittens.{DateFormat, Good, Props, TimeReader}
 import scalakittens.testing.TestBase
 
 import scala.language.reflectiveCalls
-import scala.languageFeature.postfixOps
 import java.util.Date
 
 /**
  * Test for Metamorphoses
  */
-class Metamorphoses_Test extends TestBase with Metamorphoses with TimeReader {
+class MetamorphosesTest extends TestBase with Metamorphoses with TimeReader {
   "intOr" >> {
     "work" >> {
       intOr(555, 456) must_== 555
@@ -41,9 +40,9 @@ class Metamorphoses_Test extends TestBase with Metamorphoses with TimeReader {
       (somePercentageValue %%%) must_== Good(1.0)
 
       pp = Props(Map(somePercentageValue->"59%"))
-      // to string isneeded because of precision errors
+      // to string is needed because of precision errors
       val v2 = somePercentageValue %%%;
-      v2 map (_.toString) must_== Good((0.59).toString)
+      v2 map (_.toString) must_== Good("0.59")
 
       // this is a bad value because there is space between the the digits and % sign
       // This is debatable.

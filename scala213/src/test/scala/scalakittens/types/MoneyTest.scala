@@ -10,7 +10,7 @@ import org.specs2.matcher.MatchResult
 import scalakittens.{Good, Result}
 
 // TODO(vlad): fill it in, add as many tests as there are functions
-class Money_Test extends TestBase {
+class MoneyTest extends TestBase {
   def bd(s: String): Result[BigDecimal] = {
     val v1 = new java.math.BigDecimal(s, MathContext.DECIMAL64).setScale(2)
     val v2 = new scala.math.BigDecimal(v1)

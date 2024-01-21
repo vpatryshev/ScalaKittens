@@ -1,15 +1,14 @@
 package scalakittens.stats
 
-import scala.collection.mutable.ListBuffer
-import scala.concurrent.duration._
-import scala.language.postfixOps
 import scalakittens.{DateAndTime, TimeReader}
 
-import scala.collection.{AbstractSeq, mutable}
+import scala.collection.mutable.ListBuffer
+import scala.concurrent.duration._
+import scala.collection.mutable
 
 /**
   *
-  * Created by vpatryshev on 12/25/15.
+  * Created by Vlad Patryshev on 12/25/15.
   */
 class TimeSeries(range: Duration, clock: TimeReader = DateAndTime) {
   private val data = new ListBuffer[(Duration, Double)]()
@@ -27,7 +26,7 @@ class TimeSeries(range: Duration, clock: TimeReader = DateAndTime) {
     cleanup(t0 - range)
   }
 
-  def last = data.lastOption
+  def last: Option[(Duration, Double)] = data.lastOption
 
   def lastN(n: Int): mutable.Seq[(Duration, Double)] = data.takeRight(n)
 
@@ -37,7 +36,8 @@ class TimeSeries(range: Duration, clock: TimeReader = DateAndTime) {
     ourData map (_._2) toSeq
   }
 
-  def moments(Δt: Duration): MomentData = (MomentData.Zero /: latest(Δt)) ((m: MomentData, x: Double) => m add x)
+  def moments(Δt: Duration): MomentData =
+    latest(Δt).foldLeft(MomentData.Zero) ((m: MomentData, x: Double) => m add x)
 
   def avg(Δt: Duration): Option[Double] = moments(Δt).avg
 

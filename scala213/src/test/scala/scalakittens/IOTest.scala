@@ -6,7 +6,7 @@ import scalakittens.IO._
 import scalakittens.OS._
 import org.specs2.mutable.Specification
 
-class IO_Test extends Specification {
+class IOTest extends Specification {
 
   private def writeFile(file:File, contents: String): Unit = {
     val out = new OutputStreamWriter(new FileOutputStream(file))

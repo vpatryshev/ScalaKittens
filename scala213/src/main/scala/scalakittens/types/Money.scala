@@ -3,8 +3,6 @@ package scalakittens.types
 import scalakittens.{Empty, Good, Result}
 
 import java.math.MathContext
-import scala.language.implicitConversions
-import scala.language.{implicitConversions, postfixOps}
 
 trait Money {
   sealed class SmartMoney(value:BigDecimal) {

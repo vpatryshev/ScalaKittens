@@ -12,7 +12,7 @@ import annotation.tailrec
  * - which are valid for a limited amount of time, and can be retrieved again
  * - which are not a burden to store in memory, say, in a map, say, in a ConcurrentHashMap
  *
- * Use something else if you have different requriements.
+ * Use something else if you have different requirements.
  * Or just let me know; this is work in progress. We had a bunch of caching stuff at Google, seems like now Google Guava
  * has cache package added. But that's Java, the thing of the past.
  *
@@ -31,7 +31,7 @@ import annotation.tailrec
  *
  */
 trait Caching {
-  var debugme = false
+  var debugme: Boolean = false
   def debug(s: => String): Unit = if (debugme) println(s"$now](${Thread.currentThread.getId})$s")
   // indirection that is good for applying cake pattern: see the object below and the test where time is mocked
   protected def now: Long // expecting nanos
@@ -86,13 +86,13 @@ trait Caching {
      * @return a half-way object that needs a time unit to produce a cache unit (hope you follow me)
      */
     case class validFor private(timeout: Long) {
-      def NANOSECONDS  = apply(TimeUnit.NANOSECONDS)
-      def MICROSECONDS = apply(TimeUnit.MICROSECONDS)
-      def MILLISECONDS = apply(TimeUnit.MILLISECONDS)
-      def SECONDS      = apply(TimeUnit.SECONDS)
-      def MINUTES      = apply(TimeUnit.MINUTES)
-      def HOURS        = apply(TimeUnit.HOURS)
-      def DAYS         = apply(TimeUnit.DAYS)
+      def NANOSECONDS: CacheUnit[T] = apply(TimeUnit.NANOSECONDS)
+      def MICROSECONDS: CacheUnit[T] = apply(TimeUnit.MICROSECONDS)
+      def MILLISECONDS: CacheUnit[T] = apply(TimeUnit.MILLISECONDS)
+      def SECONDS: CacheUnit[T] = apply(TimeUnit.SECONDS)
+      def MINUTES: CacheUnit[T] = apply(TimeUnit.MINUTES)
+      def HOURS: CacheUnit[T] = apply(TimeUnit.HOURS)
+      def DAYS: CacheUnit[T] = apply(TimeUnit.DAYS)
       private def apply(unit: TimeUnit) = withTimeout(timeout, unit)
     }
 
@@ -108,7 +108,7 @@ trait Caching {
   private class HardReference[+X <: AnyRef](x:X) extends Reference[X] {
     def apply(): X = x
     def get: Option[X] = Some(x)
-    def isEnqueued() = false
+    def isEnqueued = false
     def enqueue() = false
     def clear(): Unit = {}
   }

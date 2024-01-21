@@ -56,8 +56,10 @@ trait FS { fs =>
     require(path.toString != "", "Path cannot be empty")
     require(!exists || isDirectory(path), "Existing file " + path + " must be a directory")
     def /(name: String)    = new File(path, name)
-    def file(path: Seq[String]): TextFile = new TextFile((canonicalFile /: path) (new File(_, _)))
-    def file(path: String): TextFile = new TextFile(file(path split "/"))
+    def file(path: Seq[String]): TextFile =
+      new TextFile(path.iterator.foldLeft(canonicalFile)(new File(_, _)))
+
+    def file(path: String): TextFile = new TextFile(new File(path))
     def mkdirs: Boolean = path.mkdirs
 
     def isSubfolderOf(parent: Folder): Boolean = {

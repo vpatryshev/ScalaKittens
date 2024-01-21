@@ -1,12 +1,12 @@
 package scalakittens
 
-import scala.io.Source
-import scala.languageFeature.postfixOps // better not touch, since it compiles this way
+import org.specs2.matcher.MatchResult
 
+import scala.io.Source
 import scalakittens.Result.OK
 import scalakittens.testing.TestBase
 
-class Props_Test extends TestBase
+class PropsTest extends TestBase
 {
   import Library._
 
@@ -21,7 +21,7 @@ class Props_Test extends TestBase
 
   "Props.@@" >> {
     "not crash on four parameters" >> {
-      val pf = props("h.e.a.d" -> "<<A B C D>>")
+      val pf = props("a.b.c.d" -> "<<A B C D>>")
       pf.valueOf("a", "b", "c", "d") === Good("<<A B C D>>")
 
       pf.valueOf("x", "b", "c", "d") mustBeBad
@@ -156,7 +156,7 @@ class Props_Test extends TestBase
     }
 
     "@@ behave on four parameters" >> {
-      val pf = props("h.e.a.d" -> "<<A B C D>>")
+      val pf = props("a.b.c.d" -> "<<A B C D>>")
       pf valueOf ("a", "b", "c", "d") must_== Good("<<A B C D>>")
       (pf valueOf ("x", "b", "c", "d")) mustBeBad
     }
@@ -169,7 +169,7 @@ class Props_Test extends TestBase
     }
 
     "reorder params" >> {
-      val pf = props("h.e.a.d" -> "<<A B C D>>") ++ props("a1.b1.c1.d1" -> "<<A1 B1 C1 D1>>")
+      val pf = props("a.b.c.d" -> "<<A B C D>>") ++ props("a1.b1.c1.d1" -> "<<A1 B1 C1 D1>>")
       val reordered = pf reorder(4,2,1,3)
       reordered valueOf ("c", "b", "d", "a") must_== Good("<<A B C D>>")
       reordered valueOf ("c1", "b1", "d1", "a1") must_== Good("<<A1 B1 C1 D1>>")
@@ -177,7 +177,7 @@ class Props_Test extends TestBase
     }
 
     "reorder params, heterogeneous" >> {
-      val pf = props("h.e.a.d" -> "<<A B C D>>")
+      val pf = props("a.b.c.d" -> "<<A B C D>>")
       val sut = (pf reorder(4,2,1,3)) ++ props("clue" -> "treasure")
       val res = sut valueOf ("c", "b", "d", "a")
       res must_== Good("<<A B C D>>")
@@ -186,25 +186,25 @@ class Props_Test extends TestBase
     }
 
     "dropPrefix work on four parameters" >> {
-      val pf = props("h.e.a.d" -> "<<HEAD>>", "x" -> "<<X>>")
+      val pf = props("a.b.c.d" -> "<<A B C D>>", "x" -> "<<X>>")
       val dp = pf.dropPrefix
-      dp @@ ("e", "a", "d") must_== Good("<<HEAD>>")
+      dp @@ ("b", "c", "d") must_== Good("<<A B C D>>")
       (dp @@ "x").isBad must beTrue
     }
 
     "find having" >> {
-      val sut = props("h.e.a.d" -> "<<HEAD>>", "x" -> "<<X>>", "a.m.e.n" -> "<<AMEN>>", "1.k" -> "K1", "k.48" -> "K1")
-      sut.findHaving("a") must_== Good("<<HEAD>>")
-      sut.findHaving("h").isBad must beTrue
+      val sut = props("a.b.c.d" -> "<<A B C D>>", "x" -> "<<X>>", "a.d.x.y" -> "<<A D X Y>>", "1.k" -> "K1", "k.48" -> "K1")
+      sut.findHaving("c") must_== Good("<<A B C D>>")
+      sut.findHaving("a").isBad must beTrue
       sut.findHaving("ab").isBad must beTrue
-      sut.findHaving("n.o") must_== Good("<<AMEN>>")
+      sut.findHaving("y.d") must_== Good("<<A D X Y>>")
       sut.findHaving("k") must_== Good("K1")
     }
 
     "find and replace" >> {
-      val sut1 = props("h.e.a.d" -> "<<HEAD>>", "x" -> "<<X>>", "a.m.e.n" -> "<<AMEN>>")
-      val sut2 = props("h.e.a.d" -> "<<HEAD01>>", "x" -> "<<X>>", "a.m.e.n" -> "<<AMEN>>")
-      val replaced = sut1.findAndReplace("c", "<<HEAD01>>")
+      val sut1 = props("a.b.c.d" -> "<<A B C D>>", "x" -> "<<X>>", "a.d.x.y" -> "<<A D X Y>>")
+      val sut2 = props("a.b.c.d" -> "<<A B C D Z Z>>", "x" -> "<<X>>", "a.d.x.y" -> "<<A D X Y>>")
+      val replaced = sut1.findAndReplace("c", "<<A B C D Z Z>>")
       replaced == sut2 must beTrue
       sut1.findAndReplace("ab", "oh really?!") must_== sut1
 
@@ -220,13 +220,13 @@ class Props_Test extends TestBase
     }
 
     "discard empty subtrees" >> {
-      val sut = props("h.e.a.d" -> "<<HEAD>>", "x" -> "<<X>>", "a.m.e.n" -> "<<AMEN>>")
-      sut.findAllHaving("d").toString must_== """fp(Map("h.e.a.d" -> "<<HEAD>>", "a.m.e.n" -> "<<AMEN>>"))"""
+      val sut = props("a.b.c.d" -> "<<A B C D>>", "x" -> "<<X>>", "a.d.x.y" -> "<<A D X Y>>")
+      sut.findAllHaving("d").toString must_== """fp(Map("a.b.c.d" -> "<<A B C D>>", "a.d.x.y" -> "<<A D X Y>>"))"""
     }
 
     "extract one by subkey" >> {
-      val sut = props("a.b.[[1]].c.d" -> "<<HEAD>>", "a.b.[[1]].c.y" -> "<<ABCY>>", "x" -> "<<X>>")
-      sut.extractAllNumberedHaving("d").toList.toString must_== """List(fp(Map("c.d" -> "<<HEAD>>", "c.y" -> "<<ABCY>>")))"""
+      val sut = props("a.b.[[1]].c.d" -> "<<A B C D>>", "a.b.[[1]].c.y" -> "<<A B C Y>>", "x" -> "<<X>>")
+      sut.extractAllNumberedHaving("d").toList.toString must_== """List(fp(Map("c.d" -> "<<A B C D>>", "c.y" -> "<<A B C Y>>")))"""
     }
     "trim prefixes wisely" >> {
       val p = props("a.b.c" -> "ABC")
@@ -358,10 +358,10 @@ class Props_Test extends TestBase
 
   "From Map " >> {
     "drop indexes" >> {
-      val sut0 = props("a.b.[[1]].c.d" -> "<<HEAD>>", "a.b.[[1]].c.y" -> "<<ABCY>>", "x" -> "<<X>>")
+      val sut0 = props("a.b.[[1]].c.d" -> "<<A B C D>>", "a.b.[[1]].c.y" -> "<<A B C Y>>", "x" -> "<<X>>")
       val sut = sut0.dropIndexes
-      sut @@ "h.e.a.d" must_== Good("<<HEAD>>")
-      sut @@ "a.b.c.y" must_== Good("<<ABCY>>")
+      sut @@ "a.b.c.d" must_== Good("<<A B C D>>")
+      sut @@ "a.b.c.y" must_== Good("<<A B C Y>>")
       sut @@ "x"       must_== Good("<<X>>")
     }
   }
@@ -380,7 +380,7 @@ class Props_Test extends TestBase
       sutOpt match {
         case Good(sut) =>
           sut @@ "a" must_== Good("b")
-        case orelse => failure(s"Oops, not good: $orelse")
+        case orElse => failure(s"Oops, not good: $orElse")
       }
       ok
     }
@@ -401,7 +401,7 @@ class Props_Test extends TestBase
       sutOpt match {
         case Good(sut) =>
           sut @@ "Provider" must_== Good("ALL PODIATRY GROUP")
-        case orelse => failure(s"Oops, not good: $orelse")
+        case orElse => failure(s"Oops, not good: $orElse")
       }
       ok
 
@@ -413,7 +413,7 @@ class Props_Test extends TestBase
       sutOpt match {
         case Good(sut) =>
           sut @@ "a" must_== Good("b")
-        case orelse => failure(s"Oops, not good: $orelse in $txt")
+        case orElse => failure(s"Oops, not good: $orElse in $txt")
       }
       OK mustBeGood
     }
@@ -423,27 +423,27 @@ class Props_Test extends TestBase
       sutOpt match {
         case Good(sut) =>
           sut @@ "z" must_== Good("b")
-        case orelse => failure(s"Oops, not good: $orelse")
+        case orElse => failure(s"Oops, not good: $orElse")
       }
       ok
     }
 
     "parse simple sample with reordering as text" >> {
-      val sutOpt = Props parse "fp(Map(\"h.e.a.d\" -> \"cdba\")) with reordering (3,4,2,1)"
+      val sutOpt = Props parse "fp(Map(\"a.b.c.d\" -> \"c d b a\")) with reordering (3,4,2,1)"
       sutOpt match {
         case Good(sut) =>
-          sut @@ "d.c.a.b" must_== Good("cdba")
-          case orelse => failure(s"Oops, not good: $orelse")
+          sut @@ "d.c.a.b" must_== Good("c d b a")
+          case orElse => failure(s"Oops, not good: $orElse")
       }
       ok
     }
 
     "parse simple sample with dictionary and reordering as text" >> {
-      val sutOpt = Props parse "fp(Map(\"h.e.a.d\" -> \"cdba\")) with dictionary Map(\"x\" -> \"y\", \"z\" -> \"a\") with reordering (3,4,2,1)"
+      val sutOpt = Props parse "fp(Map(\"a.b.c.d\" -> \"c d b a\")) with dictionary Map(\"x\" -> \"y\", \"z\" -> \"a\") with reordering (3,4,2,1)"
       sutOpt match {
         case Good(sut) =>
-          sut @@ "d.c.z.b" must_== Good("cdba")
-        case orelse => failure(s"Oops, not good: $orelse")
+          sut @@ "d.c.z.b" must_== Good("c d b a")
+        case orElse => failure(s"Oops, not good: $orElse")
       }
       ok
     }
@@ -455,7 +455,7 @@ class Props_Test extends TestBase
       sutOpt match {
         case Good(sut) =>
           sut @@ "Private.Somewhere.Bribe.max" must_== Good("$4,0.00")
-        case orelse => failure(s"Oops, not good: $orelse")
+        case orElse => failure(s"Oops, not good: $orElse")
       }
       ok
     }
@@ -483,18 +483,43 @@ class Props_Test extends TestBase
       },
       (t: Throwable) => {t.printStackTrace(); throw t })
 
-    val samples = List(
-      "{}"  -> Props.empty,
+    val simpleSamples = List(
+      "{}" -> Props.empty,
       "{ \"v\":\"1\"}" -> props("v" -> "1"),
-      "{ \"v\":\"ab'c\"}" -> props("v" -> "ab'c"),
+      "{ \"v\":\"a b'c\"}" -> props("v" -> "a b'c"),
       "{ \"v\":\"ab\\\"c\"}" -> props("v" -> "ab\"c"),
       "[ \"1\",\"2\",\"3\",\"4\"]" -> props("[[1]]" -> "1", "[[2]]" -> "2", "[[3]]" -> "3", "[[4]]" -> "4"),
       "{\"a\":\"hp://foo\"}" -> props("a" -> "hp://foo"),
       "{\"x\":[\"1.0\",\"2.0\",\"3.0\"]}" -> props("x.[[1]]" -> "1.0", "x.[[2]]" -> "2.0", "x.[[3]]" -> "3.0"),
       "[{\"a\":\"1.0\"},{\"b\":\"2.0\"},[\"3.0\",\"4.0\"]]" -> props("[[1]].a" -> "1.0", "[[2]].b" -> "2.0", "[[3]].[[1]]" -> "3.0", "[[3]].[[2]]" -> "4.0"),
       "{\"a\":{\"b\":\"c\"}}" -> props("a.b" -> "c"),
-      "{\"c\":{\"p\":\"q\"}}" -> props("c.p" -> "q"),
-      """{"affectedIDs":["11620"],"frameType":"2.0","date":"1405445271804","httpCode":"200","type":"Attachment","item":{"attachedOn":"1405445271","mimeType":"application/pdf","updatedAt":"1405445271","EOBID":"0","ID":"11620","userID":"10204","updatedMS":"1405445271","name":"statement.pdf","size":"790523"},"message":"OK"}""" -> props(
+      "{\"c\":{\"p\":\"q\"}}" -> props("c.p" -> "q")
+    )
+
+    val sample1 =
+      """{"item":{"DocId":"0","userID":"10204","ID":"11620"},
+        |"frameType":"2.0","date":"1405445271804","httpCode":"200","type":"Attachment",
+        |"message":"OK","affectedIDs":["11621"]}""".
+        stripMargin.replaceAll("\n","") ->
+        props(
+          "type" -> "Attachment",
+          "date" -> "1405445271804",
+          "frameType" -> "2.0",
+          "message" -> "OK",
+          "httpCode" -> "200",
+          "affectedIDs.[[1]]" -> "11621",
+          "item.ID" -> "11620",
+          "item.DocId" -> "0",
+          "item.userID" -> "10204"
+        )
+
+    val sample2 =
+      """{"affectedIDs":["11620"],"frameType":"2.0","date":"1405445271804","httpCode":"200",
+        |"item":{"attachedOn":"1405445271","mimeType":"application/pdf","updatedAt":"1405445271",
+        |"ID":"11620","userID":"10204","DocId":"0","updatedMS":"1405445271",
+        |"name":"statement.pdf","size":"790523"},
+        |"type":"Attachment","message":"OK"}""".stripMargin.replaceAll("\n","") ->
+        props(
         "type" -> "Attachment",
         "date" -> "1405445271804",
         "frameType" -> "2.0",
@@ -502,7 +527,7 @@ class Props_Test extends TestBase
         "httpCode" -> "200",
         "affectedIDs.[[1]]" -> "11620",
         "item.ID" -> "11620",
-        "item.EOBID" -> "0",
+        "item.DocId" -> "0",
         "item.subsID" -> "",
         "item.uid" -> "",
         "item.userID" -> "10204",
@@ -512,7 +537,9 @@ class Props_Test extends TestBase
         "item.mimeType" -> "application/pdf",
         "item.updatedMS" -> "1405445271",
         "item.size" -> "790523"
-    ))
+      )
+
+    val samples = simpleSamples ++ List(sample1, sample2)
 
     "check json with quotes in string" >> {
       val (source, expected) = """{ "v":"ab\"c"}""" -> props("v" -> """ab"c""")
@@ -547,7 +574,14 @@ class Props_Test extends TestBase
       ok
     }
 
-    "parse" >> {
+    "parse standard samples" >> {
+      parseAndCheck maps (samples.toIndexedSeq: _*)
+
+      Props.parseJson("{'X':'s").isBad must beTrue
+      Props.parseJson("{'X").isBad must beTrue
+    }
+
+    "parse extra samples" >> {
       val extraSamples = List(
         //bad json lib        "{\"v\":\"1\"\\n}"  -> props("v" -> "1"),
         //bad json lib        "{\"v\":\"1\"\\r\\n}"  -> props("v" -> "1"),
@@ -575,7 +609,7 @@ class Props_Test extends TestBase
           ],
           "item" : {
                   "ID" : 11620,
-                  "EOBID" : 0,
+                  "DocId" : 0,
                   "subsID" : "",
                   "uid" : "",
                   "userID" : 10204,
@@ -594,7 +628,7 @@ class Props_Test extends TestBase
           "httpCode" -> "200",
           "affectedIDs.[[1]]" -> "11620",
           "item.ID" -> "11620",
-          "item.EOBID" -> "0",
+          "item.DocId" -> "0",
           "item.subsID" -> "",
           "item.uid" -> "",
           "item.userID" -> "10204",
@@ -606,23 +640,64 @@ class Props_Test extends TestBase
           "item.size" -> "790523"
         ))
 
-      parseAndCheck maps ((samples++extraSamples).toArray:_*)
-
-      Props.parseJson("{'X':'s").isBad must beTrue
-      Props.parseJson("{'X").isBad must beTrue
+      parseAndCheck maps (extraSamples.toIndexedSeq:_*)
     }
 
-    "generate" >> {
+    "generate, two samples" >> {
       props("v" -> """ab"c""").toJsonString must_== """{"v": "ab\"c"}"""
-      props("[[1]]" -> "1", "[[2]]" -> "2", "[[3]]" -> "3", "[[4]]" -> "4").toJsonString must_== """["1", "2", "3", "4"]"""
 
-      val generate = Function[Props, String]("json stringifier",
-        (p:Props) => {
-          val s = p.toJsonString
-          s.replaceAll("[ \\n]", "")
-        },
-        (t:Throwable) => {t.printStackTrace(); throw t})
-        generate maps (samples.map { case (j, p) => (p, j.replaceAll(" ", ""))}.toArray: _*)
+      props("[[1]]" -> "1", "[[2]]" -> "2", "[[3]]" -> "3", "[[4]]" -> "4").toJsonString must_==
+         """["1", "2", "3", "4"]"""
+    }
+
+    val generate = Function[Props, String]("json stringifier",
+      (p: Props) => {
+        val s = p.toJsonString
+        s.replaceAll("[ \\n]", "")
+      },
+      (t: Throwable) => {t.printStackTrace(); throw t })
+
+    def checkPair(sample: (String, Props)): MatchResult[Any] = {
+      sample._2.toJsonString.replaceAll("\\s", "")  === sample._1
+    }
+
+
+    "generate, simple samples" >> {
+        generate maps (simpleSamples.map {
+          case (j, p) => (p, j.replaceAll(" ", ""))}.toIndexedSeq: _*)
+    }
+
+    "generate, sample0" >> {
+      val sample =
+        """{"httpCode":"200","type":"Attachment",
+          |"message":"OK",
+          |"item":{"DocId":"0","userID":"10204","ID":"11620"},
+          |"affectedIDs":["11620"]}""".stripMargin.replaceAll("\n", "") ->
+          props(
+            "type" -> "Attachment",
+            "message" -> "OK",
+            "httpCode" -> "200",
+            "affectedIDs.[[1]]" -> "11620",
+            "item.ID" -> "11620",
+            "item.DocId" -> "0",
+            "item.userID" -> "10204"
+          )
+
+      checkPair(sample)
+    }
+
+    "generate, sample1" >> {
+      checkPair(sample1)
+    }
+
+    "generate, sample2" >> {
+      checkPair(sample2)
+    }
+
+    "generate, all samples" >> {
+      generate maps (samples.map {
+        case (j, p) => (p, j.replaceAll(" ", ""))
+      }.toIndexedSeq: _*)
     }
   }
 
@@ -764,7 +839,23 @@ class Props_Test extends TestBase
       actual must_== Good(props("key.[[1]]"->"first", "key.[[2]]"->"second"))
     }
 
-    "Extract data from full tree" >> {
+    "Extract data, regression 01/19/24" >> {
+      val source = Map(
+        "abroad" -> Map(
+          "hasFamilyGoals" -> false,
+          "individualHome" -> 7000
+        ))
+
+      val pp = fromTree(source)
+      pp match {
+        case Good(p) =>
+          p @@ "abroad.individualHome" aka p.toString must_== Good("7000")
+        case oops => failure(s"oops: $oops")
+      }
+      ok
+    }
+
+    "Extract data from first quarter tree" >> {
       val source = Map(
         "abroad" -> Map(
           "hasFamilyHome" -> false,
@@ -772,7 +863,31 @@ class Props_Test extends TestBase
           "hasForeignAssets" -> true,
           "familyHome" -> -1,
           "hasIndividualGoals" -> true,
-          "fname" -> List("JANE"),
+          "firstName" -> List("JANE"),
+          "individualGoals" -> 14000,
+          "familyGoals" -> -1
+      ))
+
+      val pp = fromTree(source)
+      pp match {
+        case Good(p) =>
+          (p @@ "inNetwork.individualGoalsMet.[[1]]" isBad) must_== true
+           p @@ "abroad.individualGoalsMet.[[1]]" must_== Good("0")
+           p @@ "abroad.individualGoals" must_== Good("14000")
+        case oops => failure(s"oops: $oops")
+      }
+      ok
+    }
+
+    "Extract data from half tree" >> {
+      val source = Map(
+        "abroad" -> Map(
+          "hasFamilyHome" -> false,
+          "individualGoalsMet" -> List(0),
+          "hasForeignAssets" -> true,
+          "familyHome" -> -1,
+          "hasIndividualGoals" -> true,
+          "firstName" -> List("JANE"),
           "individualGoals" -> 14000,
           "familyGoals" -> -1,
           "typeTitle" -> "Individual",
@@ -785,16 +900,49 @@ class Props_Test extends TestBase
           "familyGoalsMet" -> -1),
         "isHSA" -> false,
         "isSubscriber" -> true,
-        "isIndividual" -> true,
-        "inNetwork" -> Map(
-          "pharmHomeGeneric" -> -1, "hasFamilyHome" -> false,
+        "isIndividual" -> true)
+
+      val pp = fromTree(source)
+      pp match {
+        case Good(p) =>
+          p @@ "abroad.individualGoalsMet.[[1]]" must_== Good("0")
+          p @@ "abroad.individualHome" must_== Good("7000")
+        case oops => failure(s"oops: $oops")
+      }
+      ok
+    }
+/*
+    "Extract data from full tree" >> {
+      val source = Map(
+        "abroad" -> Map(
+          "hasFamilyHome" -> false,
+          "individualGoalsMet" -> List(0),
+          "hasForeignAssets" -> true,
+          "familyHome" -> -1,
+          "hasIndividualGoals" -> true,
+          "firstName" -> List("JANE"),
+          "individualGoals" -> 14000,
+          "familyGoals" -> -1,
+          "typeTitle" -> "Individual",
+          "individualHomeMet" -> List(0),
+          "bitcoins" -> 20,
+          "hasFamilyGoals" -> false,
+          "individualHome" -> 7000,
+          "hasIndividualHome" -> true,
+          "familyHomeMet" -> -1,
+          "familyGoalsMet" -> -1),
+          "isHSA" -> false,
+          "isSubscriber" -> true,
+          "isIndividual" -> true,
+          "inNetwork" -> Map(
+          "somethingGeneric" -> -1, "hasFamilyHome" -> false,
           "individualGoalsMet" -> List(0), "familyHome" -> -1,
           "hasDrugHomeBrand" -> false, "hasDrugHome" -> false,
-          "hasIndividualGoals" -> true, "pharmHome" -> -1,
-          "fname" -> List("JANE"), "individualGoals" -> 3500,
+          "hasIndividualGoals" -> true, "alcohol" -> -1,
+          "firstName" -> List("JANE"), "individualGoals" -> 3500,
           "hasDrugHomeGeneric" -> false, "hasInNetworkAssets" -> true,
           "familyGoals" -> -1, "typeTitle" -> "Individual",
-          "individualHomeMet" -> List(0), "pharmHomeBrand" -> -1,
+          "individualHomeMet" -> List(0), "alcoholBrand" -> -1,
           "bitcoins" -> 0, "hasFamilyGoals" -> false,
           "individualHome" -> 3500, "hasIndividualHome" -> true,
           "familyHomeMet" -> -1, "familyGoalsMet" -> -1))
@@ -808,7 +956,7 @@ class Props_Test extends TestBase
       }
       ok
     }
-
+*/
     "Group Indices from a unordered set of indices" >> {
       val source = props(
         "[[1]].name" -> "ABC",
@@ -816,16 +964,16 @@ class Props_Test extends TestBase
         "[[3]].name" -> "DEF",
         "[[3]].foo" -> "defbar",
         "[[5]].name" -> "GHI",
-        "[[5]].bar" -> "ghifoo"
+        "[[5]].bar" -> "another_nonsense"
       )
       val groupedProps = source.groupByIndex
       groupedProps.size must_== 5
       groupedProps.count(_.isEmpty) must_== 2
-      groupedProps(4) @@ "bar" map (_=="ghifoo") must_== Good(true)
+      groupedProps(4) @@ "bar" must_== Good("another_nonsense")
 
     }
 
-    "Divyesh's regression" in {
+    "Divyesh' regression" in {
       val mergedDataMaps = Set(Map.empty[String, String]::Map.empty[String, String]::Nil)
 
       val listOfMaps: List[Map[String, String]] = mergedDataMaps.toList.flatten

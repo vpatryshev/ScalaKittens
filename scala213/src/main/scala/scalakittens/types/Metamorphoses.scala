@@ -7,7 +7,6 @@ import scalakittens.types.Percentage._
 
 import java.io.InputStream
 import java.util.Date
-import scala.language.implicitConversions
 
 /**
  * All general purpose implicit transformations should be stored here

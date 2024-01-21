@@ -1,6 +1,5 @@
 package scalakittens.la
 
-import language.postfixOps
 import scala.math._
 
 /**
@@ -10,12 +9,13 @@ import scala.math._
   */
 trait Norm {
 
-  def apply(xs: Iterable[Double]): Double
-  
-//  def apply(m: Matrix[_,_]): Double = apply(m.allElements)
+  def apply(xs: Iterator[Double]): Double
+
+  def apply(v: Seq[Double]): Double = apply(v.iterator)
+  def apply(m: Matrix[_,_]): Double = apply(m.iterator)
   
   def distance(xs: IndexedSeq[Double], ys: IndexedSeq[Double]): Double = {
-    this(xs.indices map { i => xs(i) - ys(i) } view)
+    this(xs.indices map { i => xs(i) - ys(i) } iterator)
   }
       
 }
@@ -28,7 +28,7 @@ object Norm {
     * sum of absolute values of vector elements
     */
   object l1 extends Norm {
-    override def apply(xs: Iterable[Double]): Double = xs map abs sum
+    override def apply(xs: Iterator[Double]): Double = xs map abs sum
   }
 
   /**
@@ -37,12 +37,12 @@ object Norm {
     * square root of sum of squares of vector elements
     */
   object l2 extends Norm {
-    override def apply(xs: Iterable[Double]): Double = {
-      xs match {
-        case ax: VectorSpace#Vector => ax.l2
-        case _ => apply(xs.iterator)
-      }
-    }
+//    override def apply(xs: Iterable[Double]): Double = {
+//      xs match {
+//        case ax: VectorSpace#Vector => ax.l2
+//        case _ => sqrt(xs map (x => x*x) sum)
+//      }
+//    }
 
     def apply(xs: Iterator[Double]): Double = sqrt(xs map (x => x*x) sum)
 
@@ -62,6 +62,6 @@ object Norm {
     * @return max abs value of elements
     */
   object linf extends Norm {
-    override def apply(xs: Iterable[Double]): Double = (0.0 /: (xs map abs view))(max)
+    override def apply(xs: Iterator[Double]): Double = (xs map abs).foldLeft(0.0)(max)
   }
 }

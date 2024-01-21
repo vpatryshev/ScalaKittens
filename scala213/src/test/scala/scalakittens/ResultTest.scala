@@ -1,14 +1,15 @@
 package scalakittens
 
+import org.specs2.matcher.MatchResult
 import org.specs2.mutable.Specification
 
 class ResultTest extends Specification {
   import Result._
 
   implicit class checker(r: Result[_]) {
-    def mustBeBad(msgs: String*) = {
+    def mustBeBad(messages: String*): MatchResult[Option[String]] = {
       r.isBad aka r.toString must beTrue
-      r.errorDetails must beSome(msgs mkString "; ")
+      r.errorDetails must beSome(messages mkString "; ")
     }
   }
 
@@ -173,7 +174,7 @@ class ResultTest extends Specification {
       actual mustBeBad "x yourself"
     }
 
-    "work applicativel" in {
+    "work applicatively" in {
       val blended:Result[(Int,Int)] = error[Int]("x yourself") <*> error[Int]("y yourself")
       def sum(x:Int,y:Int):Int = x+y
       val actual:Result[Int] = blended map (sum _).tupled
@@ -207,7 +208,7 @@ class ResultTest extends Specification {
     "collect nothing" in {
       var wasThere = false
       val sut: Result[String] = Empty
-      sut collect ({ case "hello" => wasThere = true; 1}, _ => "whatevar") must_== Empty
+      sut collect ({ case "hello" => wasThere = true; 1}, _ => "whatever") must_== Empty
       wasThere aka "visited what you were not supposed to visit" must beFalse
     }
     "convert to None" in {
@@ -296,12 +297,12 @@ class ResultTest extends Specification {
  //     implicit def t21_to_t3[X,Y,Z](t:((X, Y), Z)):(X,Y,Z) = (t._1._1, t._1._2, t._2)
       implicit def app20[X1,X2,Z](t: ((X1 => X2 => Z, X1), X2)): Z = t._1._1(t._1._2)(t._2)
       implicit def app2[X1,X2,Z](t: (X1 => X2 => Z, X1, X2)): Z = t._1(t._2)(t._3)
-      val forty_two:String = ((n: Int) => n*7 + "!", 6)
+      val forty_two:String = ((n: Int) => s"${n * 7}!", 6)
       forty_two must_== "42!"
-      val itWorks: String = ((n:Int) => (m:Int) => n*m+":)", 6, 7)
+      val itWorks: String = ((n:Int) => (m:Int) => s"${n * m}:)", 6, 7)
       itWorks must_== "42:)"
 
-      val r0 = Result.forValue((n:Int) => (m:Int) => n*m + " :)")
+      val r0 = Result.forValue((n:Int) => (m:Int) => s"${n * m} :)")
       val r1 = Result.forValue(6)
       val r2 = Result.forValue(7)
       val r = r0 <*> r1 <*> r2
@@ -309,7 +310,7 @@ class ResultTest extends Specification {
       result must_== Good("42 :)")
 
       implicit def app3[X1,X2,X3,Z](t: (((X1 => X2 => X3 => Z, X1), X2), X3)): Z = t._1._1._1(t._1._1._2)(t._1._2)(t._2)
-      val s0 = Result.forValue((n:Int) => (m:Int) => (k:Int) => n*m + k + ".")
+      val s0 = Result.forValue((n:Int) => (m:Int) => (k:Int) => s"${n*m + k}.")
       val s1 = Result.forValue(6)
       val s2 = Result.forValue(7)
       val s3 = Result.forValue(8)
@@ -326,7 +327,7 @@ class ResultTest extends Specification {
       sample match {
         case Good("morning") => // ok
         case Good("evening") => failure("match failed miserably")
-        case whatisit => failure(s"Got $whatisit instead")
+        case whatIsIt => failure(s"Got $whatIsIt instead")
       }
       ok
     }
@@ -334,7 +335,7 @@ class ResultTest extends Specification {
       val sample = Empty
       sample match {
         case Empty => // ok
-        case whatisit => failure(s"Got $whatisit instead")
+        case whatIsIt => failure(s"Got $whatIsIt instead")
       }
       ok
     }
@@ -342,7 +343,7 @@ class ResultTest extends Specification {
       val sample = Result.error[Double]("good error")
       sample match {
         case bad:Bad[Double] => // ok
-        case whatisit => failure(s"Got $whatisit instead")
+        case whatIsIt => failure(s"Got $whatIsIt instead")
       }
       ok
     }
@@ -399,9 +400,9 @@ class ResultTest extends Specification {
 
     "apply as in applicative functors" in {
       case class Into(n:Int)
-      class X(var m:Int) { def multiply(n:Int) = Into(m*n)}
-      def mmO(xOpt:Result[X]) = xOpt map (x => x.multiply _)
-      def mm(x:X) = mmO(Good(x))
+      class X(var m:Int) { def multiply(n:Int): Into = Into(m*n)}
+      def mmO(xOpt:Result[X]): Result[Int => Into] = xOpt map (_.multiply)
+      def mm(x:X): Result[Int => Into] = mmO(Good(x))
       val multiplier = mm(new X(7))
       multiplier (Good(42)) must_== Good(Into(294))
       multiplier      (42)  must_== Good(Into(294))

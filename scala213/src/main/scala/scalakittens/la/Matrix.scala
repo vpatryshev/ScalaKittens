@@ -2,8 +2,6 @@ package scalakittens.la
 
 import java.util
 
-import language.postfixOps
-
 /**
   * Matrix defined on vector spaces over real numbers (Doubles, in Scala).
   * Domain is the space where matrix rows live;
@@ -16,7 +14,7 @@ import language.postfixOps
   * Created by Vlad Patryshev on 5/15/17.
   */
 abstract class  Matrix[Domain <: VectorSpace, Codomain <: VectorSpace](
-    val domain: Domain, val codomain: Codomain) extends ((Int, Int) => Double) with Iterable[Double] {
+    val domain: Domain, val codomain: Codomain) extends ((Int, Int) => Double) {
 
   /**
     * @return number of rows
@@ -33,9 +31,9 @@ abstract class  Matrix[Domain <: VectorSpace, Codomain <: VectorSpace](
 
   lazy val columnRange: Range = 0 until nCols
 
-  override lazy val size: Int = nRows * nCols
+  lazy val size: Int = nRows * nCols
   
-  override lazy val isEmpty: Boolean = size == 0
+  lazy val isEmpty: Boolean = size == 0
 
   /**
     * Checks row and column indexes
@@ -109,7 +107,20 @@ abstract class  Matrix[Domain <: VectorSpace, Codomain <: VectorSpace](
     } op(i)(j)
     this
   }
-  
+
+  /**
+    * checking a predicate on each pair of row index and column index
+    *
+    * @param predicate the predicate
+    * @return this matrix
+    */
+  def forall(predicate: Int => Int => Boolean): Boolean = {
+    rowRange.forall(i => {
+      val pi = predicate(i)
+      columnRange.forall(j => pi(j))
+    })
+  }
+
   /**
     * Transposed matrix
     * 
@@ -155,9 +166,9 @@ abstract class  Matrix[Domain <: VectorSpace, Codomain <: VectorSpace](
     * @return this matrix multiplied by another one; matrix is materialized
     */
   def *[NewDomain <: VectorSpace](that: Matrix[NewDomain, domain.type]): Matrix[NewDomain, Codomain] = {
-//    val r1 = domain.mmult[NewDomain, Codomain](that, this)
+//    val r1 = domain.*[NewDomain, Codomain](that, this)
 //    so far does not work
-//    val r = domain.mmult(that, this)
+//    val r = domain.*(that, this)
     
     val data = new Array[Double](nRows * that.nCols)
     for {
@@ -186,7 +197,7 @@ abstract class  Matrix[Domain <: VectorSpace, Codomain <: VectorSpace](
     */
   protected def byArray(v: domain.OnArray): codomain.Vector = {
     val data = rowRange map {
-      i => (0.0 /: (0 until v.length))((s, j) => s + this(i, j)*v.data(j))
+      i => (0 until v.length).foldLeft(0.0)((s, j) => s + this(i, j)*v.data(j))
     } toArray
     
     codomain.Vector(data)
@@ -197,8 +208,7 @@ abstract class  Matrix[Domain <: VectorSpace, Codomain <: VectorSpace](
       case other: Matrix[Domain, Codomain] =>
         nRows == other.nRows &&
         nCols == other.nCols && {
-          foreach((i:Int) => (j:Int) => if (this(i, j) != other(i, j)) return false)
-          true
+          forall((i:Int) => (j:Int) => this(i, j) == other(i, j))
         }
       case _ => false
     }

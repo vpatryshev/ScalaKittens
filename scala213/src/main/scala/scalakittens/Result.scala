@@ -86,7 +86,7 @@ sealed trait NoGood[T] extends NothingInside[T] { self:Result[T] =>
   def getOrElse[T1 >: T](alt: => T1): T1 = alt
   def orElse[T1 >: T] (next: => Result[T1]): Result[T1] = next
   def asOption: Option[T] = None
-  def fold[U](good: T => U, bad: Errors => U) = bad(listErrors)
+  def fold[U](good: T => U, bad: Errors => U): U = bad(listErrors)
   def errors: String = listErrors mkString "; "
 
   def clock: TimeReader = DateAndTime
@@ -199,11 +199,11 @@ case class BadResultException(errors: Errors) extends Exception {
 
 object Result {
 
+  private def base32map = "abdeghjklmnopqrstvxyz.".zipWithIndex.map { case (c, i) => ('a' + i).toChar -> c }.toMap.withDefault(identity)
+
   class UnacceptableResult {
     throw new UnsupportedOperationException("This is not a good result, and we can never produce it")
   }
-
-  private def base32map = "bdeghijklmnopqrstvxyz".zipWithIndex.map{case (c,i) => ('a'+i).toChar -> c}.toMap.withDefault(identity)
 
   def fiveCharsIn32(n: Long): String = {
     val s0 = java.lang.Long.toString(n, 32)
@@ -276,14 +276,14 @@ object Result {
     }
   }
 
-  private def optionize[T](x: Any): Option[T] = x match {
+  def optionOf[T](x: Any): Option[T] = x match {
     case null => None
     case Some(thing) => Result.forValue(thing.asInstanceOf[T]).asOption
     case None        => None
     case notAnOption => Result.forValue(notAnOption.asInstanceOf[T]).asOption
   }
 
-  private[scalakittens] def goodOrBad[T](good: T, bad: String):Result[T] = apply(optionize(good), Option(bad))
+  private[scalakittens] def goodOrBad[T](good: T, bad: String):Result[T] = apply(optionOf(good), Option(bad))
 
   def goodOrBad[T](data: Iterable[T]): Result[T] = data.toList match {
     case good::null::Nil => forValue(good)
@@ -321,12 +321,13 @@ object Result {
     exception[T](x) orCommentTheError comment
 
   def partition[T](results: IterableOnce[Result[T]]): (List[T], List[Errors]) = {
-    val (goodOnes, badOnes) = ((List.empty[T], List.empty[Errors]) /: results)((collected, current) =>
-      current match {
-        case Good(good)    => (good::collected._1, collected._2)
-        case noGood:NoGood[T] => (collected._1, noGood.listErrors.toList::collected._2)
-      }
-    )
+    val (goodOnes, badOnes) = results.iterator.foldLeft((List.empty[T], List.empty[Errors]))(
+      (collected, current) =>
+        current match {
+          case Good(good)    => (good::collected._1, collected._2)
+          case noGood:NoGood[T] => (collected._1, noGood.listErrors.toList::collected._2)
+        }
+      )
     (goodOnes, badOnes)
   }
 
@@ -334,10 +335,10 @@ object Result {
 
   private def bad[T](results: Result[_]*): Result[T] = bad(results flatMap (_.listErrors))
 
-  implicit class StreamOfResults[T](val source: Stream[Result[T]]) extends AnyVal {
-    def map[U](f: T => U): Stream[Result[U]] = source map (_ map f)
-    def |>[U](op: T => Result[U]): Stream[Result[U]] = source map (t => t flatMap op)
-    def filter(p: T => Result[_]): Stream[Result[T]] = |> (x => p(x) returning x)
+  implicit class StreamOfResults[T](val source: LazyList[Result[T]]) extends AnyVal {
+    def map[U](f: T => U): LazyList[Result[U]] = source map (_ map f)
+    def |>[U](op: T => Result[U]): LazyList[Result[U]] = source map (t => t flatMap op)
+    def filter(p: T => Result[_]): LazyList[Result[T]] = |> (x => p(x) returning x)
     def toList: List[Result[T]] = source.toList
   }
 
@@ -348,7 +349,7 @@ object Result {
     else Good(goodOnes.reverse)
   }
 
-  def fold(results:Iterable[Outcome]):Outcome = ((OK:Outcome) /: results)(_<*>_)
+  def fold(results:Iterable[Outcome]):Outcome = results.iterator.foldLeft(OK:Outcome)(_<*>_)
 
   def zip[X1,X2](r1: Result[X1], r2: Result[X2]): Result[(X1, X2)] = r1 andAlso r2
 
@@ -445,7 +446,7 @@ object Result {
 
   }
 
-  def negate(outcome: Outcome) = outcome match {
+  def negate(outcome: Outcome): Result[Unit] with Serializable = outcome match {
     case OK => Empty
     case bad => OK
   }

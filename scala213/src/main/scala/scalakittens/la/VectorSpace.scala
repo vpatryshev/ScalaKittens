@@ -1,6 +1,5 @@
 package scalakittens.la
 
-import scala.language.{implicitConversions, postfixOps}
 import java.util
 
 import ArrayOps._
@@ -31,24 +30,25 @@ case class VectorSpace(dim: Int) { space =>
   lazy val hyperplane = new Hyperplane
 
   def projectToHyperplane(v: Vector): hyperplane.Vector =
-    hyperplane.OnFunction(i => v(i+1))
+    hyperplane.OnFunction(i => v(i+1)).asInstanceOf[hyperplane.Vector] // weird, why cast in 2.13?
 
   def projectToHyperplane(m: SquareMatrix): hyperplane.SquareMatrix =
-    hyperplane.squareMatrix((i, j) => m(i + 1, j + 1))
+    hyperplane.squareMatrix((i, j) => m(i + 1, j + 1)).asInstanceOf[hyperplane.SquareMatrix] // weird, why cast in 2.13?
 
   def injectFromHyperplane(v: hyperplane.Vector): Vector = {
     OnFunction(i => if (i == 0) 0.0 else v(i-1))
   }
 
-  def mult(v1: Vector, v2: Vector): Double =
-    (0.0 /: v1.range) ((s, i) => s + v1(i) * v2(i))
+  def mult(v1: Vector, v2: Vector): Double = {
+    v1.range.foldLeft(0.0)((s, i) => s + v1(i) * v2(i))
+  }
 
   /**
     * real-valued vector with usual operations
     *
     * @see [[http://www.javadecompilers.com]] to figure out speed issues
     *
-    * Created by vpatryshev on 5/14/17.
+    * Created by Vlad Patryshev on 5/14/17.
     */
   trait Vector extends IndexedSeq[Double] with PartialFunction[Int, Double] {
 //    def space = VectorSpace.this
@@ -139,7 +139,7 @@ case class VectorSpace(dim: Int) { space =>
       if (n > Double.MinPositiveValue) this / n else this
     }
 
-    private lazy val _l2 = Norm.l2(iterator)
+    private lazy val _l2 = Norm.l2(range map this)
 
     /**
       * l2 norm of this vector
@@ -179,7 +179,7 @@ case class VectorSpace(dim: Int) { space =>
       * @param i the dimension
       * @param v the value
       */
-    def update(i: Int, v: Double)
+    def update(i: Int, v: Double): Unit
 
     /**
       * Updates this vector, making all components not bigger than those of the other vector
@@ -275,7 +275,7 @@ case class VectorSpace(dim: Int) { space =>
       other match {
         case o: OnArray => scalarProduct(data, o.data)
         case _ =>
-          (0.0 /: range) ((s, i) => s + data(i) * other(i))
+          range.foldLeft(0.0)((s, i) => s + data(i) * other(i))
       }
     }
 
@@ -466,7 +466,7 @@ case class VectorSpace(dim: Int) { space =>
 
     override private[VectorSpace] def fill(v: MutableVector): Unit = {
 
-      val s2 = Stream.continually {
+      val s2 = LazyList.continually {
         cube.fill(v)
         Norm.l2(v)
       } .find {1.0 <}
@@ -489,7 +489,7 @@ case class VectorSpace(dim: Int) { space =>
     */
   def inf(vectors: IterableOnce[Vector]): Vector = {
     val acc: MutableVector = const(Double.MaxValue).copy
-    vectors foreach acc.decreaseBy
+    vectors.iterator foreach acc.decreaseBy
     acc
   }
 
@@ -500,7 +500,7 @@ case class VectorSpace(dim: Int) { space =>
     */
   def sup(vectors: IterableOnce[Vector]): Vector = {
     val acc: MutableVector = const(Double.MinValue).copy
-    vectors foreach acc.increaseBy
+    vectors.iterator foreach acc.increaseBy
     acc
   }
 
@@ -519,7 +519,7 @@ case class VectorSpace(dim: Int) { space =>
   
   type MatrixFrom[Domain <: VectorSpace] = Matrix[Domain, space.type]
   
-  def mmult[Domain <: VectorSpace, Codomain <: VectorSpace](
+  def *[Domain <: VectorSpace, Codomain <: VectorSpace](
     second: Matrix[space.type, Codomain],
     first: Matrix[Domain, space.type]): Matrix[Domain, Codomain] = {
 
@@ -541,15 +541,19 @@ case class VectorSpace(dim: Int) { space =>
     require(values.length == dim * dim, s"Bad data length ${values.size}, expected $dim ⨯ $dim")
     squareMatrix(values)
   }
-  
-  def squareMatrix(data: Seq[Double]): SquareMatrix = squareMatrix((i, j) => data(i*dim+j))
+
+  // TODO: add a factory that takes an array
+
+  def squareMatrix(data: Seq[Double]): SquareMatrix = squareMatrix((i, j) => data(i * dim + j))
 
   trait SquareMatrix extends LocalMatrix {
     override val domain: space.type = space
     override val codomain: space.type = space
 
-    def isUnitary(precision: Double): Boolean =
-      Norm.l2(this * transpose - UnitMatrix) <= precision
+    def isUnitary(precision: Double): Boolean = {
+      val delta: Iterator[Double] = (this * transpose - UnitMatrix).iterator
+      Norm.l2(delta) <= precision
+    }
 
     def triangle = new TriangularMatrix(this)
 
@@ -571,7 +575,7 @@ case class VectorSpace(dim: Int) { space =>
         case va: OnArray => byArray(va)
         case _ =>
           val data = rowRange map {
-            i => (0.0 /: v.indices)((s, j) => s + this(i, j)*v(j))
+            i => v.indices.foldLeft(0.0)((s, j) => s + this(i, j)*v(j))
           } toArray
 
           Vector(data)
@@ -694,7 +698,7 @@ case class VectorSpace(dim: Int) { space =>
     * Requires a center point and a rotation matrix
     * to transform from an original basis to this one.
     *
-    * Created by vpatryshev on 5/25/17.
+    * Created by Vlad Patryshev on 5/25/17.
     */
   case class Basis(center: Vector, rotation: UnitaryMatrix) extends (Vector => Vector) {
     val transform = new AffineTransform[space.type, space.type](space, space)(rotation, center)
@@ -714,7 +718,7 @@ case class VectorSpace(dim: Int) { space =>
 
     def apply(center: Vector, basisVectors: Array[MutableVector]): Basis = {
       require(basisVectors.length == dim, s"Expected $dim basis vectors, got ${basisVectors.length}")
-      val matrix: UnitaryMatrix = unitaryMatrix(basisVectors)
+      val matrix: UnitaryMatrix = unitaryMatrix(basisVectors.toList)
       new Basis(center, matrix)
     }
 
@@ -725,7 +729,7 @@ case class VectorSpace(dim: Int) { space =>
     def apply[V <: Vector](basisVectors: Array[V]): Basis = {
       require(basisVectors.length == dim, s"Expected $dim basis vectors, got ${basisVectors.length}")
       val columns: Array[MutableVector] = basisVectors map (_.copy)
-      val matrix: UnitaryMatrix = new ColumnMatrix[space.type](space, columns) with UnitaryMatrix
+      val matrix: UnitaryMatrix = new ColumnMatrix[space.type](space, columns.toIndexedSeq) with UnitaryMatrix
       new Basis(Zero, matrix)
     }
   }
@@ -802,7 +806,7 @@ object Spaces {
   }
 
   def mult(s: VectorSpace)(v1: s.Vector, v2: s.Vector): Double =
-    (0.0 /: v1.range) ((s, i) => s + v1(i) * v2(i))
+    v1.range.foldLeft(0.0) ((s, i) => s + v1(i) * v2(i))
   
   lazy val R0: VectorSpace = VectorSpace(0)
   lazy val R1: VectorSpace = VectorSpace(1)
