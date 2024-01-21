@@ -54,7 +54,7 @@ object FSTest extends Specification {
         dir existingFile "Ego non sum"
         fail("this should not be happening")
       } catch {
-        case e: Exception ⇒ e.getMessage contains foldername mustBe true
+        case e: Exception => e.getMessage contains foldername mustBe true
       }
       dir file "Ego sum" text = "Ergo cogito"
       (dir existingFile "Ego sum" text) must_== "Ergo cogito"
@@ -102,8 +102,8 @@ object FSTest extends Specification {
     }
 
     "detect file's absoluteness" in {
-      List(".", "", "..", "../..", "a", "a/b/c", "c:") foreach (x ⇒ FS.isAbsolute(x) aka x mustBe false)
-      List("/", "/x/y", "c:/", "A:/System", "//", "c:/x") foreach (x ⇒ FS.isAbsolute(x) aka x mustBe true)
+      List(".", "", "..", "../..", "a", "a/b/c", "c:") foreach (x => FS.isAbsolute(x) aka x mustBe false)
+      List("/", "/x/y", "c:/", "A:/System", "//", "c:/x") foreach (x => FS.isAbsolute(x) aka x mustBe true)
     }
 
     "not crash listing the contents of a non-existent folder" in {

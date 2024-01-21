@@ -13,17 +13,17 @@ case class PTM(name: String, src: String*) extends Machine(name) {
 
   val program: Map[(State, Int), (State, Int, Where)] = {
     val code = for {
-      p <- 0 until src.size / 2
+      p ← 0 until src.size / 2
       row = Array(src(2 * p), src(2 * p + 1)) map decode
     } yield row
 
     val array = code.toArray
     val m = for {
-      i <- array.indices
+      i ← array.indices
       row = array(i)
-      j <- row.indices
+      j ← row.indices
       v = row(j)
-    } yield (String.valueOf(i), j) -> v
+    } yield (String.valueOf(i), j) → v
 
     m.toMap
   }

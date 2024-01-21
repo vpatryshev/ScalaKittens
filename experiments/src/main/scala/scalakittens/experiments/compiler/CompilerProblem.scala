@@ -33,7 +33,7 @@ private[compiler] object CompilerProblem {
       val ds = Set("min", "max")
     }
     val sut = new G[C[String]](c) {
-      val sd: Map[String, Double] = Map[String, Double]("pi" -> Math.PI)
+      val sd: Map[String, Double] = Map[String, Double]("pi" → Math.PI)
       override val y: C[String] = c
     }
     println(sut.aD("pi"))

@@ -26,6 +26,6 @@ object ResultType {
   val LoggedIn     = Value(6,"Logged In", OK)
   def apply(b: Boolean): Value = if (b) Success else Error
 
-  implicit def apply(r: Result[_]): Object = r.fold(_ ⇒ Success, _ ⇒ Logging.anError(r))
+  implicit def apply(r: Result[_]): Object = r.fold(_ => Success, _ => Logging.anError(r))
   def opposite(r: Value): Value = if (r.isOkay) Error else Success
 }

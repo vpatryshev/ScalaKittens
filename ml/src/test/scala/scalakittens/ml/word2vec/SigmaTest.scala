@@ -19,7 +19,7 @@ class SigmaTest extends Specification {
         sut.σ(0.0) aka ("oops: " + (sut.table mkString ",")) must_== 0.5
         abs(sut.σ(-1.945) - 0.125) < dy aka s"with max ${sut.max} dy=$dy got ${sut.σ(-1.945)} with table argument ${sut.δ/2+1.945/sut.δ}\ntable ${sut.table mkString ","}" must beTrue
         
-        for (i <- 1 until sut.size) {
+        for (i ← 1 until sut.size) {
           val y0 = sut.table(i-1)
           val y1 = sut.table(i)
           y0 > y1    aka s"1. @$i: expected $y0 > $y1" must beTrue
@@ -33,7 +33,7 @@ class SigmaTest extends Specification {
           ok
         }
         
-        for (i <- -10000 until 10000) checkPrecision(i.toDouble / 1000)
+        for (i ← -10000 until 10000) checkPrecision(i.toDouble / 1000)
       }
 
       checkOn(0.125, 15)

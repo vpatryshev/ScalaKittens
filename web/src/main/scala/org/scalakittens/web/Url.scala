@@ -9,23 +9,23 @@ import org.scalakittens.{Good, Result}
 import scala.language.{implicitConversions, postfixOps, reflectiveCalls}
 import scala.util.matching.Regex
 
-sealed abstract class Url(val schema: String, private val __path: String) { self ⇒
+sealed abstract class Url(val schema: String, private val __path: String) { self =>
   private lazy val (dom, base, page): (String, String, String) = {
     val p = __path.dropWhile('/'==)
     p.split("/").toList match {
-      case d :: Nil ⇒
+      case d :: Nil =>
         ("//"+d, "", "")
-      case d :: rest ⇒
+      case d :: rest =>
         ("//"+d, rest.dropRight(1).mkString("/"), rest.last)
-      case otherwise ⇒ (otherwise.head, otherwise.tail.mkString("/"), "") // this is a bad path anyway, who cares?
+      case otherwise => (otherwise.head, otherwise.tail.mkString("/"), "") // this is a bad path anyway, who cares?
     }
   }
 
   private val WWW = "(/*www\\.)?(.+)".r
 
   def domain: String = dom match {
-    case WWW(_, d) ⇒ d
-    case otherwise ⇒ otherwise
+    case WWW(_, d) => d
+    case otherwise => otherwise
 
   }
 
@@ -33,8 +33,8 @@ sealed abstract class Url(val schema: String, private val __path: String) { self
 
   def openConnection(): Result[HttpURLConnection] = Result.attempt (
     javaUrl.openConnection() match {
-      case huc: HttpURLConnection ⇒ Good(huc)
-      case hmm ⇒ Result.error(s"Bad connection: $hmm for $self")
+      case huc: HttpURLConnection => Good(huc)
+      case hmm => Result.error(s"Bad connection: $hmm for $self")
     },
     s"Failed to open connection: $self"
   )
@@ -42,9 +42,9 @@ sealed abstract class Url(val schema: String, private val __path: String) { self
   def httpCode: Result[Int] = {
     HttpURLConnection.setFollowRedirects(false)
     for {
-      connection <- openConnection()
+      connection ← openConnection()
       _ = Result.forValue(connection.setRequestMethod("GET"))
-      code <- Result.forValue(connection.getResponseCode)
+      code ← Result.forValue(connection.getResponseCode)
     } yield code
   }
 
@@ -57,7 +57,7 @@ sealed abstract class Url(val schema: String, private val __path: String) { self
     try {
       schema + ":" + path
     } catch {
-      case x: Exception ⇒
+      case x: Exception =>
         x.printStackTrace()
         "*** not found ***"
     }
@@ -68,7 +68,7 @@ sealed abstract class Url(val schema: String, private val __path: String) { self
   def /(key: String, value: String): UrlWithParameters
 
   def /(kvs: (String, String)*): Url = {
-    (this /: kvs)((url, kv) ⇒ url /(kv._1, kv._2))
+    (this /: kvs)((url, kv) => url /(kv._1, kv._2))
   }
 
   def contains(s: String): Boolean = path containsIgnoreCase s
@@ -80,8 +80,8 @@ sealed abstract class Url(val schema: String, private val __path: String) { self
   override def toString: String = fullPath
 
   override def equals(other: Any): Boolean = other match {
-    case url: Url ⇒ this.toString == url.toString
-    case _ ⇒ false
+    case url: Url => this.toString == url.toString
+    case _ => false
   }
 
   def GET = new HttpGet(fullPath)
@@ -105,9 +105,9 @@ protected class UrlWithParameters(_schema:String, _path:String, parameters:Seq[(
   lazy val paramMap: Map[String, String] = parameters.toMap
   override def param(key: String): Option[String] = paramMap.get(key)
   override lazy val secure = new UrlWithParameters("https", _path, parameters)
-  lazy val paramsAsString: String = parameters map {case (k,v) ⇒ue(k) + "=" + ue(v)} mkString "&"
+  lazy val paramsAsString: String = parameters map {case (k,v) =>ue(k) + "=" + ue(v)} mkString "&"
   override lazy val path: String = _path + (if(paramsAsString.isEmpty) "" else "?" + paramsAsString)
-  override def /(key: String, value:String) = new UrlWithParameters(schema, _path, parameters :+ (key->value))
+  override def /(key: String, value:String) = new UrlWithParameters(schema, _path, parameters :+ (key→value))
 
   override def replace(key:String, oldValue:String, newValue: String): UrlWithParameters = if (parameters.contains((key, oldValue))) {
     val newParameters =       parameters.takeWhile (_ != (key, oldValue)) ++
@@ -120,11 +120,11 @@ object Url {
   implicit def asString(url:Url): String = url.fullPath
 
   def parameters(href: String): Map[String, String] = href split("?",2) toList match {
-    case url::params::Nil ⇒ params split "&" map (_.split("=") toList) collect {
-      case k::v::Nil ⇒ k->v
+    case url::params::Nil => params split "&" map (_.split("=") toList) collect {
+      case k::v::Nil => k→v
     } toMap
 
-    case otherwise ⇒ Map.empty
+    case otherwise => Map.empty
   }
 
   val KeyValue: Regex = "(\\w+)=(.*)".r
@@ -135,15 +135,15 @@ object Url {
       val su = path.split(":", 2)
       val hrefAndParams = su(1).split("\\?").toList
       hrefAndParams match {
-        case h::p::Nil ⇒
+        case h::p::Nil =>
           val params = URLDecoder.decode(p, "UTF-8") split "&" toList
 
           val keyValuePairs: List[(String, String)] = params collect {
-            case KeyValue(key, value) ⇒ key -> value
+            case KeyValue(key, value) => key → value
           }
           new UrlWithParameters(su(0), h, keyValuePairs)
 
-        case otherwise ⇒ new SiteUrl(su(0), su(1))
+        case otherwise => new SiteUrl(su(0), su(1))
       }
     } else
       new SiteUrl("http", path)

@@ -26,11 +26,11 @@ class SkipGramModelTest extends Specification {
     val out = new FileWriter(file)
     out.write(s"dim=${space.dim}\n")
     for {
-      (w, v) <- vectors
+      (w, v) ← vectors
     } {
       out.write(w)
       out.write(",")
-      val s = v.map(x ⇒ (x * 10000).toInt).mkString(",")
+      val s = v.map(x => (x * 10000).toInt).mkString(",")
       out.write(s)
       out.write("\n")
     }
@@ -38,7 +38,7 @@ class SkipGramModelTest extends Specification {
     file.canRead aka s"output file $file somehow disappeared" must beTrue
     val minSize = 20 * vectors.length
     file.length > minSize aka s"output file $file too small: ${file.length}, expected at least $minSize" must beTrue
-    file.renameTo(new File(WaPmodelFileName))
+    file.renameTo(new File(filename))
     ()
   }
   
@@ -57,8 +57,8 @@ class SkipGramModelTest extends Specification {
 //      val reducer = pcaReducer(dim, newDim, 30)
 //      reducer == null must beFalse
 //      doWarAndPeace(dim, numEpoch = 1000, newDim, filename, reducer) match {
-//        case Good(vs) ⇒ ok
-//        case bad ⇒ failure(bad.listErrors.toString)
+//        case Good(vs) => ok
+//        case bad => failure(bad.listErrors.toString)
 //      }
 //
 //      ok
@@ -69,11 +69,11 @@ class SkipGramModelTest extends Specification {
       val reducer: DimensionReducer[R10.type, R3.type] = new PcaDimensionReducer[R10.type, R3.type](R10, R3, precision = 0.001, 30)//pcaReducer(dim, newDim, 30)
       
       doNovel[R10.type, R3.type](WarAndPeace, reducer, ext, numEpoch = 50) match {
-        case Good(vs) ⇒
+        case Good(vs) =>
           showNovel[R3.type]("War and Peace", vs.iterator)
           ok
-        case bad: Bad[_] ⇒ failure(bad.listErrors.toString + "\n" + bad.stackTrace)
-        case Empty ⇒ failure("No War, no Peace! /* Trotsky */")
+        case bad: Bad[_] => failure(bad.listErrors.toString + "\n" + bad.stackTrace)
+        case Empty => failure("No War, no Peace! /* Trotsky */")
       }
 
       ok
@@ -85,11 +85,11 @@ class SkipGramModelTest extends Specification {
       val reducer: DimensionReducer[mainSpace.type, R3.type] = new PcaDimensionReducer[mainSpace.type, R3.type](mainSpace, R3, precision = 0.001, 30)//pcaReducer(dim, newDim, 30)
 
       doNovel[mainSpace.type, R3.type](GoneWithTheWind, reducer, ext, numEpoch = 1000) match {
-        case Good(vs) ⇒
+        case Good(vs) =>
           showNovel[R3.type]("Gone with the Wind", vs.iterator)
           ok
-        case bad: Bad[_] ⇒ failure(bad.listErrors.toString + "\n" + bad.stackTrace)
-        case Empty ⇒ failure("Nobody leaves!")
+        case bad: Bad[_] => failure(bad.listErrors.toString + "\n" + bad.stackTrace)
+        case Empty => failure("Nobody leaves!")
       }
 
       ok
@@ -101,14 +101,14 @@ class SkipGramModelTest extends Specification {
       val sammonReducer: DimensionReducer[R7.type, R2.type] = SammonDimensionReducer.withPCA[R7.type, R2.type](R7, R2, 20)
       t << "instantiated sammon reducer"
       doNovel[R7.type, R2.type](WarAndPeace, sammonReducer, ext, numEpoch = 50) match {
-        case Good(vs: List[(String, R2.Vector)]) ⇒
+        case Good(vs: List[(String, R2.Vector)]) =>
           t << s"did war and peace, good (${vs.length} words"
           showNovel[R2.type]("War And Peace", vs.iterator)
           ok
-        case bad: Bad[_] ⇒
+        case bad: Bad[_] =>
           t << s"did not do war and peace"
           failure(bad.listErrors.toString + "\n" + bad.stackTrace)
-        case Empty ⇒ failure("No War, no Peace! /* Trotsky */")
+        case Empty => failure("No War, no Peace! /* Trotsky */")
       }
 
       ok
@@ -120,11 +120,11 @@ class SkipGramModelTest extends Specification {
       val sammonReducer = SammonDimensionReducer.withPCA[R10.type, R3.type](R10, R3, 30)
 
       doNovel[R10.type, R3.type](WarAndPeace, sammonReducer, ext, numEpoch = 50, Some(1000)) match {
-        case Good(vs: List[(String, R3.Vector)]) ⇒
+        case Good(vs: List[(String, R3.Vector)]) =>
           showNovel[R3.type]("War And Peace", vs.iterator)
           ok
-        case bad: Bad[_] ⇒ failure(bad.listErrors.toString + "\n" + bad.stackTrace)
-        case Empty ⇒ failure("No War, no Peace! /* Trotsky */")
+        case bad: Bad[_] => failure(bad.listErrors.toString + "\n" + bad.stackTrace)
+        case Empty => failure("No War, no Peace! /* Trotsky */")
       }
 
       ok
@@ -133,11 +133,12 @@ class SkipGramModelTest extends Specification {
     "visualize War and Piece" in {
       val lines: Iterator[String] = Source.fromResource(WaPmodelFileName).getLines
       val Header = "dim=(\\d+)".r
+      lines.nonEmpty should beTrue
       val Header(dim) = lines.next
       val space = VectorSpace(dim.toInt)
  
       val found = for {
-        line <- lines
+        line ← lines
         parts = line split ","
         numbers:Array[Double] = parts.tail map (_.toDouble)
         vec = space.Vector(numbers)
@@ -152,7 +153,7 @@ class SkipGramModelTest extends Specification {
 
   private def showNovel[Space <: VectorSpace](name: String, found: Iterator[(String, Space#Vector)]): Unit = {
     val allProjections = found.map {
-      case (word, vec) ⇒ (word, vec(0), vec(1))
+      case (word, vec) => (word, vec(0), vec(1))
     }.toList
 
 //    allProjections.size must_== 17355
@@ -171,7 +172,7 @@ class SkipGramModelTest extends Specification {
 
     val filename = scanner.name + "." + ext
     scanner.scannedText map {
-      st ⇒
+      st =>
         val α = 0.9 / reducer.source.dim
         val vectors: List[(String, T#Vector)] = 
           buildModel(st, reducer, numEpoch, α, chunkSize)
@@ -213,7 +214,7 @@ class SkipGramModelTest extends Specification {
     model.run()
     val originalVectors = model.in
     originalVectors.zipWithIndex foreach { 
-      case(v,i) ⇒ v.isValid aka s"@$i: $v" must beTrue; () }
+      case(v,i) => v.isValid aka s"@$i: $v" must beTrue; () }
     originalVectors .asInstanceOf[Array[space.Vector]] // TODO: get rid of casting
   }
 
@@ -238,9 +239,9 @@ class SkipGramModelTest extends Specification {
     //    val x = 0.0 until 2.0 * math.Pi by 0.1
     //    val png = PNG("docs/img/", "test")
     //
-    //    val tuple1: (Double⇒Double, Double⇒Double) = 
-    //      (t ⇒ math.sin(t), t ⇒ math.cos(t))
-    //    val tuple = x -> tuple1
+    //    val tuple1: (Double=>Double, Double=>Double) =
+    //      (t => math.sin(t), t => math.cos(t))
+    //    val tuple = x → tuple1
     //    val xyChart1 = xyChart(tuple)
     //    output(png, xyChart1)
     ok

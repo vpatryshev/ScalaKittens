@@ -45,7 +45,7 @@ class ClientHttpRequest(val connection: HttpURLConnection) extends Observable {
 
   protected def write(ss: String*) = {
     if (!_isOpen) throw new IOException("This request was already sent, too late to append.")
-    ss foreach { s ⇒
+    ss foreach { s =>
       val bytes = s.getBytes
       os.write(bytes)
       _bytesSent += bytes.length
@@ -96,7 +96,7 @@ class ClientHttpRequest(val connection: HttpURLConnection) extends Observable {
   }
 
   private def postCookies(): Unit = {
-    val newCookies = cookies map (c ⇒ c._1 + "=" + c._2) toList
+    val newCookies = cookies map (c => c._1 + "=" + c._2) toList
     val all = (rawCookies :: newCookies) filterNot (_.isEmpty) mkString "; "
     if (!all.isEmpty) connection.setRequestProperty("Cookie", all)
   }
@@ -211,8 +211,8 @@ class ClientHttpRequest(val connection: HttpURLConnection) extends Observable {
     writeName(name)
     write("; filename=\"", filename, "\"", CRLF, "Content-Type: ", contentType(filename), CRLF, CRLF)
     is match {
-      case fis: FileInputStream ⇒ pipe(fis, os)
-      case _ ⇒ pipe(is, os)
+      case fis: FileInputStream => pipe(fis, os)
+      case _ => pipe(is, os)
     }
     newline
     _filesSent += 1
@@ -250,8 +250,8 @@ class ClientHttpRequest(val connection: HttpURLConnection) extends Observable {
     */
   def addParameter(name: String, value: Any): Unit = {
     value match {
-      case f: File ⇒ addFile(name, f)
-      case _ ⇒ addParameter(name, value.toString)
+      case f: File => addFile(name, f)
+      case _ => addParameter(name, value.toString)
     }
     ()
   }
@@ -287,7 +287,7 @@ class ClientHttpRequest(val connection: HttpURLConnection) extends Observable {
     */
   def post(parameters: (String, Any)*): Result[InputStream] = {
     postCookies()
-    parameters.foreach(p ⇒ addParameter(p._1, p._2))
+    parameters.foreach(p => addParameter(p._1, p._2))
     close()
   }
 }
