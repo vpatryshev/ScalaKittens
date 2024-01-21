@@ -14,8 +14,8 @@ object OS_Test extends Specification {
 
     "provide a convincing pid" in {
       myPid match {
-        case DIGITS(pif) ⇒ // ok
-        case basura ⇒ failure("Bad pid: " + basura)
+        case DIGITS(pif) => // ok
+        case basura => failure("Bad pid: " + basura)
       }
       ok
     }

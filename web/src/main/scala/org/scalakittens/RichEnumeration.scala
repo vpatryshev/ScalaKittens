@@ -13,12 +13,12 @@ abstract class RichEnumeration extends Enumeration {
 
   lazy val allValues:Set[EnumVal] = {
     val setOfValues: Set[Value] = super.values
-    setOfValues collect { case x:  EnumVal ⇒ x}
+    setOfValues collect { case x:  EnumVal => x}
   }
 
   def find(text:String):Option[EnumVal] = {
-    for {c <- comparators
-         v <- allValues
+    for {c ← comparators
+         v ← allValues
     } if (v.matches(c)(text)) return Some(v)
 
     None
@@ -34,12 +34,12 @@ abstract class RichEnumeration extends Enumeration {
 }
 
 object RichEnumeration {
-  type Comparator = String⇒String⇒Boolean
+  type Comparator = String=>String=>Boolean
 
-  private val fully    : Comparator = (x:String) ⇒ (y:String) ⇒ x equalsIgnoreCase y
-  private val partially: Comparator = (x:String) ⇒ (y: String) ⇒ y.toLowerCase contains x.toLowerCase
+  private val fully    : Comparator = (x:String) => (y:String) => x equalsIgnoreCase y
+  private val partially: Comparator = (x:String) => (y: String) => y.toLowerCase contains x.toLowerCase
 
-  //comparators.exists(c ⇒
+  //comparators.exists(c =>
   val comparators:List[Comparator] = List(fully, partially)
 
   trait Choice {

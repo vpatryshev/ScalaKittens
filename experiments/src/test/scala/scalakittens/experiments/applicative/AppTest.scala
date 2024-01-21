@@ -9,15 +9,15 @@ import scala.collection.{Seq, Set}
 
 object AppTest extends Specification {
 
-  val decorator = (s: String) ⇒ "***" + s + "***"
+  val decorator = (s: String) => "***" + s + "***"
 
-  val appender = (s1: String) ⇒ (s2: String) ⇒ s1 + " " + s2
+  val appender = (s1: String) => (s2: String) => s1 + " " + s2
 
   def cons[A](a: A)(as: List[A]) = a :: as
 
   "ApplicativeList" should {
     "combine two lists" in {
-      def pp(i: Int) = (j: Int) ⇒ i + j * j
+      def pp(i: Int) = (j: Int) => i + j * j
       import AppList._
       val combinations: List[Int] = ap(List(pp(1), pp(2)))(List(10, 20, 30))
       combinations must_== List(101, 401, 901, 102, 402, 902)
@@ -27,15 +27,15 @@ object AppTest extends Specification {
   "ZipList" should {
     import All.AppZip._
     "be able to zip two lists" in {
-      val appender = (s1: String) ⇒ (s2: String) ⇒ s1 + " " + s2
+      val appender = (s1: String) => (s2: String) => s1 + " " + s2
 
-      val zp2: Seq[String ⇒ String ⇒ String] = pure(appender)
+      val zp2: Seq[String => String => String] = pure(appender)
       (zp2 <*> List("1", "2") <*> List("a", "b")).toList must_== List("1 a", "2 b")
     }
 
     "be able to zip functions with values" in {
 
-      def prepend(prefix: String) = (s: String) ⇒ prefix + " " + s
+      def prepend(prefix: String) = (s: String) => prefix + " " + s
 
       val result = List(prepend("a"), prepend("the")) <*> List("quick brown fox jumps over ", "lazy dog ")
       result must_== List("a quick brown fox jumps over ", "the lazy dog ")
@@ -45,14 +45,14 @@ object AppTest extends Specification {
 
       trait matrices[A] {
         type matrix = Seq[Seq[A]]
-        val glue: Seq[A ⇒ List[A] ⇒ List[A]] = pure(cons _)
+        val glue: Seq[A => List[A] => List[A]] = pure(cons _)
 
         def transpose(m: matrix): matrix = if (m.isEmpty) Nil else transposeNonempty(m)
 
         def transposeNonempty(m: matrix): matrix = {
           m match {
-            case Nil ⇒ pure(Nil)
-            case row :: rows ⇒ glue <*> row <*> transposeNonempty(rows)
+            case Nil => pure(Nil)
+            case row :: rows => glue <*> row <*> transposeNonempty(rows)
           }
         }
       }
@@ -90,12 +90,12 @@ object AppTest extends Specification {
 
       object Expressions extends AppEnv {
 
-        val fetch = (varName: String) ⇒ (env: Env) ⇒ env(varName)
-        val const = (value: Int) ⇒ (env: Env) ⇒ value
-        val add = (i: Int) ⇒ (j: Int) ⇒ i + j
+        val fetch = (varName: String) => (env: Env) => env(varName)
+        val const = (value: Int) => (env: Env) => value
+        val add = (i: Int) => (j: Int) => i + j
 
         trait Expr {
-          def eval: Env ⇒ Int
+          def eval: Env => Int
         }
 
         case class Var(name: String) extends Expr {
@@ -154,7 +154,7 @@ object AppTest extends Specification {
       def tree(s: String) = Node(Leaf(s.substring(0, 1)), Node(Leaf(s.substring(1, 2)), Leaf(s.substring(2, 3))))
 
       val sut: Tree[String] = tree("abc")
-      val collected: String = traverse(StringMonoid.App)((s: String) ⇒ "<<" + s + ">>")(sut).value
+      val collected: String = traverse(StringMonoid.App)((s: String) => "<<" + s + ">>")(sut).value
       collected must_== "<<a>><<b>><<c>>"
     }
   }
@@ -178,10 +178,10 @@ object AppTest extends Specification {
         val errorLog = new Semigroup[Oops] {def add(x: Oops, y: Oops) = OiVei(x, y)}
       }
 
-      implicit def applicable[A, B](maybeF: Either[Oops, A ⇒ B]): Applicable[A, B, Accumulator.Maybe] = Accumulator
+      implicit def applicable[A, B](maybeF: Either[Oops, A => B]): Applicable[A, B, Accumulator.Maybe] = Accumulator
         .App.applicable(maybeF)
 
-      val goodFun = Right((s: String) ⇒ "<<" + s + ">>")
+      val goodFun = Right((s: String) => "<<" + s + ">>")
       val badFun = Left(Omg("snafu"))
       val goodString = Right("I am good")
       val badString = Left(Omg("I'm bad"))

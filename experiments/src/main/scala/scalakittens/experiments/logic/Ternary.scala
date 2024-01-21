@@ -7,7 +7,7 @@ import scala.language.implicitConversions
  * Created by vpatryshev on 9/26/17.
  */
 sealed trait Ternary {
-  def unary_¬ = this -> False
+  def unary_¬ = this → False
 
   def ∨(other: Ternary): Ternary
 

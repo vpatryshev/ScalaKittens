@@ -66,12 +66,12 @@ class IO_Test extends Specification {
       sut.extension must_== "iotest"
       val renamedOpt = sut.extension = "elf"
       renamedOpt match {
-        case Good(renamed) ⇒
+        case Good(renamed) =>
           renamed.f.canRead must beTrue
           renamed.f.getName.endsWith("etc.elf") aka s"Actually have $renamed" must beTrue
           sut.exists() must beFalse
-          using (renamed.f) (in ⇒ { "this is a test" forall (in.read == _) }) must_== Good(true)
-        case bad ⇒ failure(s"oops, $bad")
+          using (renamed.f) (in => { "this is a test" forall (in.read == _) }) must_== Good(true)
+        case bad => failure(s"oops, $bad")
       }
       ok
     }
@@ -83,12 +83,12 @@ class IO_Test extends Specification {
       sut.extension must_== ""
       val renamedOpt = sut.extension = "elf"
       renamedOpt match {
-        case Good(renamed) ⇒
+        case Good(renamed) =>
           renamed.f.canRead must beTrue
           renamed.f.getName.endsWith("etc.elf") aka s"Actually have $renamed" must beTrue
           sut.exists() must beFalse
-          using (renamed.f) (in ⇒ { "this is a test" forall (in.read == _) }) must_== Good(true)
-        case bad ⇒ failure(s"oops, $bad")
+          using (renamed.f) (in => { "this is a test" forall (in.read == _) }) must_== Good(true)
+        case bad => failure(s"oops, $bad")
       }
       ok
     }

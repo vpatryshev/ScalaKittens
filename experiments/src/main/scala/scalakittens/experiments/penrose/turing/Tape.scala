@@ -15,15 +15,15 @@ class Tape(init: List[Γ]) {
 
     def !!(n: Γ): Unit =
       setTo(data match {
-        case h :: t ⇒ n :: t
-        case Nil ⇒ n :: Nil
+        case h :: t => n :: t
+        case Nil => n :: Nil
       })
 
     def push(n: Γ): Unit = setTo(n :: data)
 
     def pop(): Γ = data match {
-      case Nil ⇒ void
-      case h :: t ⇒ setTo(t); h
+      case Nil => void
+      case h :: t => setTo(t); h
     }
   }
 
@@ -42,8 +42,8 @@ class Tape(init: List[Γ]) {
   def left(): Unit = rightSide.push(leftSide.pop())
 
   override def equals(other: Any): Boolean = other match {
-    case t: Tape ⇒ canonical == t.canonical
-    case _ ⇒ false
+    case t: Tape => canonical == t.canonical
+    case _ => false
   }
 
   private def canonical =

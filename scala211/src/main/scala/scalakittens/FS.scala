@@ -1,7 +1,7 @@
 package scalakittens
 
 import scala.language.implicitConversions
-import io.{Source ⇒ ioS}
+import io.{Source => ioS}
 import java.io._
 import java.nio.channels.{Channels, ReadableByteChannel}
 
@@ -9,7 +9,7 @@ import java.nio.channels.{Channels, ReadableByteChannel}
   *
   * File system ops
   */
-trait FS { fs ⇒
+trait FS { fs =>
 
   implicit def asFile(file: TextFile):File              = file.file
   implicit def existingFile(file: File):   ExistingFile = new ExistingFile(file)
@@ -21,7 +21,7 @@ trait FS { fs ⇒
   implicit def file(path: String): File                 = new File(path)
   def tempFile(prefix: String)                          = new TextFile(File.createTempFile(prefix, "tmp"))
 
-  def probablyFile(path: String): Either[Any, ExistingFile] = try { Right(existingFile(file(path)))} catch { case x: Exception ⇒ Left(x) }
+  def probablyFile(path: String): Either[Any, ExistingFile] = try { Right(existingFile(file(path)))} catch { case x: Exception => Left(x) }
 
   def exists(file: File): Boolean = file.exists
   def exists(path: String): Boolean = exists(new File(path))
@@ -76,7 +76,7 @@ trait FS { fs ⇒
     def existingFile(name: String) = new ExistingFile(file(name).file)
     def contains(name: String) = fs.exists(new File(path, name))
     def listFiles: List[File] = Option(canonicalFile.listFiles).toList.flatMap(_.toList)
-    def files: List[ExistingFile] = listFiles.filter(_.isFile).map(f ⇒ existingFile(f.getName))
+    def files: List[ExistingFile] = listFiles.filter(_.isFile).map(f => existingFile(f.getName))
     def subfolders: List[Folder]  = listFiles.filter(_.isDirectory).map(Folder)
     def entries: List[Entry] = files ++ subfolders
 
@@ -133,8 +133,8 @@ trait FS { fs ⇒
       append(in, in.available)
     }
 
-    def textOr(default: String) = try { text } catch { case _:Exception ⇒ default }
-    def probablyText: Either[Any, String] = try { Right(text) } catch { case x: Exception ⇒ Left(x) }
+    def textOr(default: String) = try { text } catch { case _:Exception => default }
+    def probablyText: Either[Any, String] = try { Right(text) } catch { case x: Exception => Left(x) }
   }
 
   // TODO(vlad): make it efficient - use channels

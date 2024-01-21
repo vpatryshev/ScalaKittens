@@ -50,7 +50,7 @@ object JavaScript {
       selector = ${selector.js}
       element = document.querySelector(selector)
       if (!element) return ("Table not found: " + selector)
-      """ + fields.map(kv ⇒ s"addRow('${kv._1}', ${kv._2.js})").mkString("\n") + """
+      """ + fields.map(kv => s"addRow('${kv._1}', ${kv._2.js})").mkString("\n") + """
       return response
       """
 
