@@ -36,7 +36,7 @@ object ClientHttpRequestTest extends Specification { /*
       request.addParameter("email", "abuse@spamcop.com")
       request.addParameter("file-upload", makeTestFile)
       val is: Result[InputStream] = request.post
-      val result = is map (s ⇒ new LineNumberReader(new InputStreamReader(s)).readLine)
+      val result = is map (s => new LineNumberReader(new InputStreamReader(s)).readLine)
       result aka (result + serverLog) must_== Good("Success")
     }
 
@@ -46,7 +46,7 @@ object ClientHttpRequestTest extends Specification { /*
                                          "email" → "abuse@spamcop.com",
                                          "file-upload" → makeTestFile)
 
-      val result = is map (s ⇒ new LineNumberReader(new InputStreamReader(s)).readLine)
+      val result = is map (s => new LineNumberReader(new InputStreamReader(s)).readLine)
       result aka (result + serverLog) must_== Good("Success")
     }
 
@@ -56,7 +56,7 @@ object ClientHttpRequestTest extends Specification { /*
       request.addParameter("email", "abuse@spamcop.com")
       request.addFile("file-upload", testFileName, new ByteArrayInputStream(testFileData.getBytes))
       val is: Result[InputStream] = request.post
-      val result = is map (s ⇒ new LineNumberReader(new InputStreamReader(s)).readLine)
+      val result = is map (s => new LineNumberReader(new InputStreamReader(s)).readLine)
       result aka (result + serverLog) must_== Good("Success")
     }
 

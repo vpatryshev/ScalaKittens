@@ -16,11 +16,7 @@ echo "pushing $name"
   pushd $name
 fi
 
-./do1 core
-./do1 ml
-./do1 experiments
+sbt clean test package
 
-if [ "$dir" != '.' ]; then
-  popd
-fi
+popd
 

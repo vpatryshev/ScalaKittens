@@ -5,3 +5,9 @@ scala21*/project/target
 **/tmp
 
 *_rsa
+/build.log
+/gonewiththewind.vecs.fast.txt
+/prepare_mvn
+/warandpeace.vecs.fast.txt
+/warandpeace.vecs.sammon.txt
+/warandpeace.vecs.txt

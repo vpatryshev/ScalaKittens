@@ -17,36 +17,36 @@ object All {
     * Functorial features of List type
     */
   trait ListFunctor extends Functor[List] {
-    override def f1[A, B](f: A ⇒ B) = (aa: List[A]) ⇒  aa map f
+    override def f1[A, B](f: A => B) = (aa: List[A]) =>  aa map f
   }
 
   /**
     * Functorial features of Seq type
     */
   trait SeqFunctor extends Functor[Seq] {
-    override def f1[A, B](f: A ⇒ B) = (aa: Seq[A]) ⇒ aa map f
+    override def f1[A, B](f: A => B) = (aa: Seq[A]) => aa map f
   }
 
   /**
     * Functorial features of Set type (covariant version)
     */
   trait SetFunctor extends Functor[Set] {
-    override def f1[A, B](f: A ⇒ B) = (sa: Set[A]) ⇒ sa map f
+    override def f1[A, B](f: A => B) = (sa: Set[A]) => sa map f
   }
 
   /**
     * Functorial features of Either[X,Y], for the second parameter
     */
   trait RightEitherFunctor[L] extends Functor[({type Maybe[A] = Either[L, A]})#Maybe] {
-    def f1[A, B](f: A ⇒ B): Either[L, A] ⇒ Either[L, B] = _.right.map(f)
+    def f1[A, B](f: A => B): Either[L, A] => Either[L, B] = _.right.map(f)
   }
 
   object AppList extends ListFunctor with Applicative[List] {
     override def pure[A](a: A) = List(a)
 
-    override implicit def applicable[A, B](lf: List[A ⇒ B]): Applicable[A, B, List] = {
+    override implicit def applicable[A, B](lf: List[A => B]): Applicable[A, B, List] = {
       new Applicable[A, B, List] {
-        def <*>(as: List[A]) = for (f <- lf; a <- as) yield f(a)
+        def <*>(as: List[A]) = for (f ← lf; a ← as) yield f(a)
       }
     }
   }
@@ -54,10 +54,10 @@ object All {
   object AppSet extends SetFunctor with Applicative[Set] {
     override def pure[A](a: A) = Set(a)
 
-    override implicit def applicable[A, B](ff: Set[A ⇒ B]):Applicable[A, B, Set] = {
-      val sf: Set[A ⇒ B] = ff
+    override implicit def applicable[A, B](ff: Set[A => B]):Applicable[A, B, Set] = {
+      val sf: Set[A => B] = ff
       new Applicable[A, B, Set] {
-        def <*>(fa: Set[A]) = (for (f <- sf; a <- fa) yield f(a)).toSet
+        def <*>(fa: Set[A]) = (for (f ← sf; a ← fa) yield f(a)).toSet
       }
     }
   }
@@ -66,10 +66,10 @@ object All {
 
     override def pure[A](a: A): Seq[A] = Stream.continually(a)
 
-    implicit def applicable[A, B](ff: Seq[A ⇒ B]): Applicable[A, B, Seq] = {
+    implicit def applicable[A, B](ff: Seq[A => B]): Applicable[A, B, Seq] = {
       new Applicable[A, B, Seq] {
         def <*>(az: Seq[A]) = for {
-          (f, a) <- ff zip az
+          (f, a) ← ff zip az
         } yield f(a)
       }
     }
@@ -77,44 +77,44 @@ object All {
 
   object EnvExample {
 
-    type Env = Map[String, Int] // String⇒Int would be enough, but for educational purposes...
+    type Env = Map[String, Int] // String=>Int would be enough, but for educational purposes...
 
-    type Environmental[X] = Env ⇒ X
+    type Environmental[X] = Env => X
 
     trait EnvFunctor extends Functor[Environmental] {
-      override def f1[A, B](f: A ⇒ B) = (aa: Environmental[A]) ⇒ aa andThen f
+      override def f1[A, B](f: A => B) = (aa: Environmental[A]) => aa andThen f
     }
 
-    implicit def K[A](a: A): (Env ⇒ A) = (env: Env) ⇒ a
+    implicit def K[A](a: A): (Env => A) = (env: Env) => a
 
-    trait HaveS[A, B] { def S: (Env ⇒ A) ⇒ Env ⇒ B }
+    trait HaveS[A, B] { def S: (Env => A) => Env => B }
 
     // combinators
-    implicit def ski[A, B](fe: Env ⇒ A ⇒ B): HaveS[A, B] =
+    implicit def ski[A, B](fe: Env => A => B): HaveS[A, B] =
       new HaveS[A, B] {
-        val S = (ae: Env ⇒ A) ⇒ (env: Env) ⇒ fe(env)(ae(env))
+        val S = (ae: Env => A) => (env: Env) => fe(env)(ae(env))
       }
 
     trait AppEnv extends EnvFunctor {
       def pure[A](a: A): Environmental[A] = K(a)
 
-      implicit def applicable[A, B](fe: Environmental[A ⇒ B]): Applicable[A, B, Environmental] = new Applicable[A, B, Environmental] {
+      implicit def applicable[A, B](fe: Environmental[A => B]): Applicable[A, B, Environmental] = new Applicable[A, B, Environmental] {
         def <*>(fa: Environmental[A]) = fe S fa // aka S(f, a)
       }
     }
   }
 
-  //def FOLD[E, A, B, F <: E ⇒A ⇒B, P](f: F, p: (E ⇒ P)*) = {
-  //  (K(f))(p) /: ((x: E⇒F, y: E ⇒ B) ⇒ ski(x) S y)
+  //def FOLD[E, A, B, F <: E =>A =>B, P](f: F, p: (E => P)*) = {
+  //  (K(f))(p) /: ((x: E=>F, y: E => B) => ski(x) S y)
   //}
 
   implicit object TraversableList extends scalakittens.experiments.applicative.Traversable[List] {
     def cons[A](a: A)(as: List[A]): List[A] = a :: as
 
-    def traverse[A, B, F[_]](app: Applicative[F])(f: A ⇒ F[B])(al: List[A]): F[List[B]] = {
+    def traverse[A, B, F[_]](app: Applicative[F])(f: A => F[B])(al: List[A]): F[List[B]] = {
       al match {
-        case Nil ⇒ app.pure(List[B]())
-        case head :: tail ⇒ app.applicable(app.lift(cons[B]) <@> f(head)) <*> traverse[A, B, F](app)(f)(tail)
+        case Nil => app.pure(List[B]())
+        case head :: tail => app.applicable(app.lift(cons[B]) <@> f(head)) <*> traverse[A, B, F](app)(f)(tail)
       }
     }
   }
@@ -127,13 +127,13 @@ object All {
 
   implicit object TraversableTree extends Traversable[Tree] {
 
-    def traverse[A, B, F[_]](app: Applicative[F])(f: A ⇒ F[B])(at: Tree[A]): F[Tree[B]] = at match {
+    def traverse[A, B, F[_]](app: Applicative[F])(f: A => F[B])(at: Tree[A]): F[Tree[B]] = at match {
 
-      case Leaf(a) ⇒ app.lift(leaf[B]) <@> f(a)
-      case Node(left, right) ⇒
-        implicit def applicable[X, Y](tf: F[X ⇒ Y]): Applicable[X,Y,F] = app.applicable(tf)
+      case Leaf(a) => app.lift(leaf[B]) <@> f(a)
+      case Node(left, right) =>
+        implicit def applicable[X, Y](tf: F[X => Y]): Applicable[X,Y,F] = app.applicable(tf)
 
-        val traverse1: (Tree[A]) ⇒ F[Tree[B]] = traverse(app)(f)
+        val traverse1: (Tree[A]) => F[Tree[B]] = traverse(app)(f)
 
         app.pure(node[B] _) <*> traverse1(left) <*> traverse1(right)
     }
@@ -165,14 +165,14 @@ object All {
 
       def pure[A](a: A):Either[Bad, A] = Right[Bad, A](a)
 
-      implicit def applicable[A, B](maybeF: Either[Bad, A ⇒ B]): Applicable[A, B, Maybe] =
+      implicit def applicable[A, B](maybeF: Either[Bad, A => B]): Applicable[A, B, Maybe] =
         new Applicable[A, B, Maybe] {
 
           def <*>(maybeA: Maybe[A]) = (maybeF, maybeA) match {
-            case (Left(badF), Left(badA)) ⇒ Left(badF + badA)
-            case (Left(badF), _)          ⇒ maybeF
-            case (Right(f),  Left(badA))  ⇒ maybeA
-            case (Right(f), Right(a))     ⇒ Right(f(a))
+            case (Left(badF), Left(badA)) => Left(badF + badA)
+            case (Left(badF), _)          => maybeF
+            case (Right(f),  Left(badA))  => maybeA
+            case (Right(f), Right(a))     => Right(f(a))
           }
         }
     }

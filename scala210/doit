@@ -7,5 +7,6 @@ echo "************************************"
 echo "**     building $name          **"
 echo "************************************"
 pushd $name
-sbt clean test package
+echo "Version 2.10 has reached EOL. Bye."
+#sbt clean test package
 popd

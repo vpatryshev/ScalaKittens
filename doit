@@ -1,11 +1,17 @@
-dir=$(dirname $0)
+dir=$1
 if [ "$dir" = '.' ]; then
  dir=`pwd`
 fi
+
 name=$(basename "$dir")
 echo "************************************"
 echo "**     building $name          **"
 echo "************************************"
 pushd $name
-sbt clean test package
+if [ -x build.sh ]; then
+  build.sh
+else
+  sbt clean test package
+fi
+
 popd
