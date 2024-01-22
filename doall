@@ -1,2 +1,2 @@
-scala210/doit && scala211/doit && scala212/doit && scala213/doit
+scala210/build.sh && scala211/build.sh && scala212/build.sh && scala213/build.sh
 
