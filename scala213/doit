@@ -12,7 +12,6 @@ echo "**     building $name          **"
 echo "************************************"
 
 if [ $dir != '.' ]; then
-echo "pushing $name"
   pushd $name
 fi
 

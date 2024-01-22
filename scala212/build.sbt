@@ -26,8 +26,7 @@ resolvers ++= Seq(
   "releases"       at "http://oss.sonatype.org/content/repositories/releases",
   "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases")
 
-enablePlugins(JmhPlugin)
-
+libraryDependencies ++= Seq(
   "org.scalatest"  %% "scalatest"     % "3.2.15" % "test" withSources(),
   "org.scala-lang" % "scala-compiler" % WhichScala,
   "org.scala-lang" % "scala-library" % WhichScala,

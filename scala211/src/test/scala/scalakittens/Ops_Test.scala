@@ -8,21 +8,20 @@ import scala.collection.mutable.ListBuffer
 import scala.language.{implicitConversions, reflectiveCalls}
 import scalakittens.Ops._
 import scalakittens.Result._
-import scala.util.Try
 
 class Ops_Test extends Specification {
 
    "tryOr()" should {
     "call the function once on success" in {
       var nCalls = 0
-      var result = tryOr({nCalls += 1; "heureux"}, "malheureux")
+      val result = tryOr({nCalls += 1; "heureux"}, "malheureux")
       result must_== "heureux"
       nCalls must_== 1
     }
 
     "call the function once on failure" in {
       var nCalls = 0
-      var result = tryOr({nCalls += 1; throw new IllegalArgumentException("wtf?!")}, "malheureux")
+      val result = tryOr({nCalls += 1; throw new IllegalArgumentException("wtf?!")}, "malheureux")
       result must_== "malheureux"
       nCalls must_== 1
     }
@@ -60,7 +59,7 @@ class Ops_Test extends Specification {
 
       }
       val sut = asScala(source)
-      sut must_== Map("first" → Map("one"→"1", "two"→"2"), "second"→Map("ten"→"10", "twenty"→"20"))
+      sut must_== Map("first" -> Map("one"->"1", "two"->"2"), "second"->Map("ten"->"10", "twenty"->"20"))
     }
 
     "Convert a set into a set" in {
@@ -79,7 +78,7 @@ class Ops_Test extends Specification {
   "OnTimer" should {
     import scala.concurrent.duration._
     val msInTimeout = 100
-    val tooLong = msInTimeout * 2
+    val tooLong = msInTimeout * 32
     val tooFast = msInTimeout / 2
     val timeout = msInTimeout milliseconds
 
@@ -87,7 +86,7 @@ class Ops_Test extends Specification {
       val startTime = System.currentTimeMillis()
       var lastChecked = startTime
       val result = spendNotMoreThan(timeout) on {
-        for (i ← 1 to tooLong) {
+        for (_ <- 1 to tooLong) {
           lastChecked = System.currentTimeMillis()
           Thread.sleep(1)
         }
@@ -97,7 +96,6 @@ class Ops_Test extends Specification {
     }
 
     "Delimit execution of stuff using timer, graciously" in {
-      val startTime = System.currentTimeMillis()
       val result = spendNotMoreThan(timeout) on {
         Thread sleep tooLong
         OK
@@ -107,7 +105,6 @@ class Ops_Test extends Specification {
     }
 
     "Report status when asked, timeout" in {
-      val startTime = System.currentTimeMillis()
       val report = new ListBuffer[Job.Status]
 
       val result = spendNotMoreThan(timeout) reporting ((s:Job.Status) => {report += s; ()}) on {
@@ -120,8 +117,6 @@ class Ops_Test extends Specification {
     }
 
     "Return the right stuff if calculated in due time" in {
-      val startTime = System.currentTimeMillis()
-
       val result = spendNotMoreThan(timeout) on {
         Thread sleep tooFast
         Good(":)")
@@ -130,7 +125,6 @@ class Ops_Test extends Specification {
     }
 
     "Report status when asked, positive outcome" in {
-      val startTime = System.currentTimeMillis()
       val report = new ListBuffer[Job.Status]
 
       val result = spendNotMoreThan(msInTimeout milliseconds).

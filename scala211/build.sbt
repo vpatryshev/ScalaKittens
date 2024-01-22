@@ -34,12 +34,10 @@ libraryDependencies ++= Seq(
   "org.scalaz" %% "scalaz-core" % "7.1.4" withSources(),
   "org.apache.httpcomponents" % "httpclient" % "4.3.6",
   "org.apache.httpcomponents" % "httpmime"   % "4.3.6",
-  "org.specs2" %% "specs2-core" % "3.6" % "test",
+  "org.specs2" %% "specs2-core" % "3.6.6" % "test",
   "org.scalacheck" %% "scalacheck" % "1.12.4" % "test"//,
 //  "org.openjdk.jmh" % "jmh-scala-benchmark-archetype" % "0.5.5" from "http://repo1.maven.org/maven2/org/openjdk/jmh/jmh-scala-benchmark-archetype/0.5.5/jmh-scala-benchmark-archetype-0.5.5.jar"
 )
-
-libraryDependencies ++= Seq("org.specs2" %% "specs2-core" % "4.10.6" % "test")
 
 logLevel := Level.Warn
 
