@@ -76,7 +76,7 @@ class Props_Test extends Specification {
     }
 
     "pass a positive real-life case with transformer" in {
-      val transformer: String ⇒ String = s ⇒ s.toLowerCase.replaceAll("[^\\w\\.]", "")
+      val transformer: String => String = s => s.toLowerCase.replaceAll("[^\\w\\.]", "")
       val map = props("Private.In-The-House.Alcohol.Yearly" → "$30.00",
         "Private.Abroad.Bribe.Used" → "$0.00",
         "Private.In-The-House.Bribe.Used" → "$15.00",
@@ -102,7 +102,7 @@ class Props_Test extends Specification {
     }
 
     "pass a positive real-life case with regex" in {
-      val transformer: String ⇒ String = replaceAll("Used" → "sofar", "Yearly" → "max", "Out-of-(\\w+)" → "Out$1", "In-The-(\\w+)" → "InThe$1")
+      val transformer: String => String = replaceAll("Used" → "sofar", "Yearly" → "max", "Out-of-(\\w+)" → "Out$1", "In-The-(\\w+)" → "InThe$1")
       val sut = props("Private.In-The-House.Alcohol.Yearly" → "$30.00",
         "Private.Abroad.Bribe.Used" → "$0.00",
         "Private.In-The-House.Bribe.Used" → "$15.00",
@@ -212,11 +212,11 @@ class Props_Test extends Specification {
       sut1.findAndReplace("ab", "oh really?!") must_== sut1
       val sut3 = Props parse "fp(Map(\"Back to Transaction History.Account #2014151 Details.Health Net ID#\" → \"R0000000-00\", \"Back to Transaction History.Account #20140101 Details.Name\" → \"SCOTT GRISCHY\"))"
       sut3 match {
-        case Good(props) ⇒
+        case Good(props) =>
           val newOne = props.findAndReplace("Name", "Lia Van Damm")
           val newName: Result[String] = newOne.findHaving("Name")
           newName must_== Good("Lia Van Damm")
-        case bad ⇒ failure(s"wrong text: $bad")
+        case bad => failure(s"wrong text: $bad")
       }
       ok
     }
@@ -291,22 +291,22 @@ class Props_Test extends Specification {
     "extract data when headers are the same" in {
       val got = Props.fromParallelLists(List("A", "B", "C"), List("a1", "b1", "c1"), List("A", "B", "C"))
       got match {
-        case Good(props) ⇒
+        case Good(props) =>
           props @@ "A" must_== Good("a1")
           props @@ "B" must_== Good("b1")
           props @@ "C" must_== Good("c1")
-        case bad ⇒ failure(s"Oops, $bad")
+        case bad => failure(s"Oops, $bad")
       }
       ok
     }
     "extract data when headers are messed up" in {
       val got = Props.fromParallelLists(List("D", "B", "A", "C"), List("d1", "b1", "a1", "c1"), List("A", "B", "C"))
       got match {
-        case Good(props) ⇒
+        case Good(props) =>
           props @@ "A" must_== Good("a1")
           props @@ "B" must_== Good("b1")
           props @@ "C" must_== Good("c1")
-        case bad ⇒ failure(s"Oops, $bad")
+        case bad => failure(s"Oops, $bad")
       }
       ok
     }
@@ -314,8 +314,8 @@ class Props_Test extends Specification {
     "fail if headers are missing" in {
       val got = Props.fromParallelLists(List("A", "C"), List("a1", "c1"), List("A", "B", "C"))
       got match {
-        case bad: Bad[_] ⇒ bad.toString() contains "(b)" must beTrue
-        case shozanah ⇒ failure(s"Expected an error in $shozanah")
+        case bad: Bad[_] => bad.toString() contains "(b)" must beTrue
+        case shozanah => failure(s"Expected an error in $shozanah")
       }
       ok
     }
@@ -343,9 +343,9 @@ class Props_Test extends Specification {
     "parse simple sample as text" in {
       val sutOpt = Props parse "fp(Map(\"a\" → \"b\"))"
       sutOpt match {
-        case Good(sut) ⇒
+        case Good(sut) =>
           sut @@ "a" must_== Good("b")
-        case orelse ⇒ failure(s"Oops, not good: $orelse")
+        case orelse => failure(s"Oops, not good: $orelse")
       }
       ok
     }
@@ -354,9 +354,9 @@ class Props_Test extends Specification {
       val txt = props("a" → "b").toString()
       val sutOpt = Props parse txt
       sutOpt match {
-        case Good(sut) ⇒
+        case Good(sut) =>
           sut @@ "a" must_== Good("b")
-        case orelse ⇒ failure(s"Oops, not good: $orelse in $txt")
+        case orelse => failure(s"Oops, not good: $orelse in $txt")
       }
       ok
     }
@@ -364,9 +364,9 @@ class Props_Test extends Specification {
     "parse simple sample with dictionary as text" in {
       val sutOpt = Props parse "fp(Map(\"a\" → \"b\")) with dictionary Map(\"x\" → \"y\", \"z\" → \"a\")"
       sutOpt match {
-        case Good(sut) ⇒
+        case Good(sut) =>
           sut @@ "z" must_== Good("b")
-        case orelse ⇒ failure(s"Oops, not good: $orelse")
+        case orelse => failure(s"Oops, not good: $orelse")
       }
       ok
     }
@@ -374,9 +374,9 @@ class Props_Test extends Specification {
     "parse simple sample with reordering as text" in {
       val sutOpt = Props parse "fp(Map(\"a.b.c.d\" → \"cdba\")) with reordering (3,4,2,1)"
       sutOpt match {
-        case Good(sut) ⇒
+        case Good(sut) =>
           sut @@ "d.c.a.b" must_== Good("cdba")
-        case orelse ⇒ failure(s"Oops, not good: $orelse")
+        case orelse => failure(s"Oops, not good: $orelse")
       }
       ok
     }
@@ -384,9 +384,9 @@ class Props_Test extends Specification {
     "parse simple sample with dictionary and reordering as text" in {
       val sutOpt = Props parse "fp(Map(\"a.b.c.d\" → \"cdba\")) with dictionary Map(\"x\" → \"y\", \"z\" → \"a\") with reordering (3,4,2,1)"
       sutOpt match {
-        case Good(sut) ⇒
+        case Good(sut) =>
           sut @@ "d.c.z.b" must_== Good("cdba")
-        case orelse ⇒ failure(s"Oops, not good: $orelse")
+        case orelse => failure(s"Oops, not good: $orelse")
       }
       ok
     }
@@ -396,9 +396,9 @@ class Props_Test extends Specification {
         "with dictionary Map(\"Private\" → \"Protected\", \"max\" → \"Limit\", \"Somewhere\" → \"Abroad\", \"InTheHouse\" → \"Home\", \"sofar\" → \"Accumulated\", \"Alcohol\" → \"Alcohol\") " +
         "with reordering (3,4,2,1)"
       sutOpt match {
-        case Good(sut) ⇒
+        case Good(sut) =>
           sut @@ "Private.Somewhere.Bribe.max" must_== Good("$4,0.00")
-        case orelse ⇒ failure(s"Oops, not good: $orelse")
+        case orelse => failure(s"Oops, not good: $orelse")
       }
       ok
     }
@@ -407,9 +407,9 @@ class Props_Test extends Specification {
       val text = "fp(Map(\"Bribe.Limit.Abroad.Protected\" → \"$4,0.00\", \"Bribe.Accumulated.Home.Protected\" → \"$0.00\", \"Bribe.How Much.Home.Protected\" → \"$2,0.00\", \"Bribe.Limit.Home.Protected\" → \"$2,0.00\", \"Bribe.Accumulated.Abroad.House\" → \"$0.00\", \"Bribe.Accumulated.Home.House\" → \"$249.00\", \"Bribe.Accumulated.Abroad.Protected\" → \"$0.00\", \"Bribe.Limit.Home.House\" → \"$4,0.00\", \"Bribe.How Much.Home.House\" → \"$3,751.00\", \"Bribe.How Much.Abroad.Protected\" → \"$4,0.00\", \"Bribe.Limit.Abroad.House\" → \"$8,0.00\", \"Bribe.How Much.Abroad.House\" → \"$8,0.00\")) with dictionary Map(\"Private\" → \"Protected\", \"max\" → \"Limit\", \"Somewhere\" → \"Abroad\", \"InTheHouse\" → \"Home\", \"sofar\" → \"Accumulated\") with reordering (3,4,2,1)"
       val sutOpt = Props parse text
       sutOpt match {
-        case Good(sut) ⇒
+        case Good(sut) =>
           sut @@ "Private.Somewhere.Bribe.max" must_== Good("$4,0.00")
-        case orElse ⇒ failure(s"Oops, not good: $orElse")
+        case orElse => failure(s"Oops, not good: $orElse")
       }
       ok
     }
@@ -431,8 +431,8 @@ class Props_Test extends Specification {
       ))
       val sut = pp.groupByIndex
       sut.size must_== 3
-      for (i <- 0 to 2;
-           j <- 1 to 2) {
+      for (i ← 0 to 2;
+           j ← 1 to 2) {
         sut(i)(s"key$i$j") must_== s"val$i$j"
       }
       ok
@@ -446,8 +446,8 @@ class Props_Test extends Specification {
       ))
       val sut = pp.groupByIndex.toList
       sut.size must_== 3
-      for (i <- 0 to 2;
-           j <- 1 to 2) {
+      for (i ← 0 to 2;
+           j ← 1 to 2) {
         sut(i)(s"[[1]].key$i$j") must_== s"val$i$j"
       }
       ok
@@ -459,14 +459,14 @@ class Props_Test extends Specification {
       val props05062014 = Props parse text05062014
 
       props05062014 match {
-        case Good(props) ⇒
+        case Good(props) =>
           val sut = props.groupByIndex
           //          val sut = props.gbi2(1 to 3)
           //          sut.toString.contains ("I0") must beTrue
           sut.size must_== 3
           val serviceTypes = sut map (_.getOrElse("[[1]].K", "oops..."))
           serviceTypes.toList must_== List("I0", "I1", "I2")
-        case basura ⇒ failure(s"Oops, not good: $basura")
+        case basura => failure(s"Oops, not good: $basura")
       }
       ok
     }
@@ -475,9 +475,9 @@ class Props_Test extends Specification {
       val text = "fp(Map(\"DoS\" → \"01/29/2014\", \"HERMIONE GRANGER, MUGGLE.Passport Number\" → \"9\"))"
       val propsOpt = Props parse text
       propsOpt match {
-        case Good(props) ⇒
+        case Good(props) =>
           props @@ "HERMIONE GRANGER, MUGGLE.Passport Number" must_== Good("9")
-        case basura ⇒ failure(s"Oops, not good: $basura")
+        case basura => failure(s"Oops, not good: $basura")
       }
       ok
     }
@@ -486,12 +486,12 @@ class Props_Test extends Specification {
       val text = "fp(Map(\"[[1]].[[1]].Fuel Burned\" → \"$26.80\", \"[[1]].[[2]].Distance Limit\" → \"$5.00\", \"[[4]].[[1]].Distance Flown\" → \"$0.00\", \"[[3]].[[2]].Wasted\" → \"$12.00\", \"[[1]].[[2]].Wasted\" → \"$5.00\", \"[[4]].[[1]].Departure Date\" → \"03/18/2014 - 03/18/2014\", \"[[2]].[[2]].Wasted\" → \"$26.00\", \"[[2]].[[1]].Purpose of the Trip\" → \"Pure Entertainment\", \"[[5]].[[2]].Wasted\" → \"$9.00\", \"[[3]].[[1]].Departure Date\" → \"03/18/2014 - 03/18/2014\", \"[[4]].[[1]].Fuel Burned\" → \"$49.30\", \"[[5]].[[1]].Purpose of the Trip\" → \"Dirty Entertainment\", \"[[5]].[[1]].Flyweight\" → \"$9.00\", \"[[2]].[[2]].Tax\" → \"$0.00\", \"[[4]].[[1]].Purpose of the Trip\" → \"Mixed Entertainment\", \"[[3]].[[1]].Distance Flown\" → \"$0.00\", \"[[3]].[[2]].Tip\" → \"$0.00\", \"[[2]].[[2]].Distance Limit\" → \"$26.00\", \"[[4]].[[2]].Distance Limit\" → \"$7.00\", \"[[4]].[[2]].Tax\" → \"$0.00\", \"[[5]].[[1]].Distance Flown\" → \"$0.00\", \"[[4]].[[2]].Wasted\" → \"$7.00\", \"[[3]].[[1]].Purpose of the Trip\" → \"Sinful Fun\", \"[[2]].[[2]].Tip\" → \"$0.00\", \"[[1]].[[2]].Tip\" → \"$0.00\", \"[[1]].[[2]].Tax\" → \"$0.00\", \"[[2]].[[1]].Departure Date\" → \"03/18/2014 - 03/18/2014\", \"[[3]].[[1]].Futeemel Burned\" → \"$87.60\", \"[[4]].[[2]].Tip\" → \"$0.00\", \"[[3]].[[2]].Tax\" → \"$0.00\", \"[[5]].[[2]].Tax\" → \"$0.00\", \"[[5]].[[2]].Tip\" → \"$0.00\", \"[[1]].[[1]].Purpose of the Trip\" → \"36415 - Surgery\", \"[[5]].[[1]].Departure Date\" → \"03/18/2014 - 03/18/2014\", \"[[5]].[[1]].Fuel Burned\" → \"$40.50\", \"[[2]].[[1]].Flyweight\" → \"$26.00\", \"[[3]].[[1]].Flyweight\" → \"$12.00\", \"[[2]].[[1]].Fuel Burned\" → \"$159.30\", \"[[1]].[[1]].Flyweight\" → \"$5.00\", \"[[4]].[[1]].Flyweight\" → \"$7.00\", \"[[5]].[[2]].Distance Limit\" → \"$9.00\", \"[[1]].[[1]].Departure Date\" → \"03/18/2014 - 03/18/2014\", \"[[2]].[[1]].Distance Flown\" → \"$0.00\", \"[[3]].[[2]].Distance Limit\" → \"$12.00\", \"[[1]].[[1]].Distance Flown\" → \"$0.00\"))"
       val propsOpt = Props parse text
       propsOpt match {
-        case Good(props) ⇒
+        case Good(props) =>
           val sut = props.groupByIndex.zipWithIndex
           sut.size must_== 5
           val empty = sut.find(_._1.isEmpty)
           empty.isEmpty aka s"#{empty._2}" must beTrue
-        case basura ⇒ failure(s"Oops, not good: $basura")
+        case basura => failure(s"Oops, not good: $basura")
       }
       ok
     }
@@ -500,15 +500,15 @@ class Props_Test extends Specification {
       val text = "fp(Map(\"[[2]].[[1]].Tip\" → \"$0.00\", \"[[3]].[[1]].Distance Limit\" → \"$27.13\", \"[[1]].[[1]].Distance Flown by your Best Friend\" → \"$0.00\", \"[[3]].[[1]].Departure Date\" → \"10/16/2013 - 10/16/2013\", \"[[3]].[[1]].Distance Flown by your Best Friend\" → \"$0.00\", \"[[1]].[[1]].key01\" → \"val01\", \"[[2]].[[1]].Distance Limit\" → \"$16.00\", \"[[3]].[[1]].Wasted\" → \"$0.00\", \"[[2]].[[1]].Departure Date\" → \"10/16/2013 - 10/16/2013\", \"[[3]].[[1]].Fuel Burned\" → \"$38.00\", \"[[1]].[[1]].Wasted\" → \"$91.49\", \"[[2]].[[1]].Wasted\" → \"$0.00\", \"[[3]].[[1]].key21\" → \"val21\", \"[[2]].[[1]].Distance Flown by your Best Friend\" → \"$0.00\", \"[[1]].[[1]].Tax\" → \"$0.00\", \"[[2]].[[1]].key11\" → \"val11\", \"[[2]].[[1]].Tax\" → \"$0.00\", \"[[1]].[[1]].Distance Flown by your Traditional Partner\" → \"$0.00\", \"[[3]].[[1]].Distance Flown by your Traditional Partner\" → \"$27.13\", \"[[1]].[[1]].Departure Date\" → \"10/16/2013 - 10/16/2013\", \"[[2]].[[1]].Fuel Burned\" → \"$30.00\", \"[[3]].[[1]].Tip\" → \"$0.00\", \"[[1]].[[1]].Distance Limit\" → \"$91.49\", \"[[2]].[[1]].Distance Flown by your Traditional Partner\" → \"$16.00\", \"[[1]].[[1]].Flyweight\" → \"$91.49\", \"[[2]].[[1]].Flyweight\" → \"$0.00\", \"[[1]].[[1]].Fuel Burned\" → \"$144.00\", \"[[3]].[[1]].Flyweight\" → \"$0.00\", \"[[3]].[[1]].Tax\" → \"$0.00\", \"[[1]].[[1]].Tip\" → \"$0.00\"))"
       val propsOpt = Props parse text
       propsOpt match {
-        case Good(props) ⇒
+        case Good(props) =>
           val sut = props.groupByIndex
           sut.size must_== 3
-          for (i <- 0 to 2;
-               j <- 1 to 1) {
+          for (i ← 0 to 2;
+               j ← 1 to 1) {
             sut(i)(s"[[1]].key$i$j") must_== s"val$i$j"
           }
           val serviceTypes = sut map (_.getOrElse("[[1]].key", "oops..."))
-        case basura ⇒ failure(s"Oops, not good: $basura")
+        case basura => failure(s"Oops, not good: $basura")
       }
       ok
     }
@@ -517,12 +517,12 @@ class Props_Test extends Specification {
       val text = "fp(Map(\"[[2]].[[1]].Tip\" → \"$0.00\", \"[[3]].[[1]].Distance Limit\" → \"$27.13\", \"[[1]].[[1]].Distance Flown by your Best Friend\" → \"$0.00\", \"[[3]].[[1]].Departure Date\" → \"10/16/2013 - 10/16/2013\", \"[[3]].[[1]].Distance Flown by your Best Friend\" → \"$0.00\", \"[[1]].[[1]].Purpose of the Trip\" → \"Private Beach Party\", \"[[2]].[[1]].Distance Limit\" → \"$16.00\", \"[[3]].[[1]].Wasted\" → \"$0.00\", \"[[2]].[[1]].Departure Date\" → \"10/16/2013 - 10/16/2013\", \"[[3]].[[1]].Official Distance\" → \"$38.00\", \"[[1]].[[1]].Wasted\" → \"$91.49\", \"[[2]].[[1]].Wasted\" → \"$0.00\", \"[[3]].[[1]].Purpose of the Trip\" → \"Private Show\", \"[[2]].[[1]].Distance Flown by your Best Friend\" → \"$0.00\", \"[[1]].[[1]].Tax\" → \"$0.00\", \"[[2]].[[1]].Purpose of the Trip\" → \"Thai Massage\", \"[[2]].[[1]].Tax\" → \"$0.00\", \"[[1]].[[1]].Distance Flown by your Traditional Partner\" → \"$0.00\", \"[[3]].[[1]].Distance Flown by your Traditional Partner\" → \"$27.13\", \"[[1]].[[1]].Departure Date\" → \"10/16/2013 - 10/16/2013\", \"[[2]].[[1]].Fuel Burned\" → \"$30.00\", \"[[3]].[[1]].Tip\" → \"$0.00\", \"[[1]].[[1]].Distance Limit\" → \"$91.49\", \"[[2]].[[1]].Distance Flown by your Traditional Partner\" → \"$16.00\", \"[[1]].[[1]].Flyweight\" → \"$91.49\", \"[[2]].[[1]].Flyweight\" → \"$0.00\", \"[[1]].[[1]].Fuel Burned\" → \"$144.00\", \"[[3]].[[1]].Flyweight\" → \"$0.00\", \"[[3]].[[1]].Tax\" → \"$0.00\", \"[[1]].[[1]].Tip\" → \"$0.00\"))"
       val propsOpt = Props parse text
       propsOpt match {
-        case Good(props) ⇒
+        case Good(props) =>
           val sut = props.groupByIndex
           sut.size must_== 3
           val serviceTypes = sut map (_.getOrElse("[[1]].Purpose of the Trip", "oops..."))
           serviceTypes.toList must_== List("Private Beach Party", "Thai Massage", "Private Show")
-        case basura ⇒ failure(s"Oops, not good: $basura")
+        case basura => failure(s"Oops, not good: $basura")
       }
       ok
     }
@@ -531,9 +531,9 @@ class Props_Test extends Specification {
       val text = "fp(Map(\"DoS\" → \"01/29/2014\", \"HERMIONE GRANGER (MUGGLE).Passport Number\" → \"9\"))"
       val propsOpt = Props parse text
       propsOpt match {
-        case Good(props) ⇒
+        case Good(props) =>
           props @@ ".Passport Number" must_== Good("9")
-        case basura ⇒ failure(s"Oops, not good: $basura")
+        case basura => failure(s"Oops, not good: $basura")
       }
       ok
     }
@@ -590,10 +590,10 @@ class Props_Test extends Specification {
 
       val pp = fromTree(source)
       pp match {
-        case Good(p) ⇒
+        case Good(p) =>
           p @@ "inNetwork.individualGoalsMet.[[1]]" aka p.toString must_== Good("0")
           p @@ "abroad.individualHome" aka p.toString must_== Good("7000")
-        case oops ⇒ failure(s"oops: $oops")
+        case oops => failure(s"oops: $oops")
       }
       ok
 

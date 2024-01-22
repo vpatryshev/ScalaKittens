@@ -1,3 +1,4 @@
 # IntelliJ files
 .idea/*
-
+project/target/*
+target/*

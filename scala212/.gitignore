@@ -5,7 +5,7 @@
 *.tmp
 tmp/*
 target/*
-project/target
+project/target/*
 project/project
 
 bad.*

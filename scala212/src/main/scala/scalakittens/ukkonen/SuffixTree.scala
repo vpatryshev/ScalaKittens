@@ -1,7 +1,8 @@
 package scalakittens.ukkonen
 
-import scala.language.postfixOps
 import scalakittens.ukkonen.SuffixTree._
+
+import scala.annotation.tailrec
 
 /**
   * Created by vpatryshev on 1/30/17.
@@ -369,8 +370,9 @@ for non-leaf edges will be -1*/
 
   val Empty = Set.empty[MatchPoint]
 
-  def isGood(b: Byte) = b >= ch0 && b <= ch1
+  def isGood(b: Byte): Boolean = b >= ch0 && b <= ch1
 
+  @tailrec
   private def listAlignmentsAt(n: Node, str: Segment, idx0: Int, max: Int = Integer.MAX_VALUE): Set[MatchPoint] = {
     var idx = idx0
     

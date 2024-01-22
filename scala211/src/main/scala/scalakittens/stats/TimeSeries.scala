@@ -35,7 +35,7 @@ class TimeSeries(range: Duration, clock: TimeReader = DateAndTime) {
     ourData map (_._2)
   }
 
-  def moments(Δt: Duration): MomentData = (MomentData.Zero /: latest(Δt)) ((m: MomentData, x: Double) ⇒ m add x)
+  def moments(Δt: Duration): MomentData = (MomentData.Zero /: latest(Δt)) ((m: MomentData, x: Double) => m add x)
 
   def avg(Δt: Duration): Option[Double] = moments(Δt).avg
 

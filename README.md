@@ -1,16 +1,16 @@
-#Scala Kittens Project#
+# Scala Kittens Project
 
-*Attention Please*
-This project is currently split into two versions: scala210 and scala211 (which is not there yet).
+This project is split into versions: scala210, scala211, scala212. Libraries are different in these two versions of Scala.
 
-In this project I plan to store small solutions to typical problems, which are free to grab and too small for building a "library".
+In this project I store small solutions to typical problems, which are free to grab and too small for building a "library".
 [Scala kittens][slides] has examples of this kind of stuff, one-liners. Probably they deserve to be put to gist.
 
 Currently there are Caching, FS, OS, ClientHttpRequest, Result and some samples.
 
-##Result##
+## Result
 
 Presentation here: https://docs.google.com/presentation/d/11Yzt-VvL5emFHmG1ku4QVNQbo7LawC8qinDX1bN3ifY/edit?usp=sharing
+And here: http://tinyurl.com/flatprops
 
 This is my version of scalaz.Validating; somewhat less highbrow applicative monadic monoidal bs
 (but yes, it is a monad, and it is an applicative functor).
@@ -21,11 +21,11 @@ This is my version of scalaz.Validating; somewhat less highbrow applicative mona
 One can chain, blend, check the results; all that you can do with `Option` you can do with `Result`; one can `fold` it like they do with `Either`.
 Using `Result` in sugared loops (aka "list comprehensions") makes the loops even sweeter.
 
-##Caching##
+## Caching
 
 Implements single value caching strategy.
 
-###Purpose###
+### Purpose
 
 Why would we need to cache just one value? There are a couple cases.
 
@@ -40,7 +40,7 @@ Why would we need to cache just one value? There are a couple cases.
    Using this kind of discardable references has some negative impact on performance in the tests, but this is a non-issue: if we are saving
    on seconds, losing on milliseconds should not bother us.
 
-###How to use###
+### How to use
 
 Here's an example
 
@@ -52,14 +52,14 @@ To use the value, we can write
 
     val theHour: Int = hourNow()
 
-###Methods###
+### Methods
 
 Import `Caching._`, and use `cache(function)` to specify an instance of cached value; `validFor(timeout: Long)`,
 followed by one of `NANOSECONDS`, `MILLISECONDS`... `DAY`.
 
 The resulting instance has just one public method, `apply`, which can be called by parentheses.
 
-###How It Works#
+### How It Works
 
 Let's say we do it `withSoftReferences`.
 
@@ -87,7 +87,7 @@ Credits: [lj user="sassa_nf"](sassa_nf.livejournal.com) [discussion](http://ivan
 
 [slides]: (https://docs.google.com/present/view?id=dc7rg5cv_76d7dpx5c5&revision=_latest&start=0&theme=blank&cwj=true&pli=1)
 
-##FS (Flie System)##
+## FS (File System)
 
 FS provides shortcuts for typical operations with files and directories, with less hassle than usual.
 
@@ -95,7 +95,7 @@ FS provides shortcuts for typical operations with files and directories, with le
 
 will write the contents to the file. There's a bunch of such one-liners.
 
-##ClientHttpRequest##
+## ClientHttpRequest
 
 This class comes from my old Java code on myjavatools.com
 
@@ -103,7 +103,7 @@ Pls refer to the test to see how to use it. It's easy actually.
 Note that in your web app you can also trace the progress. Might be convenient.
 And you can cancel it half way through.
 
-## Scala Versions ##
+## Scala Versions
 
 Currently the base version was moved to scala210 directory, since it targets scala 2.10. A version for Scala 2.11, when finished, will be deployed in scala211 directory.
 
