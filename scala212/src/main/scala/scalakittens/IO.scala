@@ -119,7 +119,7 @@ trait IO { self =>
     }
   }
 
-  def saveToFile(s:String, name: String = ""): Result[File] = {
+  def saveToFile(s:String, name: String = "") = {
     Result.attempt ({
       val tmp = new File("tmp")
       tmp.mkdir

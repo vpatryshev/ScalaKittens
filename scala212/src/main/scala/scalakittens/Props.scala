@@ -19,6 +19,7 @@ import scala.util.matching.Regex
 /**
   * LDAP-like storage of properties with multilevel (dot-separated) keys
   */
+
 case class Props(private val innerMap: PropMap) extends PartialFunction[String, String] { self =>
   def filterValues(predicate: String => Boolean): Props =
     props(innerMap.filter {case (k,v) => predicate(v)})
@@ -59,8 +60,6 @@ case class Props(private val innerMap: PropMap) extends PartialFunction[String, 
     val result = Result traverse results
     result
   }
-
-
 
   lazy val pfOpt: String => Option[String] = (key:String) => {
     val kOpt = findKey(key)
@@ -135,7 +134,6 @@ case class Props(private val innerMap: PropMap) extends PartialFunction[String, 
     Result.zip(valueOf(key1), valueOf(key2), valueOf(key3), valueOf(key4), valueOf(key5))
   def valuesOf(key1:Any, key2:Any, key3:Any, key4:Any, key5:Any, key6:Any): Result[(String, String, String, String, String, String)] =
     Result.zip(valueOf(key1), valueOf(key2), valueOf(key3), valueOf(key4), valueOf(key5), valueOf(key6))
-
 
   def guaranteedValueOf(key: String)(implicit defaultT: String): Good[String] = @?(key)(defaultT)
   def intValueOf(key: Any): Result[Int] = @@(key) map(_.toInt)
@@ -443,6 +441,7 @@ trait PropsOps {
 
   // opportunistically extract props from sequence of strings, some of them being empty etc
   def fromStrings(source: Seq[String], separator: String=":"): Props = {
+    props(source map (_.split(separator, 2)) filter (_.length == 2) map (kv ⇒ kv(0).trim→kv(1).trim) toMap)
     props(source map (_.split(separator, 2)) filter (_.length == 2) map (kv => kv(0).trim->kv(1).trim) toMap)
   }
 
@@ -725,5 +724,3 @@ class PropsJsonSerializer extends Serializer[Props]{
       parse(props.toJsonString)
   }
 }
-
-

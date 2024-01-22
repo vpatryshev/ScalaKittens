@@ -21,7 +21,6 @@ case class Function[-From, +To]
   }
 
   override def andThen[Next](next: To => Next) = Function[From, Next](name, act andThen next, react andThen next)
-
 }
 
 object Functions {

@@ -1,6 +1,5 @@
 package scalakittens
 
-
 import java.text.SimpleDateFormat
 import java.util.{Date, SimpleTimeZone, TimeZone}
 import scalakittens.DateAndTime._
@@ -341,4 +340,3 @@ object DateAndTime extends DateAndTime with TimeReader {
     else               s"${h}h ${m%60}m"
   }
 }
-
