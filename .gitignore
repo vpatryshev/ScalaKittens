@@ -4,6 +4,7 @@ scala21*/project/target
 **/target
 **/tmp
 
+*_rsa
 /build.log
 /gonewiththewind.vecs.fast.txt
 /prepare_mvn

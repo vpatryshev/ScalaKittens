@@ -1,13 +1,15 @@
-
 organization := "ScalaKittens Inc."
 
 val WhichScala = "2.12.8"
 
-name := s"Scala Kittens Library Core, Scala $WhichScala"
+name := s"Scala Kittens Library, Scala $WhichScala"
 
 version := "1.0.0"
 
 scalaVersion := WhichScala
+lazy val core = RootProject(file("./core"))
+lazy val ml = RootProject(file("./ml"))
+lazy val experiments = RootProject(file("./experiments"))
 
 scalacOptions ++= Seq("-feature", "-deprecation", "-encoding", "UTF-8", "-feature", "-target:jvm-1.8", "-unchecked",
     "-Ywarn-adapted-args", "-Ywarn-value-discard", "-Xlint")
@@ -24,7 +26,8 @@ resolvers ++= Seq(
   "releases"       at "http://oss.sonatype.org/content/repositories/releases",
   "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases")
 
-libraryDependencies ++= Seq(
+enablePlugins(JmhPlugin)
+
   "org.scalatest"  %% "scalatest"     % "3.2.15" % "test" withSources(),
   "org.scala-lang" % "scala-compiler" % WhichScala,
   "org.scala-lang" % "scala-library" % WhichScala,

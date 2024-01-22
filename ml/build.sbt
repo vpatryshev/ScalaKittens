@@ -9,7 +9,7 @@ version := "1.0.0"
 
 scalaVersion := WhichScala
 
-lazy val core = RootProject(file("../scala212"))
+lazy val core = RootProject(file("../core"))
 
 val main = Project(id = "ml", base = file(".")).dependsOn(core)
 

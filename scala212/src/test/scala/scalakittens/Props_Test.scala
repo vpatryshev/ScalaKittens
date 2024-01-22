@@ -734,6 +734,7 @@ class Props_Test extends TestBase
           sut.size must_== 3
           val serviceTypes = sut map (_.getOrElse("[[1]].Purpose of the Trip", "oops..."))
           serviceTypes.toList must_== List("Private Beach Party", "Thai Massage", "Private Show")
+        case basura ⇒ failure(s"Oops, not good: $basura")
         case basura => failure(s"Oops, not good: $basura")
       }
       ok

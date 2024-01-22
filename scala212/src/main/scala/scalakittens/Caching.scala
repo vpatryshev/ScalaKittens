@@ -46,7 +46,7 @@ trait Caching {
   }
 
   trait RefFactory { def apply[X <: AnyRef] (x: X) : Reference[X] }
-  
+
   class CacheUnit[T](fun:() => T, timeout_nano: Long, newRef: RefFactory) {
 
     private val maxTime = Long.MaxValue/2
@@ -119,6 +119,5 @@ trait Caching {
 
 object Caching extends Caching {
   protected def now: Long = System.nanoTime
-
   implicit def currentValue[T](cu: CacheUnit[T]): T = cu.apply()
 }

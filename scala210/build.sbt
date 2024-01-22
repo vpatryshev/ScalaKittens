@@ -6,21 +6,23 @@ name := "Scala Kittens Library"
 
 version := "0.1.3"
 
-val WhichScala = "2.10.6"// "2.11.8"
+val WhichScala = "2.10.6"
+
+"ScalaKittens for Scala 2.10 has reached End of Life. Please use 2.11, or 2.12, or 2.13, or other vesions."
+
+System.exit(1)
 
 scalaVersion := WhichScala
 
 scalacOptions ++= Seq("-deprecation", "-encoding", "UTF-8", "-feature", "-target:jvm-1.7", "-unchecked",
     "-Ywarn-adapted-args", "-Ywarn-value-discard", "-Xlint")
 
-baseDirectory.
-
-scalacOptions ++= baseDirectory.map {
-  (bd: File) ⇒ Seq[String](
-     "-sourcepath", bd.getAbsolutePath,
-     "-doc-source-url", "https://github.com/mslinn/changeMe/tree/master€{FILE_PATH}.scala"
-  )
-}
+//scalacOptions ++= baseDirectory.map {
+//  (bd: File) ⇒ Seq[String](
+//     "-sourcepath", bd.getAbsolutePath,
+//     "-doc-source-url", "https://github.com/mslinn/changeMe/tree/master€{FILE_PATH}.scala"
+//  )
+//}
 
 javacOptions ++= Seq("-Xlint:deprecation", "-Xlint:unchecked", "-source", "1.8", "-target", "1.8", "-g:vars")
 
@@ -34,6 +36,7 @@ libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-library" % WhichScala,
   "org.scala-lang" % "scala-reflect" % WhichScala,
   "org.scalaz" %% "scalaz-core" % "7.1.4" withSources(),
+  "org.scalaz" %% "scalaz-stream" % "0.8.6" withSources(),
   "org.apache.httpcomponents" % "httpclient" % "4.3.6",
   "org.apache.httpcomponents" % "httpmime"   % "4.3.6",
   "org.specs2" %% "specs2-core" % "3.6" % "test",
@@ -42,7 +45,9 @@ libraryDependencies ++= Seq(
 
 resolvers ++= Seq("snapshots" at "http://oss.sonatype.org/content/repositories/snapshots",
   "releases"  at "http://oss.sonatype.org/content/repositories/releases",
-  "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases")
+  "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases",
+  "scalaz-mvn" at "https://mvnrepository.com/artifact/org.scalaz.stream/scalaz-stream"
+  )
 
 logLevel := Level.Warn
 

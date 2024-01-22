@@ -1,13 +1,14 @@
 package scalakittens
 
-
 import java.text.SimpleDateFormat
 import java.util.{Date, SimpleTimeZone, TimeZone}
 import scalakittens.DateAndTime._
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.{DateTime, DateTimeZone}
+import scalakittens.types.Strings
 
 import scala.concurrent.duration.Duration
+import scala.language.postfixOps
 import scala.util.matching.Regex
 
 /**
@@ -339,4 +340,3 @@ object DateAndTime extends DateAndTime with TimeReader {
     else               s"${h}h ${m%60}m"
   }
 }
-

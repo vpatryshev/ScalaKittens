@@ -1,11 +1,11 @@
 
-organization := "org.scalakittens"
+organization := "Scalakittens Inc."
 
 val WhichScala = "2.12.8"
 
 name := s"Scala Kittens Library Experiments, Scala $WhichScala"
 
-version := "1.0.0"
+version := "2.0.0"
 
 scalaVersion := WhichScala
 

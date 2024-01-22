@@ -385,14 +385,14 @@ object Result {
   def zip[X1,X2,X3,X4,X5,X6,X7](r1: Result[X1], r2: Result[X2], r3: Result[X3], r4: Result[X4], r5: Result[X5], r6: Result[X6], r7: Result[X7]): Result[(X1,X2,X3, X4,X5,X6,X7)] = {
     (r1,r2,r3,r4,r5,r6,r7) match {
       case (Good(x1),Good(x2),Good(x3),Good(x4),Good(x5),Good(x6),Good(x7)) => Good((x1,x2,x3,x4,x5,x6,x7))
-      case (b1,b2,b3,b4,b5,b6,b7)                                     => bad(b1, b2, b3, b4, b5, b6, b7)
+      case (b1,b2,b3,b4,b5,b6,b7)                                           => bad(b1, b2, b3, b4, b5, b6, b7)
     }
   }
 
   def zip[X1,X2,X3,X4,X5,X6,X7,X8](r1: Result[X1], r2: Result[X2], r3: Result[X3], r4: Result[X4], r5: Result[X5], r6: Result[X6], r7: Result[X7], r8: Result[X8]): Result[(X1,X2,X3, X4,X5,X6,X7,X8)] = {
     (r1,r2,r3,r4,r5,r6,r7,r8) match {
       case (Good(x1),Good(x2),Good(x3),Good(x4),Good(x5),Good(x6),Good(x7),Good(x8)) => Good((x1,x2,x3,x4,x5,x6,x7,x8))
-      case (b1,b2,b3,b4,b5,b6,b7,b8)                                     => bad(b1, b2, b3, b4, b5, b6, b7, b8)
+      case (b1,b2,b3,b4,b5,b6,b7,b8)                                                 => bad(b1, b2, b3, b4, b5, b6, b7, b8)
     }
   }
 
@@ -406,7 +406,7 @@ object Result {
   def zip[X1,X2,X3,X4,X5,X6,X7,X8,X9, X10](r1: Result[X1], r2: Result[X2], r3: Result[X3], r4: Result[X4], r5: Result[X5], r6: Result[X6], r7: Result[X7], r8: Result[X8], r9: Result[X9], r10: Result[X10]): Result[(X1,X2,X3, X4,X5,X6,X7,X8,X9,X10)] = {
     (r1,r2,r3,r4,r5,r6,r7,r8,r9,r10) match {
       case (Good(x1),Good(x2),Good(x3),Good(x4),Good(x5),Good(x6),Good(x7),Good(x8),Good(x9),Good(x10)) => Good((x1,x2,x3,x4,x5,x6,x7,x8,x9, x10))
-      case (b1,b2,b3,b4,b5,b6,b7,b8,b9,b10)                                                       => bad(b1, b2, b3, b4, b5, b6, b7, b8, b9, b10)
+      case (b1,b2,b3,b4,b5,b6,b7,b8,b9,b10)                                                             => bad(b1, b2, b3, b4, b5, b6, b7, b8, b9, b10)
     }
   }
 

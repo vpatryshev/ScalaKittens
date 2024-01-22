@@ -70,6 +70,5 @@ class ContainsTest extends Specification {
       listC contains "abracadabra" must beFalse
       listC contains b2 must beTrue
     }
-
   }
 }

@@ -5,7 +5,7 @@ javacOptions ++= Seq("-source", "11", "-target", "11")
 val scalaVesion = "212"
 val WhichScala = "2.12.3"
 
-name := s"Scala Kittens Library, Scala $WhichScala"
+name := s"Scala Kittens Library Experiments, Scala $WhichScala"
 
 version := "2.0.0"
 

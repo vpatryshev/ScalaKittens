@@ -2,6 +2,7 @@ dir=$1
 if [ "$dir" = '.' ]; then
  dir=`pwd`
 fi
+
 name=$(basename "$dir")
 echo "************************************"
 echo "**     building $name          **"
