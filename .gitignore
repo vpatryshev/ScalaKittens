@@ -1,0 +1,13 @@
+**/.idea/*
+*/project/project
+scala21*/project/target
+**/target
+**/tmp
+
+*_rsa
+/build.log
+/gonewiththewind.vecs.fast.txt
+/prepare_mvn
+/warandpeace.vecs.fast.txt
+/warandpeace.vecs.sammon.txt
+/warandpeace.vecs.txt

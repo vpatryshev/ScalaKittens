@@ -4,6 +4,7 @@ import org.specs2.mutable.Specification
 
 /**
  * example of natural transformation from covariant to contravariant functor
+ *
  * @see https://docs.google.com/document/d/1sC42GKY7WvztXzgWPGDqFukZ0smZFmNnQksD_lJzm20/edit?usp=sharing
  */
 class ContainsTest extends Specification {
@@ -40,7 +41,7 @@ class ContainsTest extends Specification {
       }
       class B(val name: String) extends A(name) {
         override def toString = "B(" + name + ")"}
-      val b1= new B("1")
+      val b1 = new B("1")
       val b2 = new B("2")
       val b3 = new B("3")
       val listB = b1 :: b2 :: EmptyList
@@ -54,11 +55,13 @@ class ContainsTest extends Specification {
 //      listB contains a3 must not compile
       val cA: Container[A] = listA
       val cB: Container[B] = listB
+      cB contains b3 must beFalse
       val cba: Container[B] = cA
       cA contains b3 must beFalse
       cba contains b3 must beFalse
       val cA1: Container[A] = listA
       val cB1: Container[B] = listB
+      cB1 contains b1 must beTrue
       val cba1: Container[B] = cA1
       cba1 contains b3 must beFalse
 //      cB contains a3 must not compile

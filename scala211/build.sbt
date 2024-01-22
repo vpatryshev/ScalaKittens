@@ -4,7 +4,7 @@ organization := "org.scalakittens"
 
 name := "Scala Kittens Library"
 
-version := "0.1.3"
+version := "1.0.0"
 
 val WhichScala = "2.11.8"
 
@@ -13,26 +13,24 @@ scalaVersion := WhichScala
 scalacOptions ++= Seq("-deprecation", "-encoding", "UTF-8", "-feature", "-target:jvm-1.7", "-unchecked",
     "-Ywarn-adapted-args", "-Ywarn-value-discard", "-Xlint")
 
-scalacOptions in (Compile, doc) <++= baseDirectory.map {
-  (bd: File) ⇒ Seq[String](
-     "-sourcepath", bd.getAbsolutePath,
-     "-doc-source-url", "https://github.com/mslinn/changeMe/tree/master€{FILE_PATH}.scala"
-  )
-}
-
 javacOptions ++= Seq("-Xlint:deprecation", "-Xlint:unchecked", "-source", "1.8", "-target", "1.8", "-g:vars")
 
+artifactName := { (sv: ScalaVersion, module: ModuleID, artifact: Artifact) =>
+  artifact.name + "-" + module.revision + "." + artifact.extension
+}
+
 resolvers ++= Seq(
-  "Lightbend Releases" at "http://repo.typesafe.com/typesafe/releases"
-)
+  "snapshots"                  at "http://oss.sonatype.org/content/repositories/snapshots",
+  "releases"                   at "http://oss.sonatype.org/content/repositories/releases",
+  "scalaz-bintray"             at "http://dl.bintray.com/scalaz/releases",
+  "Secured Central Repository" at "https://repo1.maven.org/maven2")
 
 enablePlugins(JmhPlugin)
 
 libraryDependencies ++= Seq(
-  "org.scalatest"  %% "scalatest"     % "2.2.3" % "test" withSources(),
   "org.scala-lang" % "scala-compiler" % WhichScala,
-  "org.scala-lang" % "scala-library" % WhichScala,
-  "org.scala-lang" % "scala-reflect" % WhichScala,
+  "org.scala-lang" % "scala-library"  % WhichScala,
+  "org.scala-lang" % "scala-reflect"  % WhichScala,
   "org.scalaz" %% "scalaz-core" % "7.1.4" withSources(),
   "org.apache.httpcomponents" % "httpclient" % "4.3.6",
   "org.apache.httpcomponents" % "httpmime"   % "4.3.6",
@@ -41,9 +39,7 @@ libraryDependencies ++= Seq(
 //  "org.openjdk.jmh" % "jmh-scala-benchmark-archetype" % "0.5.5" from "http://repo1.maven.org/maven2/org/openjdk/jmh/jmh-scala-benchmark-archetype/0.5.5/jmh-scala-benchmark-archetype-0.5.5.jar"
 )
 
-resolvers ++= Seq("snapshots" at "http://oss.sonatype.org/content/repositories/snapshots",
-  "releases"  at "http://oss.sonatype.org/content/repositories/releases",
-  "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases")
+libraryDependencies ++= Seq("org.specs2" %% "specs2-core" % "4.10.6" % "test")
 
 logLevel := Level.Warn
 

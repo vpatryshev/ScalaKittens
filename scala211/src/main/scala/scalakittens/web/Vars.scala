@@ -14,9 +14,9 @@ object Vars {
         def put(key: String, value: T): T = { map += (key → value); value }
         def apply(key: String): Option[T] = map.get(key)
         def show: String = {
-            val sorted: List[(String, _)] = map.toList.sortWith((x,y) ⇒ x._1 < y._1)
+            val sorted: List[(String, _)] = map.toList.sortWith((x,y) => x._1 < y._1)
 
-            val strings: Iterable[String] = sorted.map(kv ⇒ s"${kv._1} → ${kv._2}")
+            val strings: Iterable[String] = sorted.map(kv => s"${kv._1} → ${kv._2}")
             strings mkString "\n"
         }
     }

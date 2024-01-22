@@ -24,21 +24,21 @@ class Result_Test extends Specification {
     }
     "do nothing on error" in {
       var wasThere = false
-      Good("I'm good").onError((errors:Any) ⇒ wasThere = true)
+      Good("I'm good").onError((errors:Any) => wasThere = true)
       wasThere aka "was called on error" must_== false
     }
     "Map as designed" in {
       Good("hello") map (_.toUpperCase) must_== Good("HELLO")
     }
     "flatMap as designed" in {
-      Good("hello") flatMap (s ⇒ Good(s.toUpperCase)) must_== Good("HELLO")
-      Good("hello") flatMap (s ⇒ Result.error("alas...")) mustBeBad "alas..."
-      Good("hello") flatMap (s ⇒ Empty) must_== Empty
+      Good("hello") flatMap (s => Good(s.toUpperCase)) must_== Good("HELLO")
+      Good("hello") flatMap (s => Result.error("alas...")) mustBeBad "alas..."
+      Good("hello") flatMap (s => Empty) must_== Empty
     }
     "collect as designed" in {
       val err = ":("
-      Good("hello") collect ({ case "hello" ⇒ 1}, _ ⇒ ":(") must_== Good(1)
-      Good("hello") collect ({ case "Hello" ⇒ 1}, _ ⇒ ":(") mustBeBad err
+      Good("hello") collect ({ case "hello" => 1}, _ => ":(") must_== Good(1)
+      Good("hello") collect ({ case "Hello" => 1}, _ => ":(") mustBeBad err
     }
     "convert to Some" in {
       Good(":)").toOption must_== Some(":)")
@@ -60,17 +60,17 @@ class Result_Test extends Specification {
        v must_== ":)"
      }
      "filter as designed" in {
-       Good("hello") filter ((s:String) ⇒ s.startsWith("he"), "oi vei") must_== Good("hello")
-       Good("huilo") filter ((s:String) ⇒ s.startsWith("he"), "oi vei") must_== Result.error("oi vei")
-       Good("huilo") filter ((s:String) ⇒ s.startsWith("he")) must_== Empty
+       Good("hello") filter ((s:String) => s.startsWith("he"), "oi vei") must_== Good("hello")
+       Good("huilo") filter ((s:String) => s.startsWith("he"), "oi vei") must_== Result.error("oi vei")
+       Good("huilo") filter ((s:String) => s.startsWith("he")) must_== Empty
      }
      "Show nothing in errorDetails" in {
        Good("sh").errorDetails must_== None
      }
 
      "combine with other goods in sugared loop" in {
-       val actual = for (x <- Good("x");
-                         y <- Good("y")) yield x+y
+       val actual = for (x ← Good("x");
+                         y ← Good("y")) yield x+y
        actual must_== Good("xy")
      }
    }
@@ -89,37 +89,37 @@ class Result_Test extends Specification {
                    new Exception("Say bye"):: Nil
       var beenThere = false
       var ed: Errors = Nil
-      bad(errors).onError((es:Errors) ⇒ { beenThere = true; ed=es})
+      bad(errors).onError((es:Errors) => { beenThere = true; ed=es})
       beenThere aka "visited what you were not supposed to visit" must beTrue
       ed must_== errors
     }
     "Map as designed" in {
       var wasThere = false
-      Result.error[Int]("oops") map ((x:Int) ⇒ {
+      Result.error[Int]("oops") map ((x:Int) => {
         wasThere = true; 1+x
       }) must_== Result.error("oops")
       wasThere aka "visited what you were not supposed to visit" must beFalse
     }
     "flatMap as designed" in {
       var wasThere = false
-      val r1 = Result.error[String]("oops") flatMap ((s:String) ⇒ {wasThere = true; Good(s.toUpperCase)})
+      val r1 = Result.error[String]("oops") flatMap ((s:String) => {wasThere = true; Good(s.toUpperCase)})
       r1 must_== Result.error("oops")
       wasThere aka "visited what you were not supposed to visit" must beFalse
       val r20:Result[String] = Result.error("oops")
-      val r2 = r20 flatMap (s ⇒ {wasThere = true; Result.error("alas...")})
+      val r2 = r20 flatMap (s => {wasThere = true; Result.error("alas...")})
       r2 mustBeBad "oops"
       wasThere aka "visited what you were not supposed to visit" must beFalse
       val r3:Result[String] = Result.error("oops")
-      r3 flatMap (s ⇒ {wasThere = true; Empty}) mustBeBad "oops"
+      r3 flatMap (s => {wasThere = true; Empty}) mustBeBad "oops"
       wasThere aka "visited what you were not supposed to visit" must beFalse
     }
     "collect nothing" in {
       var wasThere = false
       val bad:Result[String] = Result.error("oops")
-      bad collect ({ case "hello" ⇒ wasThere = true; 1}, _ ⇒ ":(") must_== Result.error("oops")
+      bad collect ({ case "hello" => wasThere = true; 1}, _ => ":(") must_== Result.error("oops")
       wasThere aka "visited what you were not supposed to visit" must beFalse
       val bad1:Result[String] = Result.error("oops")
-      bad1 collect ({ case "Hello" ⇒ wasThere = true; 1}, _ ⇒ ":(") must_== Result.error("oops")
+      bad1 collect ({ case "Hello" => wasThere = true; 1}, _ => ":(") must_== Result.error("oops")
       wasThere aka "visited what you were not supposed to visit" must beFalse
     }
     "convert to None" in {
@@ -141,12 +141,12 @@ class Result_Test extends Specification {
     "ignore call function in foreach" in {
       var wasThere = false
       val bad: Result[String] = Result.error("oops")
-      bad foreach {s ⇒ wasThere = true}
+      bad foreach {s => wasThere = true}
       wasThere aka "visited what you were not supposed to visit" must beFalse
     }
     "filter as designed" in {
-      Result.error[String]("oops") filter ((s:String) ⇒ s.startsWith("he"), "oi vei") must_== Result.error("oops")
-      Result.error[String]("oops") filter ((s:String) ⇒ s.startsWith("lo"), "oi vei") must_== Result.error("oops")
+      Result.error[String]("oops") filter ((s:String) => s.startsWith("he"), "oi vei") must_== Result.error("oops")
+      Result.error[String]("oops") filter ((s:String) => s.startsWith("lo"), "oi vei") must_== Result.error("oops")
     }
     "Merge errorDetails" in {
       val detailsOpt: Option[String] = bad(new ResultException("beer too expensive"):: new ResultException("are we there?") :: Nil).errorDetails
@@ -158,18 +158,18 @@ class Result_Test extends Specification {
     }
 
     "combine with goods in sugared loop" in {
-      val actual1 = for (x:String <- Result.error[String]("x yourself");
-                         y <- Good("y")) yield x+y
+      val actual1 = for (x:String ← Result.error[String]("x yourself");
+                         y ← Good("y")) yield x+y
       actual1 mustBeBad "x yourself"
 
-      val actual2 = for (x <- Good("x");
-                         y:String <- Result.error[String]("y yourself")) yield x+y
+      val actual2 = for (x ← Good("x");
+                         y:String ← Result.error[String]("y yourself")) yield x+y
       actual2 mustBeBad "y yourself"
     }
 
     "combine with bads in sugared loop" in {
-      val actual = for (x <- error[String]("x yourself");
-                        y <- error[String]("y yourself")) yield x+y
+      val actual = for (x ← error[String]("x yourself");
+                        y ← error[String]("y yourself")) yield x+y
       actual mustBeBad "x yourself"
     }
 
@@ -191,23 +191,23 @@ class Result_Test extends Specification {
     }
     "ignore on error" in {
       var beenThere = false
-      Empty.onError((es:Any) ⇒ { beenThere = true})
+      Empty.onError((es:Any) => { beenThere = true})
       beenThere must beFalse
     }
     "Map as designed" in {
       var wasThere = false
-      Empty map (x ⇒ {wasThere = true; null== x}) must_== Empty
+      Empty map (x => {wasThere = true; null== x}) must_== Empty
       wasThere aka "visited what you were not supposed to visit" must beFalse
     }
     "flatMap as designed" in {
       var wasThere = false
-      Empty flatMap (s ⇒ {wasThere = true; Empty}) must_== Empty
+      Empty flatMap (s => {wasThere = true; Empty}) must_== Empty
       wasThere aka "visited what you were not supposed to visit" must beFalse
     }
     "collect nothing" in {
       var wasThere = false
       val sut: Result[String] = Empty
-      sut collect ({ case "hello" ⇒ wasThere = true; 1}, _ ⇒ "whatevar") must_== Empty
+      sut collect ({ case "hello" => wasThere = true; 1}, _ => "whatevar") must_== Empty
       wasThere aka "visited what you were not supposed to visit" must beFalse
     }
     "convert to None" in {
@@ -229,12 +229,12 @@ class Result_Test extends Specification {
     }
     "ignore call function in foreach" in {
       var wasThere = false
-      Empty foreach {x ⇒ wasThere = true}
+      Empty foreach {x => wasThere = true}
       wasThere aka "visited what you were not supposed to visit" must beFalse
     }
     "Filter as designed" in {
-      Empty filter ((x:Any) ⇒ x != null, "oi vei") must_== Empty
-      Empty filter ((x:Any) ⇒ x == null, "oi vei") must_== Empty
+      Empty filter ((x:Any) => x != null, "oi vei") must_== Empty
+      Empty filter ((x:Any) => x == null, "oi vei") must_== Empty
     }
     "Show 'missing' in errorDetails" in {
       Empty.errorDetails must_== Some("No results")
@@ -242,30 +242,30 @@ class Result_Test extends Specification {
 
     "combine with goods in sugared loop" in {
       val nr: Result[String] = Empty
-      val actual1 = for (x <- nr;
-                         y <- Good("y")) yield x+y
+      val actual1 = for (x ← nr;
+                         y ← Good("y")) yield x+y
       actual1 must_== Empty
 
-      val actual2 = for (x <- Good("x");
-                         y <- nr) yield x+y
+      val actual2 = for (x ← Good("x");
+                         y ← nr) yield x+y
       actual2 must_== Empty
     }
 
     "combine with bads in sugared loop" in {
       val nr: Result[String] = Empty
-      val actual1 = for (x <- nr;
-                        y <- Result.error[String]("y yourself")) yield x+y
+      val actual1 = for (x ← nr;
+                        y ← Result.error[String]("y yourself")) yield x+y
       actual1 must_== nr
-      val actual2 = for (x <- Result.error[String]("x yourself");
-                        y  <- nr) yield x+y
+      val actual2 = for (x ← Result.error[String]("x yourself");
+                        y  ← nr) yield x+y
 
       actual2 mustBeBad "x yourself"
     }
 
     "combine with Empty in sugared loop" in {
       val nr: Result[String] = Empty
-      val actual1 = for (x <- nr;
-                         y <- nr) yield x+y
+      val actual1 = for (x ← nr;
+                         y ← nr) yield x+y
       actual1 must_== nr
     }
   }
@@ -291,18 +291,18 @@ class Result_Test extends Specification {
 
   "applicative functionality" should {
     "impress the public" in {
-      implicit def app[X,Y](p: (X ⇒ Y, X)): Y = p._1(p._2)
+      implicit def app[X,Y](p: (X => Y, X)): Y = p._1(p._2)
  //     implicit def t21_to_t3[X,Y,Z](t:((X, Y), Z)):(X,Y,Z) = (t._1._1, t._1._2, t._2)
-      implicit def app20[X1,X2,Z](t: ((X1 ⇒ X2 ⇒ Z, X1), X2)): Z = t._1._1(t._1._2)(t._2)
-      implicit def app2[X1,X2,Z](t: (X1 ⇒ X2 ⇒ Z, X1, X2)): Z = t._1(t._2)(t._3)
-      implicit def app3[X1,X2,X3,Z](t: (X1 ⇒ X2 ⇒ X3 ⇒ Z, X1, X2, X3)): Z = t._1(t._2)(t._3)(t._4)
+      implicit def app20[X1,X2,Z](t: ((X1 => X2 => Z, X1), X2)): Z = t._1._1(t._1._2)(t._2)
+      implicit def app2[X1,X2,Z](t: (X1 => X2 => Z, X1, X2)): Z = t._1(t._2)(t._3)
+      implicit def app3[X1,X2,X3,Z](t: (X1 => X2 => X3 => Z, X1, X2, X3)): Z = t._1(t._2)(t._3)(t._4)
       // etc; use ProductIterator for folding, instead of copy and paste
-      val forty_two:String = ((n: Int) ⇒ n*7 + "!", 6)
+      val forty_two:String = ((n: Int) => n*7 + "!", 6)
       forty_two must_== "42!"
-      val itWorks: String = ((n:Int) ⇒ (m:Int) ⇒ n*m+":)", 6, 7)
+      val itWorks: String = ((n:Int) => (m:Int) => n*m+":)", 6, 7)
       itWorks must_== "42:)"
 
-      val r0 = Result.forValue((n:Int) ⇒ (m:Int) ⇒ n*m + " :)")
+      val r0 = Result.forValue((n:Int) => (m:Int) => n*m + " :)")
       val r1 = Result.forValue(6)
       val r2 = Result.forValue(7)
       val r = r0 <*> r1 <*> r2
@@ -391,7 +391,7 @@ class Result_Test extends Specification {
     "apply as in applicative functors" in {
       case class Into(n:Int)
       class X(var m:Int) { def multiply(n:Int) = Into(m*n)}
-      def mmO(xOpt:Result[X]) = xOpt map (x ⇒ x.multiply _)
+      def mmO(xOpt:Result[X]) = xOpt map (x => x.multiply _)
       def mm(x:X) = mmO(Good(x))
       val multiplier = mm(new X(7))
       multiplier (Good(42)) must_== Good(Into(294))

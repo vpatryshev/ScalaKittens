@@ -42,7 +42,7 @@ at org.firebirdsql.gds.GDSException: Unable to complete network request to host 
 - The service calls someone named `sasta`
 - Sasta starts looking up for a service in a catalog
 - the catalog has a class which name ends with `Impl`, which means this is a Working Class, and he tells the worker: work!
-- this poor `Impl`, he won't work until his Base Class, `BaseImpl` (a Base Worker) is not *initiated*
+- this poor `Impl`, he won't work until his Base Class, `BaseImpl` (a Base Worker) is *initiated*
 - now our Base Worker has no choice but to start doing something; here what he does:
   - it has `Helpers`, and it calls its helpers, which are not simple guys, they have *functions*, `ExtFunc`
   - Base Worker asks his Helpers Functions to tell him *Object Identifier*

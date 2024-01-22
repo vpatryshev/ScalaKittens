@@ -13,9 +13,9 @@ object FileSpecTest extends Specification {
   def file(path: String) = new java.io.File(path)
 
   def checkPositive(cases: (String, String)*) { cases foreach {
-      p ⇒ {
+      p => {
         val spec = FileSpec(p._1)
-        for (path <- p._2 split ",") {
+        for (path ← p._2 split ",") {
           spec.accepts(file(path)) aka (path + " in " + p._1) mustBe true
         }
       }
@@ -23,9 +23,9 @@ object FileSpecTest extends Specification {
   }
 
   def checkNegative(cases: (String, String)*) { cases foreach {
-      p ⇒ {
+      p => {
         val spec = FileSpec(p._1)
-        for (path <- p._2 split ",") {
+        for (path ← p._2 split ",") {
           spec.accepts(file(path)) aka (path + " in " + p._1) mustBe false
         }
       }

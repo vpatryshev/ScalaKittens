@@ -14,11 +14,11 @@
       <name>Scala-Tools Maven2 Repository</name>
       <url>http://scala-tools.org/repo-releases</url>
     </repository>
-      <repository>
-          <id>sonatype.org</id>
-          <name>Scala-Tools another Repository</name>
-          <url>https://oss.sonatype.org/content/repositories/releases</url>
-      </repository>
+    <repository>
+      <id>sonatype.org</id>
+      <name>Scala-Tools another Repository</name>
+      <url>https://oss.sonatype.org/content/repositories/releases</url>
+    </repository>
   </repositories>
 
   <pluginRepositories>
@@ -45,7 +45,7 @@
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
-      <version>4.5.3</version>
+      <version>4.5.13</version>
     </dependency>
     <!-- https://mvnrepository.com/artifact/org.specs2/specs2-core_2.11 -->
     <dependency>
@@ -62,7 +62,7 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.4</version>
+      <version>4.13.1</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -71,22 +71,22 @@
       <version>1.6.9</version>
       <scope>test</scope>
     </dependency>
-      <dependency>
-          <groupId>org.scalaz</groupId>
-          <artifactId>scalaz-core_2.9.2</artifactId>
-          <version>7.0.0-M3</version>
-      </dependency>
+    <dependency>
+      <groupId>org.scalaz</groupId>
+      <artifactId>scalaz-core_2.9.2</artifactId>
+      <version>7.0.0-M3</version>
+    </dependency>
 
-      <dependency>
-          <groupId>org.scalaz</groupId>
-          <artifactId>scalaz-effect_2.9.2</artifactId>
-          <version>7.0.0-M3</version>
-      </dependency>
-      <dependency>
-          <groupId>org.scalaz</groupId>
-          <artifactId>scalaz-concurrent_2.9.2</artifactId>
-          <version>7.0.0-M3</version>
-      </dependency>
+    <dependency>
+      <groupId>org.scalaz</groupId>
+      <artifactId>scalaz-effect_2.9.2</artifactId>
+      <version>7.0.0-M3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scalaz</groupId>
+      <artifactId>scalaz-concurrent_2.9.2</artifactId>
+      <version>7.0.0-M3</version>
+    </dependency>
   </dependencies>
 
   <build>
