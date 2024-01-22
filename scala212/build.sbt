@@ -3,11 +3,15 @@ organization := "ScalaKittens Inc."
 
 val WhichScala = "2.12.8"
 
-name := s"Scala Kittens Library Core, Scala $WhichScala"
+name := s"Scala Kittens Library, Scala $WhichScala"
 
 version := "1.0.0"
 
 scalaVersion := WhichScala
+lazy val core = RootProject(file("./core"))
+lazy val ml = RootProject(file("./ml"))
+lazy val experiments = RootProject(file("./experiments"))
+
 
 scalacOptions ++= Seq("-feature", "-deprecation", "-encoding", "UTF-8", "-feature", "-target:jvm-1.8", "-unchecked",
     "-Ywarn-adapted-args", "-Ywarn-value-discard", "-Xlint")

@@ -5,9 +5,9 @@ javacOptions ++= Seq("-source", "11", "-target", "11")
 val scalaVesion = "212"
 val WhichScala = "2.12.3"
 
-name := s"Scala Kittens Library, Scala $WhichScala"
+name := s"Scala Kittens Library Experiments, Scala $WhichScala"
 
-version := "1.0.0"
+version := "2.0.0"
 
 scalaVersion := WhichScala
 lazy val core = RootProject(file(s"scala212/core"))
@@ -15,7 +15,7 @@ lazy val ml = RootProject(file("./ml"))
 lazy val experiments = RootProject(file("./experiments"))
 
 
-val main = Project(id = "coe", base = file(".")).dependsOn(core)
+val main = Project(id = "core", base = file(".")).dependsOn(core)
 
 scalacOptions ++= Seq("-feature", "-deprecation", "-encoding", "UTF-8", "-feature", "-target:jvm-1.8", "-unchecked",
     "-Ywarn-adapted-args", "-Ywarn-value-discard", "-Xlint")
@@ -44,7 +44,6 @@ libraryDependencies ++= Seq(
   "org.specs2" %% "specs2-core" % "3.8.8" % "test",
   "org.scalacheck" %% "scalacheck" % "1.13.4" % "test",
   "org.sameersingh.scalaplot" % "scalaplot" % "0.0.4"
-
 )
 
 resolvers ++= Seq("snapshots" at "http://oss.sonatype.org/content/repositories/snapshots",

@@ -1,0 +1,22 @@
+dir0=$(dirname $0)
+dir=$dir0
+name=$(basename $dir)
+
+if [ "$dir" = '.' ]; then
+ d1=`pwd`
+ name=$(basename $d1)
+fi
+
+echo "************************************"
+echo "**     building $name          **"
+echo "************************************"
+
+if [ $dir != '.' ]; then
+echo "pushing $name"
+  pushd $name
+fi
+
+sbt clean test package
+
+popd
+

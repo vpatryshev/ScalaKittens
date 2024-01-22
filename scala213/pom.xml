@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>ScalaKittens</groupId>
   <artifactId>Core</artifactId>
-  <version>1.0.0</version>
+  <version>2.0.0</version>
   <inceptionYear>2012</inceptionYear>
   <properties>
     <scala.version>2.12.8</scala.version>
@@ -54,11 +54,16 @@
       <artifactId>specs2-core_2.12</artifactId>
       <version>3.8.7</version>
     </dependency>
-
+    <!-- https://mvnrepository.com/artifact/org.openjdk.jmh/jmh-core -->
+    <dependency>
+      <groupId>org.openjdk.jmh</groupId>
+      <artifactId>jmh-core</artifactId>
+      <version>1.17.5</version>
+    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.13.1</version>
+      <version>4.4</version>
       <scope>test</scope>
     </dependency>
     <!-- https://mvnrepository.com/artifact/org.scalaz/scalaz-core_2.12.0-RC1 -->

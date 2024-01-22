@@ -1,0 +1,14 @@
+
+# IntelliJ files
+.idea/*
+
+*.class
+*.tmp
+tmp/*
+target/*
+project/target
+project/project
+
+bad.*
+
+*_rsa
